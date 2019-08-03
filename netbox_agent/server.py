@@ -74,7 +74,7 @@ class ServerBase():
             name='Server Chassis',
         )
         datacenter = nb.dcim.sites.get(
-            name='DC3'
+            name='DC3' # FIXME: datacenter support
         )
         new_chassis = nb.dcim.devices.create(
             name=''.format(),
@@ -92,16 +92,40 @@ class ServerBase():
         device_type = nb.dcim.device_types.get(
             model=self.get_product_name(),
         )
-
+        datacenter = nb.dcim.sites.get(
+            name='DC3' # FIXME: datacenter support
+        )
         new_blade = nb.dcim.devices.create(
             name='{}'.format(socket.gethostname()),
             serial=self.get_service_tag(),
             device_role=device_role.id,
             device_type=device_type.id,
             parent_device=chassis.id,
-            site='1',
+            site=datacenter.id,
         )
         return new_blade
+
+    def _netbox_create_server(self):
+        device_role = nb.dcim.device_roles.get(
+            name='Server',
+        )
+        device_type = nb.dcim.device_types.get(
+            model=self.get_product_name(),
+        )
+        if not device_type:
+            raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
+        datacenter = nb.dcim.sites.get(
+            name='DC3' # FIXME: datacenter support
+        )
+        new_server = nb.dcim.devices.create(
+            name='{}'.format(socket.gethostname()),
+            serial=self.get_service_tag(),
+            device_role=device_role.id,
+            device_type=device_type.id,
+            site=datacenter.id,
+        )
+        return new_server
+
 
     def netbox_create(self):
         if self.is_blade():
@@ -128,4 +152,6 @@ class ServerBase():
                 device_bay.save()
         else:
             # FIXME : handle pizza box
-            pass
+            server = nb.dcim.devices.get(serial=self.get_service_tag())
+            if not server:
+                self._netbox_create_server()
