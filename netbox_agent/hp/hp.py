@@ -11,11 +11,11 @@ class HPHost(ServerBase):
         return self.get_product_name().startswith('ProLiant BL')
 
     def _find_rack_locator(self):
-        '''
+        """
         Depending on the server, the type of the `HP ProLiant System/Rack Locator`
         can change.
         So we need to find it every time
-        '''
+        """
         # FIXME: make a dmidecode function get_by_dminame() ?
         if self.is_blade():
             for key, value in self.dmi.parse().items():

@@ -58,10 +58,10 @@ for type_id, type_str in _type2str.items():
 
 
 def parse():
-    '''
+    """
     parse the full output of the dmidecode
     command and return a dic containing the parsed information
-    '''
+    """
     buffer = _execute_cmd()
     if isinstance(buffer, bytes):
         buffer = buffer.decode('utf-8')
@@ -70,7 +70,7 @@ def parse():
 
 
 def get_by_type(type_id):
-    '''
+    """
     filter the output of dmidecode per type
     0   BIOS
     1   System
@@ -115,7 +115,7 @@ def get_by_type(type_id):
     40   Additional Information
     41   Onboard Devices Extended Information
     42   Management Controller Host Interface
-    '''
+    """
     if isinstance(type_id, str):
         type_id = _str2type[type_id]
 

@@ -12,7 +12,7 @@ setup(
     include_package_data=True,
     use_scm_version=True,
     packages=find_packages(),
-    install_requires=open('requirements.txt').readlines(),
+    install_requires=find_packages(),
     zip_safe=False,
     keywords=['netbox'],
     classifiers=[

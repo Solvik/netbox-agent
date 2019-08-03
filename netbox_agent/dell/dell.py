@@ -6,11 +6,11 @@ class DellHost(ServerBase):
         return self.get_product_name().startswith('PowerEdge M')
 
     def get_blade_slot(self):
-        '''
+        """
         Return blade slot
         dmidecode output is:
         `        Location In Chassis: Slot 03`
-        '''
+        """
         if self.is_blade():
             return int(self.dmi.get_by_type('Baseboard')[0].get('Location In Chassis').split()[1])
         return None

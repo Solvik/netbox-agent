@@ -22,15 +22,15 @@ class ServerBase():
         self.network_cards = []
 
     def get_product_name(self):
-        '''
+        """
         Return the Chassis Name from dmidecode info
-        '''
+        """
         return self.system[0]['Product Name']
 
     def get_service_tag(self):
-        '''
+        """
         Return the Service Tag from dmidecode info
-        '''
+        """
         return self.system[0]['Serial Number']
 
     def is_blade(self):
