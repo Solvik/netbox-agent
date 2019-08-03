@@ -1,12 +1,14 @@
-import re
 import os
+import re
 import socket
-import netbox_agent.dmidecode as dmidecode
+
 from netbox_agent.config import netbox_instance as nb
+import netbox_agent.dmidecode as dmidecode
 
 # Regex to match base interface name
 # Doesn't match vlan interfaces and other loopback etc
 INTERFACE_REGEX = re.compile('^(eth[0-9]+|ens[0-9]+|enp[0-9]+s[0-9]f[0-9])$')
+
 
 class ServerBase():
     def __init__(self, dmi=None):
@@ -59,7 +61,7 @@ class ServerBase():
                 nic = {
                     'name': interface,
                     'mac': open('/sys/class/net/{}/address'.format(interface), 'r').read().strip(),
-                    'ip': None, #FIXME
+                    'ip': None,  # FIXME
                 }
                 nics.append(nic)
         return nics
@@ -74,7 +76,7 @@ class ServerBase():
             name='Server Chassis',
         )
         datacenter = nb.dcim.sites.get(
-            name='DC3' # FIXME: datacenter support
+            name='DC3',  # FIXME: datacenter support
         )
         new_chassis = nb.dcim.devices.create(
             name=''.format(),
@@ -93,7 +95,7 @@ class ServerBase():
             model=self.get_product_name(),
         )
         datacenter = nb.dcim.sites.get(
-            name='DC3' # FIXME: datacenter support
+            name='DC3',  # FIXME: datacenter support
         )
         new_blade = nb.dcim.devices.create(
             name='{}'.format(socket.gethostname()),
@@ -115,7 +117,7 @@ class ServerBase():
         if not device_type:
             raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
         datacenter = nb.dcim.sites.get(
-            name='DC3' # FIXME: datacenter support
+            name='DC3'  # FIXME: datacenter support
         )
         new_server = nb.dcim.devices.create(
             name='{}'.format(socket.gethostname()),
@@ -125,7 +127,6 @@ class ServerBase():
             site=datacenter.id,
         )
         return new_server
-
 
     def netbox_create(self):
         if self.is_blade():

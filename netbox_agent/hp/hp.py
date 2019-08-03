@@ -1,5 +1,6 @@
 from netbox_agent.server import ServerBase
 
+
 class HPHost(ServerBase):
     def __init__(self, *args, **kwargs):
         super(HPHost, self).__init__(*args, **kwargs)

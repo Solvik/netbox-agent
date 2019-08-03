@@ -1,7 +1,5 @@
-import socket
-from pprint import pprint
-
 from netbox_agent.server import ServerBase
+
 
 class DellHost(ServerBase):
     def is_blade(self):
@@ -10,7 +8,7 @@ class DellHost(ServerBase):
     def get_blade_slot(self):
         '''
         Return blade slot
-        dmidecode output is: 
+        dmidecode output is:
         `        Location In Chassis: Slot 03`
         '''
         if self.is_blade():
@@ -26,4 +24,3 @@ class DellHost(ServerBase):
         if self.is_blade():
             return self.dmi.get_by_type('chassis')[0]['Serial Number']
         return self.get_service_tag()
-
