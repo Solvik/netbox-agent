@@ -1,0 +1,9 @@
+netbox:
+ url: 'http://netbox.internal.company.com'
+ token: supersecrettoken
+
+datacenter_location:
+ driver: file:/etc/qualification
+ regex: "datacenter: (?P<datacenter>[A-Za-z0-9]+)"
+# driver: 'cmd:lldpctl'
+# regex = 'SysName: .*\.(?P<datacenter>[A-Za-z0-9]+)'
