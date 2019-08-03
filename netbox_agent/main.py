@@ -12,10 +12,9 @@ MANUFACTURERS = {
 
 def main():
     manufacturer = dmidecode.get_by_type('Chassis')[0].get('Manufacturer')
+    print(manufacturer)
     server = MANUFACTURERS[manufacturer](dmidecode)
-    pprint(dmidecode.parse())
     print(server.get_product_name())
-    print(server.get_blade_slot())
     print(server.get_chassis())
     print(server.get_service_tag())
     print(server.get_chassis_service_tag())
