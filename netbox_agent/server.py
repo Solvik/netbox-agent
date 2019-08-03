@@ -155,3 +155,13 @@ class ServerBase():
             server = nb.dcim.devices.get(serial=self.get_service_tag())
             if not server:
                 self._netbox_create_server()
+
+    def print_debug(self):
+        # FIXME: do something more generic by looping on every get_* methods
+        print('Datacenter:', self.get_datacenter())
+        print('Netbox Datacenter:', self.get_netbox_datacenter())
+        print('Is blade:', self.is_blade())
+        print('Product Name:', self.get_product_name())
+        print('Chassis:', self.get_chassis())
+        print('Chassis service tag:', self.get_chassis_service_tag())
+        print('Service tag:', self.get_service_tag())
