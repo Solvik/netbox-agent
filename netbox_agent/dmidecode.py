@@ -2,10 +2,10 @@ import re as _re
 import subprocess as _subprocess
 
 
-_handle_re = _re.compile("^Handle\\s+(.+),\\s+DMI\\s+type\\s+(\\d+),\\s+(\\d+)\\s+bytes$")
-_in_block_re = _re.compile("^\\t\\t(.+)$")
-_record_re = _re.compile("\\t(.+):\\s+(.+)$")
-_record2_re = _re.compile("\\t(.+):$")
+_handle_re = _re.compile('^Handle\\s+(.+),\\s+DMI\\s+type\\s+(\\d+),\\s+(\\d+)\\s+bytes$')
+_in_block_re = _re.compile('^\\t\\t(.+)$')
+_record_re = _re.compile('\\t(.+):\\s+(.+)$')
+_record2_re = _re.compile('\\t(.+):$')
 
 _type2str = {
     0:   'BIOS',
@@ -129,7 +129,7 @@ def get_by_type(type_id):
 
 
 def _execute_cmd():
-    return _subprocess.check_output("dmidecode", stderr=_subprocess.PIPE)
+    return _subprocess.check_output('dmidecode', stderr=_subprocess.PIPE)
 
 
 def _parse(buffer):
@@ -153,21 +153,21 @@ def _parse(buffer):
         dmi_handle = handle_data[0]
 
         output_data[dmi_handle] = {}
-        output_data[dmi_handle]["DMIType"] = int(handle_data[1])
-        output_data[dmi_handle]["DMISize"] = int(handle_data[2])
+        output_data[dmi_handle]['DMIType'] = int(handle_data[1])
+        output_data[dmi_handle]['DMISize'] = int(handle_data[2])
 
         #  Okay, we know 2nd line == name
-        output_data[dmi_handle]["DMIName"] = record_element[1]
+        output_data[dmi_handle]['DMIName'] = record_element[1]
 
-        in_block_elemet = ""
-        in_block_list = ""
+        in_block_elemet = ''
+        in_block_list = ''
 
         #  Loop over the rest of the record, gathering values
         for i in range(2, len(record_element), 1):
             if i >= len(record_element):
                 break
             #  Check whether we are inside a \t\t block
-            if in_block_elemet != "":
+            if in_block_elemet != '':
 
                 in_block_data = _in_block_re.findall(record_element[1])
 
@@ -175,14 +175,14 @@ def _parse(buffer):
                     if not in_block_list:
                         in_block_list = in_block_data[0][0]
                     else:
-                        in_block_list = in_block_list + "\t\t" + in_block_data[0][1]
+                        in_block_list = in_block_list + '\t\t' + in_block_data[0][1]
 
                     output_data[dmi_handle][in_block_elemet] = in_block_list
                     continue
                 else:
                     # We are out of the \t\t block; reset it again, and let
                     # the parsing continue
-                    in_block_elemet = ""
+                    in_block_elemet = ''
 
             record_data = _record_re.findall(record_element[i])
 
