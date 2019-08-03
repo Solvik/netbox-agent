@@ -1,4 +1,6 @@
-from netbox_agent.dmidecode import Dmidecode
+import sys
+from pprint import pprint
+import netbox_agent.dmidecode as dmidecode
 from netbox_agent.dell.dell import DellHost
 from netbox_agent.hp.hp import HPHost
 
@@ -9,14 +11,16 @@ MANUFACTURERS = {
    }
 
 def main():
-    dmi = Dmidecode()
-    manufacturer = dmi.get('chassis')[0].get('Manufacturer')
-    server = MANUFACTURERS[manufacturer](dmi)
+    manufacturer = dmidecode.get_by_type('Chassis')[0].get('Manufacturer')
+    server = MANUFACTURERS[manufacturer](dmidecode)
+    pprint(dmidecode.parse())
+    print(server.get_product_name())
+    print(server.get_blade_slot())
     print(server.get_chassis())
     print(server.get_service_tag())
     print(server.get_chassis_service_tag())
     server.netbox_create()
-    print(server.get_network_cards())
+#    print(server.get_network_cards())
 
 if __name__ == '__main__':
     main()
