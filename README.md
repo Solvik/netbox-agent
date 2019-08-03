@@ -1,4 +1,3 @@
-
 # Netbox agent
 
 
@@ -12,6 +11,7 @@ Tested on:
 ## Dell Inc.
 
 ### Blades
+
 * PowerEdge M1000e
 * PowerEdge M640
 * PowerEdge M630
@@ -19,15 +19,24 @@ Tested on:
 * PowerEdge M610
 
 ### Pizzas
+
 * DSS7500
 
 ## HP
 
-- WIP
+### Blades
+
+* HP BladeSystem c7000 Enclosure G2
+* HP ProLiant BL460c Gen8
+* HP ProLiant BL460c Gen9
+
+### Pizzas
+
+* ProLiant DL380p Gen8
 
 ## HPE
 
-- WIP
+* HPE ProLiant XL450 Gen10
 
 # TODO
 
