@@ -61,7 +61,7 @@ class ServerBase():
     def get_bios_release_date(self):
         raise NotImplementedError
 
-    def _netbox_create_blade_chassis(self):
+    def _netbox_create_blade_chassis(self, datacenter):
         device_type = nb.dcim.device_types.get(
             model=self.get_chassis(),
         )
