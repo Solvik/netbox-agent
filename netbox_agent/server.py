@@ -1,14 +1,8 @@
-import os
-import re
-import socket
+from pprint import pprint
 
 from netbox_agent.config import netbox_instance as nb
 import netbox_agent.dmidecode as dmidecode
-
-# Regex to match base interface name
-# Doesn't match vlan interfaces and other loopback etc
-INTERFACE_REGEX = re.compile('^(eth[0-9]+|ens[0-9]+|enp[0-9]+s[0-9]f[0-9])$')
-
+from netbox_agent.network import Network
 
 class ServerBase():
     def __init__(self, dmi=None):
@@ -19,7 +13,7 @@ class ServerBase():
         self.system = self.dmi.get_by_type('System')
         self.bios = self.dmi.get_by_type('BIOS')
 
-        self.network_cards = []
+        self.network = Network(service_tag=self.get_service_tag())
 
     def get_product_name(self):
         """
@@ -53,18 +47,6 @@ class ServerBase():
 
     def get_bios_release_date(self):
         raise NotImplementedError
-
-    def get_network_cards(self):
-        nics = []
-        for interface in os.listdir('/sys/class/net/'):
-            if re.match(INTERFACE_REGEX, interface):
-                nic = {
-                    'name': interface,
-                    'mac': open('/sys/class/net/{}/address'.format(interface), 'r').read().strip(),
-                    'ip': None,  # FIXME
-                }
-                nics.append(nic)
-        return nics
 
     def _netbox_create_blade_chassis(self):
         device_type = nb.dcim.device_types.get(
@@ -166,3 +148,6 @@ class ServerBase():
         print('Chassis:', self.get_chassis())
         print('Chassis service tag:', self.get_chassis_service_tag())
         print('Service tag:', self.get_service_tag())
+        print('NIC:',)
+        pprint(self.network.get_network_cards())
+        pass
