@@ -2,7 +2,29 @@
 
 
 This project aims to create hardware automatically into Netbox based on standard tools (dmidecode, lldpd, parsing /sys/, etc).
-The goal is to generate an existing infrastructure on Netbox and have the ability to update it regularly.
+
+The goal is to generate an existing infrastructure on Netbox and have the ability to update it regularly by executing the agent.
+
+# Features
+
+* Create servers, chassis and blade through standard tools (`dmidecode`)
+* Create physical network interfaces with IPs
+* Generic ability to guess datacenters through drivers (`cmd` and `file` and custom ones)
+
+# Configuration
+
+```
+netbox:
+ url: 'http://netbox.internal.company.com'
+ token: supersecrettoken
+
+datacenter_location:
+ # driver_file: /opt/netbox_driver_dc.py
+ driver: file:/etc/qualification
+ regex: "datacenter: (?P<datacenter>[A-Za-z0-9]+)"
+# driver: 'cmd:lldpctl'
+# regex = 'SysName: .*\.(?P<datacenter>[A-Za-z0-9]+)'```
+```
 
 # Hardware
 
@@ -40,14 +62,9 @@ Tested on:
 
 # TODO
 
-- [ ] HP(E) servers support
 - [ ] Handle blade moving
 - [ ] Handle network cards (MAC, IP addresses)
 - [ ] Handle switch <> NIC connections (using lldp)
 - [ ] Handle blade and server local changes (new NIC, new RAM, etc) using somekind of diff
-
-# Ideas
-
 - [ ] CPU, RAID Card(s), RAM, Disks in `Device`'s `Inventory`
 - [ ] `CustomFields` support with firmware versions for Device (BIOS), RAID Cards and disks
-- [ ] Handle custom business logic : datacenter guessing logic based on hostname/switch name
