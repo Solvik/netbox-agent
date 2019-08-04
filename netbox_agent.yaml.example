@@ -3,6 +3,7 @@ netbox:
  token: supersecrettoken
 
 datacenter_location:
+ # driver_file: /opt/netbox_driver_dc.py
  driver: file:/etc/qualification
  regex: "datacenter: (?P<datacenter>[A-Za-z0-9]+)"
 # driver: 'cmd:lldpctl'
