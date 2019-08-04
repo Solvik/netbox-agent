@@ -1,8 +1,10 @@
 from pprint import pprint
+import socket
 
 from netbox_agent.config import netbox_instance as nb
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.network import Network
+
 
 class ServerBase():
     def __init__(self, dmi=None):
@@ -13,7 +15,7 @@ class ServerBase():
         self.system = self.dmi.get_by_type('System')
         self.bios = self.dmi.get_by_type('BIOS')
 
-        self.network = Network(service_tag=self.get_service_tag())
+        self.network = Network(server=self)
 
     def get_product_name(self):
         """
@@ -110,6 +112,9 @@ class ServerBase():
         )
         return new_server
 
+    def get_netbox_server(self):
+        return nb.dcim.devices.get(serial=self.get_service_tag())
+
     def netbox_create(self):
         if self.is_blade():
             # let's find the blade
@@ -138,6 +143,8 @@ class ServerBase():
             server = nb.dcim.devices.get(serial=self.get_service_tag())
             if not server:
                 self._netbox_create_server()
+
+        self.network.update_netbox_network_cards()
 
     def print_debug(self):
         # FIXME: do something more generic by looping on every get_* methods
