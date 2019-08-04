@@ -40,5 +40,7 @@ class Datacenter():
 
     def get(self):
         if not hasattr(self.driver, 'get'):
-            raise Exception("Your driver {} doesn't have a get() function, please fix it".format(self.driver))
+            raise Exception(
+                "Your driver {} doesn't have a get() function, please fix it".format(self.driver)
+            )
         return getattr(self.driver, 'get')(self.driver_value, DATACENTER_LOCATION_REGEX)
