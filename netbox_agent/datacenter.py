@@ -10,7 +10,7 @@ class Datacenter():
     This class is used to guess the datacenter in order to push the information
     in Netbox for a `Device`
 
-    A driver takes a `value` and evaluates a regex with a `named group`: `datacenter`.
+    A driver takes a `value` and evaluates a regex with a `capture group`.
 
     There's embeded drivers such as `file` or `cmd` which read a file or return the
     output of a file.
@@ -20,7 +20,7 @@ class Datacenter():
     """
     def __init__(self, *args, **kwargs):
         self.driver = DATACENTER_LOCATION.split(':')[0]
-        self.driver_value = DATACENTER_LOCATION.split(':')[1]
+        self.driver_value = ':'.join(DATACENTER_LOCATION.split(':')[1:])
         self.driver_file = DATACENTER_LOCATION_DRIVER_FILE
 
         if self.driver_file:
