@@ -1,5 +1,6 @@
 import re
 import subprocess
+from shutil import which
 
 #  Originally from https://github.com/opencoff/useful-scripts/blob/master/linktest.py
 
@@ -64,6 +65,8 @@ class Ethtool():
             return {'form_factor': r.groups()[0]}
 
     def parse(self):
+        if which('ethtool') is None:
+            return None
         return {
             **self._parse_ethtool_output(),
             **self._parse_ethtool_module_output(),

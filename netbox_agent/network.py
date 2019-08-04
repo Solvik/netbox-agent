@@ -65,6 +65,8 @@ class Network():
         return self.nics
 
     def get_netbox_type_for_nic(self, nic):
+        if nic.get('ethtool') is None:
+            return IFACE_TYPE_OTHER
         if nic['ethtool']['speed'] == '10000Mb/s':
             if nic['ethtool']['port'] == 'FIBRE':
                 return IFACE_TYPE_10GE_SFP_PLUS
