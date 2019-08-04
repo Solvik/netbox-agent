@@ -11,5 +11,6 @@ netbox_instance = pynetbox.api(
 )
 
 
-DATACENTER_LOCATION = config['datacenter_location']['driver']
-DATACENTER_LOCATION_REGEX = config['datacenter_location']['regex']
+DATACENTER_LOCATION_DRIVER_FILE = config.get('datacenter_location').get('driver_file')
+DATACENTER_LOCATION = config.get('datacenter_location').get('driver')
+DATACENTER_LOCATION_REGEX = config.get('datacenter_location').get('regex')
