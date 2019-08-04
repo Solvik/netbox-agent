@@ -1,6 +1,6 @@
 import re
-import subprocess
 from shutil import which
+import subprocess
 
 #  Originally from https://github.com/opencoff/useful-scripts/blob/master/linktest.py
 
