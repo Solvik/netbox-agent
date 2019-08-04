@@ -11,6 +11,11 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 * Create physical network interfaces with IPs
 * Generic ability to guess datacenters through drivers (`cmd` and `file` and custom ones)
 
+# Known limitations
+
+* The project is only compatible with Linux.
+Since it uses `ethtool` and parses `/sys/` directory, it's not compatible with *BSD distributions.
+
 # Configuration
 
 ```
