@@ -7,6 +7,16 @@ from netbox_agent.config import DATACENTER_LOCATION, DATACENTER_LOCATION_DRIVER_
 
 class Datacenter():
     """
+    This class is used to guess the datacenter in order to push the information
+    in Netbox for a `Device`
+
+    A driver takes a `value` and evaluates a regex with a `named group`: `datacenter`.
+
+    There's embeded drivers such as `file` or `cmd` which read a file or return the
+    output of a file.
+
+    There's also a support for an external driver file outside of this project in case
+    the logic isn't supported here.
     """
     def __init__(self, *args, **kwargs):
         self.driver = DATACENTER_LOCATION.split(':')[0]
