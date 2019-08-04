@@ -13,7 +13,8 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 
 # Configuration
 
-```netbox:
+```
+netbox:
  url: 'http://netbox.internal.company.com'
  token: supersecrettoken
 
