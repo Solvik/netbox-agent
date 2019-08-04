@@ -24,11 +24,11 @@ class ServerBase():
 
     def get_datacenter(self):
         dc = Datacenter()
-        return dc.get().upper()
+        return dc.get()
 
     def get_netbox_datacenter(self):
         datacenter = nb.dcim.sites.get(
-            name=self.get_datacenter()
+            slug=self.get_datacenter()
         )
         return datacenter
 
