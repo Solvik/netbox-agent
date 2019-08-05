@@ -152,7 +152,7 @@ class ServerBase():
             if not server:
                 self._netbox_create_server()
 
-        self.network.update_netbox_network_cards()
+        self.network.create_netbox_network_cards()
 
     def netbox_update(self):
         """
@@ -192,7 +192,6 @@ class ServerBase():
             if move_device_bay or device_bay.name != 'Blade {}'.format(self.get_blade_slot()):
                 device_bay.installed_device = None
                 device_bay.save()
-
                 # Find the slot and update it with our blade
                 device_bays = nb.dcim.device_bays.filter(
                     device_id=chassis.id,
@@ -209,7 +208,7 @@ class ServerBase():
             update = True
             server.hostname = self.get_hostname()
         # check network cards
-        #self.network.update_netbox_network_cards()
+        self.network.update_netbox_network_cards()
         if update:
             server.save()
 
