@@ -2,7 +2,7 @@ from pprint import pprint
 import socket
 
 from netbox_agent.config import netbox_instance as nb
-from netbox_agent.datacenter import Datacenter
+from netbox_agent.location import Datacenter
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.network import Network
 
@@ -39,6 +39,9 @@ class ServerBase():
         Return the Service Tag from dmidecode info
         """
         return self.system[0]['Serial Number']
+
+    def get_hostname(self):
+        return '{}'.format(socket.gethostname())
 
     def is_blade(self):
         raise NotImplementedError
@@ -87,7 +90,7 @@ class ServerBase():
             model=self.get_product_name(),
         )
         new_blade = nb.dcim.devices.create(
-            name='{}'.format(socket.gethostname()),
+            name=self.get_hostname(),
             serial=self.get_service_tag(),
             device_role=device_role.id,
             device_type=device_type.id,
@@ -106,7 +109,7 @@ class ServerBase():
         if not device_type:
             raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
         new_server = nb.dcim.devices.create(
-            name='{}'.format(socket.gethostname()),
+            name=self.get_hostname(),
             serial=self.get_service_tag(),
             device_role=device_role.id,
             device_type=device_type.id,
@@ -127,6 +130,9 @@ class ServerBase():
             if not blade:
                 # check if the chassis exist before
                 # if it doesn't exist, create it
+                chassis = nb.dcim.devices.get(
+                    serial=self.get_chassis_service_tag()
+                    )
                 if not chassis:
                     chassis = self._netbox_create_blade_chassis(datacenter)
 
@@ -149,12 +155,63 @@ class ServerBase():
         self.network.update_netbox_network_cards()
 
     def netbox_update(self):
+        """
+        Netbox method to update info about our server/blade
+
+        Handle:
+        * new chasis for a blade
+        * new slot for a bblade
+        * hostname update
+        * new network infos
+        """
         server = nb.dcim.devices.get(serial=self.get_service_tag())
+        if not server:
+            raise Exception("The server (Serial: {}) isn't yet registered in Netbox, register"
+                            "it before updating it".format(self.get_service_tag()))
+        update = False
         if self.is_blade():
-            # check if the slot/chassis is the same
+            # get current chassis device bay
+            device_bay = nb.dcim.device_bays.get(
+                server.parent_device.device_bay.id
+                )
+            netbox_chassis_serial = server.parent_device.device_bay.device.serial
+            chassis = server.parent_device.device_bay.device
+            move_device_bay = False
+
+            # check chassis serial with dmidecode
+            if netbox_chassis_serial != self.get_chassis_service_tag():
+                move_device_bay = True
+                # try to find the new netbox chassis
+                chassis = nb.dcim.devices.get(
+                    serial=self.get_chassis_service_tag()
+                )
+                # create the new chassis if it doesn't exist
+                if not chassis:
+                    chassis = self._netbox_create_blade_chassis(datacenter)
+
+            if move_device_bay or device_bay.name != 'Blade {}'.format(self.get_blade_slot()):
+                device_bay.installed_device = None
+                device_bay.save()
+
+                # Find the slot and update it with our blade
+                device_bays = nb.dcim.device_bays.filter(
+                    device_id=chassis.id,
+                    name='Blade {}'.format(self.get_blade_slot()),
+                )
+                if len(device_bays) > 0:
+                    device_bay = device_bays[0]
+                    device_bay.installed_device = server
+                    device_bay.save()
+
         # for every other specs
         # check hostname
+        if server.name != self.get_hostname():
+            update = True
+            server.hostname = self.get_hostname()
         # check network cards
+        #self.network.update_netbox_network_cards()
+        if update:
+            server.save()
 
     def print_debug(self):
         # FIXME: do something more generic by looping on every get_* methods
