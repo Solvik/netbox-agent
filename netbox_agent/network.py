@@ -154,8 +154,8 @@ class Network():
                             status=1,
                         )
                     else:
-                        if netbox_ip.device != device:
-                            netbox_ip.device = device
+                        if netbox_ip.interface != interface:
+                            netbox_ip.interface = interface
                             netbox_ip.save()
             if nic_update:
                 interface.save()
