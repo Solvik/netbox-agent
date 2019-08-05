@@ -1,7 +1,7 @@
 # Netbox agent
 
 
-This project aims to create hardware automatically into Netbox based on standard tools (dmidecode, lldpd, parsing /sys/, etc).
+This project aims to create hardware automatically into [Netbox](https://github.com/netbox-community/netbox) based on standard tools (dmidecode, lldpd, parsing /sys/, etc).
 
 The goal is to generate an existing infrastructure on Netbox and have the ability to update it regularly by executing the agent.
 
