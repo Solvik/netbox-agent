@@ -10,3 +10,11 @@ datacenter_location:
 #
 # driver: "file:/tmp/datacenter"
 # regex: "(.*)"
+
+rack_location:
+# driver: 'cmd:lldpctl'
+# match SysName: sw-dist-a1.dc42
+# regex: 'SysName:[ ]+[A-Za-z]+-[A-Za-z]+-([A-Za-z0-9]+)'
+#
+# driver: "file:/tmp/datacenter"
+# regex: "(.*)"
