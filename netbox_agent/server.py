@@ -148,6 +148,14 @@ class ServerBase():
 
         self.network.update_netbox_network_cards()
 
+    def netbox_update(self):
+        server = nb.dcim.devices.get(serial=self.get_service_tag())
+        if self.is_blade():
+            # check if the slot/chassis is the same
+        # for every other specs
+        # check hostname
+        # check network cards
+
     def print_debug(self):
         # FIXME: do something more generic by looping on every get_* methods
         print('Datacenter:', self.get_datacenter())
