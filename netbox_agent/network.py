@@ -1,3 +1,4 @@
+from itertools import chain
 import os
 import re
 
@@ -86,7 +87,7 @@ class Network():
             type=self.get_netbox_type_for_nic(nic),
         )
 
-    def update_netbox_network_cards(self):
+    def create_netbox_network_cards(self):
         device = self.server.get_netbox_server()
         for nic in self.nics:
             interface = nb.dcim.interfaces.get(
@@ -112,9 +113,49 @@ class Network():
                                 interface=new_interface.id,
                                 status=1,
                             )
-            # or we check if it needs update
-            else:
-                # FIXME: implement update
-                # update name or ip
-                # see https://github.com/Solvik/netbox_agent/issues/9
-                pass
+
+    def update_netbox_network_cards(self):
+        device = self.server.get_netbox_server()
+
+        # delete IP on netbox that are not known on this server
+        netbox_ips = nb.ipam.ip_addresses.filter(
+            device=device
+        )
+        all_local_ips = list(chain.from_iterable([
+            x['ip'] for x in self.nics if x['ip'] is not None
+        ]))
+        for netbox_ip in netbox_ips:
+            if netbox_ip.address not in all_local_ips:
+                netbox_ip.interface = None
+                netbox_ip.save()
+
+        # update each nic
+        for nic in self.nics:
+            interface = nb.dcim.interfaces.get(
+                mac_address=nic['mac'],
+                )
+
+            nic_update = False
+            if nic['name'] != interface.name:
+                nic_update = True
+                interface.name = nic['name']
+
+            if nic['ip']:
+                # sync local IPs
+                for ip in nic['ip']:
+                    netbox_ip = nb.ipam.ip_addresses.get(
+                        address=ip,
+                    )
+                    if not netbox_ip:
+                        # create netbbox_ip on device
+                        netbox_ip = nb.ipam.ip_addresses.create(
+                            address=ip,
+                            interface=interface.id,
+                            status=1,
+                        )
+                    else:
+                        if netbox_ip.device != device:
+                            netbox_ip.device = device
+                            netbox_ip.save()
+            if nic_update:
+                interface.save()

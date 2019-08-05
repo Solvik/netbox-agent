@@ -18,14 +18,18 @@ def run(args):
         server.print_debug()
     if args.register:
         server.netbox_create()
+    if args.update:
+        server.netbox_update()
     return True
 
 
 def main():
     parser = argparse.ArgumentParser(description='Netbox agent command line')
-    parser.add_argument('--register', action='store_true',
+    parser.add_argument('-r', '--register', action='store_true',
                         help='Register server in Netbox')
-    parser.add_argument('--debug', action='store_true',
+    parser.add_argument('-u', '--update', action='store_true',
+                        help='Update server in Netbox')
+    parser.add_argument('-d', '--debug', action='store_true',
                         help='Print debug informations')
 
     args = parser.parse_args()
