@@ -1,6 +1,6 @@
+from itertools import chain
 import os
 import re
-from itertools import chain
 
 from netaddr import IPAddress
 import netifaces
@@ -121,7 +121,9 @@ class Network():
         netbox_ips = nb.ipam.ip_addresses.filter(
             device=device
         )
-        all_local_ips = list(chain.from_iterable([x['ip'] for x in self.nics if x['ip'] != None]))
+        all_local_ips = list(chain.from_iterable([
+            x['ip'] for x in self.nics if x['ip'] is not None
+        ]))
         for netbox_ip in netbox_ips:
             if netbox_ip.address not in all_local_ips:
                 netbox_ip.interface = None
