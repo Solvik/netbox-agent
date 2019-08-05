@@ -2,8 +2,9 @@ from pprint import pprint
 import socket
 
 from netbox_agent.config import netbox_instance as nb
-from netbox_agent.location import Datacenter
+
 import netbox_agent.dmidecode as dmidecode
+from netbox_agent.location import Datacenter, Rack
 from netbox_agent.network import Network
 
 
@@ -27,6 +28,17 @@ class ServerBase():
             slug=self.get_datacenter()
         )
         return datacenter
+
+    def get_rack(self):
+        rack = Rack()
+        return rack.get()
+
+    def get_netbox_rack(self):
+        rack = nb.dcim.racks.get(
+            name=self.get_rack(),
+            datacenter=self.get_netbox_datacenter(),
+        )
+        return rack
 
     def get_product_name(self):
         """
@@ -217,6 +229,8 @@ class ServerBase():
         # FIXME: do something more generic by looping on every get_* methods
         print('Datacenter:', self.get_datacenter())
         print('Netbox Datacenter:', self.get_netbox_datacenter())
+        print('Rack:', self.get_rack())
+        print('Netbox Rack:', self.get_netbox_rack())
         print('Is blade:', self.is_blade())
         print('Product Name:', self.get_product_name())
         print('Chassis:', self.get_chassis())
