@@ -9,7 +9,9 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 
 * Create servers, chassis and blade through standard tools (`dmidecode`)
 * Create physical network interfaces with IPs
-* Generic ability to guess datacenters through drivers (`cmd` and `file` and custom ones)
+* Generic ability to guess datacenters and rack location through drivers (`cmd` and `file` and custom ones)
+* Update existing `Device` and `Interfaces`
+* Handle blade moving (new slot, new chassis)
 
 # Known limitations
 
@@ -67,9 +69,6 @@ Tested on:
 
 # TODO
 
-- [ ] Handle blade moving
-- [ ] Handle network cards (MAC, IP addresses)
 - [ ] Handle switch <> NIC connections (using lldp)
-- [ ] Handle blade and server local changes (new NIC, new RAM, etc) using somekind of diff
 - [ ] CPU, RAID Card(s), RAM, Disks in `Device`'s `Inventory`
 - [ ] `CustomFields` support with firmware versions for Device (BIOS), RAID Cards and disks
