@@ -167,7 +167,7 @@ class ServerBase():
         server = nb.dcim.devices.get(serial=self.get_service_tag())
         if not server:
             raise Exception("The server (Serial: {}) isn't yet registered in Netbox, register"
-                            "it before updating it".format(self.get_service_tag()))
+                            'it before updating it'.format(self.get_service_tag()))
         update = False
         if self.is_blade():
             # get current chassis device bay
@@ -187,6 +187,7 @@ class ServerBase():
                 )
                 # create the new chassis if it doesn't exist
                 if not chassis:
+                    datacenter = self.get_netbox_datacenter()
                     chassis = self._netbox_create_blade_chassis(datacenter)
 
             if move_device_bay or device_bay.name != 'Blade {}'.format(self.get_blade_slot()):
