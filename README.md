@@ -17,6 +17,7 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 
 * The project is only compatible with Linux.
 Since it uses `ethtool` and parses `/sys/` directory, it's not compatible with *BSD distributions.
+* Netbox `>=2.6.0,<=2.6.2` has a caching problem ; if the cache lifetime is too high, the script can get stale data after modification.
 
 # Configuration
 
