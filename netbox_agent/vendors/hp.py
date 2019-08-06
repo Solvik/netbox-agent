@@ -6,6 +6,7 @@ class HPHost(ServerBase):
         super(HPHost, self).__init__(*args, **kwargs)
         if self.is_blade():
             self.hp_rack_locator = self._find_rack_locator()
+        self.manufacturer = 'HP'
 
     def is_blade(self):
         return self.get_product_name().startswith('ProLiant BL')

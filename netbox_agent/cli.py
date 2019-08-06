@@ -18,7 +18,7 @@ MANUFACTURERS = {
 
 def run(args):
     manufacturer = dmidecode.get_by_type('Chassis')[0].get('Manufacturer')
-    server = MANUFACTURERS[manufacturer](dmidecode)
+    server = MANUFACTURERS[manufacturer](dmi=dmidecode)
     if args.debug:
         server.print_debug()
     if args.register:

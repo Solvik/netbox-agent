@@ -2,6 +2,10 @@ from netbox_agent.server import ServerBase
 
 
 class DellHost(ServerBase):
+    def __init__(self, *args, **kwargs):
+        super(DellHost, self).__init__(*args, **kwargs)
+        self.manufacturer = 'Dell'
+        
     def is_blade(self):
         return self.get_product_name().startswith('PowerEdge M')
 
