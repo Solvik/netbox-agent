@@ -7,6 +7,7 @@ import netifaces
 
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.ethtool import Ethtool
+from netbox_agent.logging import logger
 
 IFACE_TYPE_100ME_FIXED = 800
 IFACE_TYPE_1GE_FIXED = 1000
@@ -80,14 +81,18 @@ class Network():
 
     def create_netbox_nic(self, device, nic):
         # TODO: add Optic Vendor, PN and Serial
+        type = self.get_netbox_type_for_nic(nic)
+        logger.info('Creating NIC {name} ({mac}) on {device}'.format(
+            name=nic['name'], mac=nic['mac'], device=device.name))
         return nb.dcim.interfaces.create(
             device=device.id,
             name=nic['name'],
             mac_address=nic['mac'],
-            type=self.get_netbox_type_for_nic(nic),
+            type=type,
         )
 
     def create_netbox_network_cards(self):
+        logger.info('Creating NIC..')
         device = self.server.get_netbox_server()
         for nic in self.nics:
             interface = nb.dcim.interfaces.get(
@@ -105,16 +110,22 @@ class Network():
                             address=ip,
                         )
                         if netbox_ip:
+                            logger.info('Assigning existing IP {ip} to {interface}'.format(
+                                ip=ip, interface=new_interface))
                             netbox_ip.interface = new_interface
                             netbox_ip.save()
                         else:
+                            logger.info('Create new IP {ip} on {interface}'.format(
+                                ip=ip, interface=new_interface))
                             netbox_ip = nb.ipam.ip_addresses.create(
                                 address=ip,
                                 interface=new_interface.id,
                                 status=1,
                             )
+        logger.info('Finished creating NIC!')
 
     def update_netbox_network_cards(self):
+        logger.debug('Updating NIC..')
         device = self.server.get_netbox_server()
 
         # delete IP on netbox that are not known on this server
@@ -126,6 +137,8 @@ class Network():
         ]))
         for netbox_ip in netbox_ips:
             if netbox_ip.address not in all_local_ips:
+                logger.info('Unassigning IP {ip} from {interface}'.format(
+                    ip=netbox_ip.address, interface=netbox_ip.interface))
                 netbox_ip.interface = None
                 netbox_ip.save()
 
@@ -138,6 +151,8 @@ class Network():
             nic_update = False
             if nic['name'] != interface.name:
                 nic_update = True
+                logger.info('Updating interface {interface} name to: {name}'.format(
+                    interface=interface, name=nic['name']))
                 interface.name = nic['name']
 
             if nic['ip']:
@@ -153,9 +168,19 @@ class Network():
                             interface=interface.id,
                             status=1,
                         )
+                        logger.info('Created new IP {ip} on {interface}'.format(
+                            ip=ip, interface=interface))
                     else:
-                        if netbox_ip.interface != interface:
+                        if netbox_ip.interface.id != interface.id:
+                            logger.info(
+                                'Dected interface change: old interface is {old_interface} '
+                                '(id: {old_id}), new interface is {new_interface} (id: {new_id})'
+                                .format(
+                                    old_interface=netbox_ip.interface, new_interface=interface,
+                                    old_id=netbox_ip.id, new_id=interface.id
+                                ))
                             netbox_ip.interface = interface
                             netbox_ip.save()
             if nic_update:
                 interface.save()
+        logger.debug('Finished updating NIC!')
