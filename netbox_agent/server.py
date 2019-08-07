@@ -1,10 +1,10 @@
+import logging
 from pprint import pprint
 import socket
 
 from netbox_agent.config import netbox_instance as nb
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.location import Datacenter, Rack
-from netbox_agent.logging import logger
 from netbox_agent.network import Network
 
 
@@ -82,13 +82,13 @@ class ServerBase():
         )
         if not device_type:
             error_msg = 'Chassis "{}" doesn\'t exist'.format(self.get_chassis())
-            logger.error(error_msg)
+            logging.error(error_msg)
             raise Exception(error_msg)
         device_role = nb.dcim.device_roles.get(
             name='Server Chassis',
         )
         serial = self.get_chassis_service_tag()
-        logger.info('Creating chassis blade (serial: {serial})'.format(
+        logging.info('Creating chassis blade (serial: {serial})'.format(
             serial=serial))
         new_chassis = nb.dcim.devices.create(
             name=''.format(),
@@ -108,7 +108,7 @@ class ServerBase():
         )
         serial = self.get_service_tag()
         hostname = self.get_hostname()
-        logger.info(
+        logging.info(
             'Creating blade (serial: {serial}) {hostname} on chassis {chassis_serial}'.format(
                 serial=serial, hostname=hostname, chassis_serial=chassis.serial
             ))
@@ -133,7 +133,7 @@ class ServerBase():
             raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
         serial = self.get_service_tag()
         hostname = self.get_hostname()
-        logger.info('Creating server (serial: {serial}) {hostname}'.format(
+        logging.info('Creating server (serial: {serial}) {hostname}'.format(
             serial=serial, hostname=hostname))
         new_server = nb.dcim.devices.create(
             name=hostname,
@@ -148,7 +148,7 @@ class ServerBase():
         return nb.dcim.devices.get(serial=self.get_service_tag())
 
     def netbox_create(self):
-        logger.debug('Creating Server..')
+        logging.debug('Creating Server..')
         datacenter = self.get_netbox_datacenter()
         if self.is_blade():
             # let's find the blade
@@ -174,7 +174,7 @@ class ServerBase():
                 name='Blade {}'.format(slot),
                 )
             if len(device_bays) > 0:
-                logger.info('Updating blade ({serial}) slot on: Blade {slot}'.format(
+                logging.info('Updating blade ({serial}) slot on: Blade {slot}'.format(
                     serial=serial, slot=slot))
                 device_bay = device_bays[0]
                 device_bay.installed_device = blade
@@ -185,7 +185,7 @@ class ServerBase():
                 self._netbox_create_server()
 
         self.network.create_netbox_network_cards()
-        logger.debug('Server created!')
+        logging.debug('Server created!')
 
     def netbox_update(self):
         """
@@ -197,7 +197,7 @@ class ServerBase():
         * hostname update
         * new network infos
         """
-        logger.debug('Updating Server...')
+        logging.debug('Updating Server...')
         server = nb.dcim.devices.get(serial=self.get_service_tag())
         if not server:
             raise Exception("The server (Serial: {}) isn't yet registered in Netbox, register"
@@ -225,7 +225,7 @@ class ServerBase():
                     chassis = self._netbox_create_blade_chassis(datacenter)
 
             if move_device_bay or device_bay.name != 'Blade {}'.format(self.get_blade_slot()):
-                logger.info('Device ({serial}) seems to have moved, reseting old slot..'.format(
+                logging.info('Device ({serial}) seems to have moved, reseting old slot..'.format(
                     serial=server.serial))
                 device_bay.installed_device = None
                 device_bay.save()
@@ -237,7 +237,7 @@ class ServerBase():
                     name='Blade {}'.format(slot),
                 )
                 if len(device_bays) > 0:
-                    logger.info(
+                    logging.info(
                         'Setting device ({serial}) new slot on Blade {slot} '
                         '(Chassis {chassis_serial})..'.format(
                             serial=server.serial, slot=slot, chassis_serial=chassis.serial
@@ -255,7 +255,7 @@ class ServerBase():
         self.network.update_netbox_network_cards()
         if update:
             server.save()
-        logger.debug('Finished updating Server!')
+        logging.debug('Finished updating Server!')
 
     def print_debug(self):
         # FIXME: do something more generic by looping on every get_* methods

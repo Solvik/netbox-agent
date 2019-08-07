@@ -10,6 +10,8 @@ netbox_instance = pynetbox.api(
     token=config['netbox']['token']
 )
 
+LOG_LEVEL = config.get('log_level', 'debug')
+
 DATACENTER_LOCATION_DRIVER_FILE = None
 DATACENTER_LOCATION = None
 DATACENTER_LOCATION_REGEX = None
