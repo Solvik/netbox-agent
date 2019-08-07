@@ -61,7 +61,7 @@ class Ethtool():
         if status != 0:
             return {}
         r = re.search(r'Identifier.*\((\w+)\)', output)
-        if r and r.groups() > 0:
+        if r and len(r.groups()) > 0:
             return {'form_factor': r.groups()[0]}
 
     def parse(self):
