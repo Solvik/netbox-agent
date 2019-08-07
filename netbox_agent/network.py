@@ -173,7 +173,7 @@ class Network():
                     else:
                         if netbox_ip.interface.id != interface.id:
                             logger.info(
-                                'Dected interface change: old interface is {old_interface} '
+                                'Detected interface change: old interface is {old_interface} '
                                 '(id: {old_id}), new interface is {new_interface} (id: {new_id})'
                                 .format(
                                     old_interface=netbox_ip.interface, new_interface=interface,
