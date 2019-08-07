@@ -47,6 +47,10 @@ class Network():
 
     def scan(self):
         for interface in os.listdir('/sys/class/net/'):
+            # ignore if it's not a link (ie: bonding_masters etc)
+            if not os.path.islink('/sys/class/net/{}'.format(interface)):
+                continue
+
             if NETWORK_IGNORE_INTERFACES and \
                re.match(NETWORK_IGNORE_INTERFACES, interface):
                 logging.debug('Ignore interface {interface}'.format(interface=interface))
@@ -79,6 +83,22 @@ class Network():
                     'bonding_slaves': bonding_slaves,
                 }
                 self.nics.append(nic)
+
+    def _set_bonding_interfaces(self):
+        logging.debug('Setting bonding interfaces..')
+        for nic in [x for x in self.nics if x['bonding']]:
+            bond_int = self.get_netbox_network_card(nic)
+            logging.debug('Setting slave interface for {name}'.format(
+                name=bond_int.name
+            ))
+            for slave in nic['bonding_slaves']:
+                slave_nic = next(item for item in self.nics if item['name'] == slave)
+                slave_int  = self.get_netbox_network_card(slave_nic)
+                logging.debug('Settting interface {name} as slave of {master}'.format(
+                    name=slave_int.name, master=bond_int.name
+                ))
+                slave_int.lag = bond_int
+                slave_int.save()
 
     def get_network_cards(self):
         return self.nics
@@ -158,6 +178,7 @@ class Network():
                                 interface=new_interface.id,
                                 status=1,
                             )
+        self._set_bonding_interfaces()
         logging.debug('Finished creating NIC!')
 
     def update_netbox_network_cards(self):
@@ -231,4 +252,6 @@ class Network():
                             netbox_ip.save()
             if nic_update:
                 interface.save()
+
+        self._set_bonding_interfaces()
         logging.debug('Finished updating NIC!')
