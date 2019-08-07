@@ -8,16 +8,18 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 # Features
 
 * Create servers, chassis and blade through standard tools (`dmidecode`)
-* Create physical network interfaces with IPs
+* Create physical, bonding and vlan network interfaces with IPs
 * Generic ability to guess datacenters and rack location through drivers (`cmd` and `file` and custom ones)
 * Update existing `Device` and `Interfaces`
 * Handle blade moving (new slot, new chassis)
+
 
 # Known limitations
 
 * The project is only compatible with Linux.
 Since it uses `ethtool` and parses `/sys/` directory, it's not compatible with *BSD distributions.
 * Netbox `>=2.6.0,<=2.6.2` has a caching problem ; if the cache lifetime is too high, the script can get stale data after modification.
+We advise to set `CACHE_TIME` to `0`.
 
 # Configuration
 
