@@ -7,6 +7,7 @@ from netaddr import IPAddress
 import netifaces
 
 from netbox_agent.config import netbox_instance as nb
+from netbox_agent.config import NETWORK_IGNORE_INTERFACES, NETWORK_IGNORE_IPS
 from netbox_agent.ethtool import Ethtool
 
 IFACE_TYPE_100ME_FIXED = 800
@@ -33,10 +34,7 @@ IFACE_TYPE_200GE_CFP2 = 1650
 IFACE_TYPE_200GE_QSFP56 = 1700
 IFACE_TYPE_400GE_QSFP_DD = 1750
 IFACE_TYPE_OTHER = 32767
-
-# Regex to match base interface name
-# Doesn't match vlan interfaces and other loopback etc
-INTERFACE_REGEX = re.compile('^(eth[0-9]+|ens[0-9]+|enp[0-9]+s[0-9]f[0-9])$')
+IFACE_TYPE_LAG = 200
 
 
 class Network():
@@ -44,29 +42,69 @@ class Network():
         self.nics = []
 
         self.server = server
+        self.device = self.server.get_netbox_server()
         self.scan()
 
     def scan(self):
         for interface in os.listdir('/sys/class/net/'):
-            if re.match(INTERFACE_REGEX, interface):
+            if NETWORK_IGNORE_INTERFACES and \
+               re.match(NETWORK_IGNORE_INTERFACES, interface):
+                logging.debug('Ignore interface {interface}'.format(interface=interface))
+                continue
+            else:
                 ip_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET)
+                mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
+                vlan = None
+                if len(interface.split('.')) > 1:
+                    vlan = int(interface.split('.')[1])
+                bonding = False
+                bonding_slaves = []
+                if os.path.isdir('/sys/class/net/{}/bonding'.format(interface)):
+                    bonding = True
+                    bonding_slaves = open(
+                        '/sys/class/net/{}/bonding/slaves'.format(interface)
+                    ).read().split()
                 nic = {
                     'name': interface,
-                    'mac': open('/sys/class/net/{}/address'.format(interface), 'r').read().strip(),
+                    'mac': mac if mac != '00:00:00:00:00:00' else None,
                     'ip': [
                         '{}/{}'.format(
                             x['addr'],
                             IPAddress(x['netmask']).netmask_bits()
-                        ) for x in ip_addr
+                        ) for x in ip_addr if not re.match(NETWORK_IGNORE_IPS, x['addr'])
                         ] if ip_addr else None,  # FIXME: handle IPv6 addresses
-                    'ethtool': Ethtool(interface).parse()
+                    'ethtool': Ethtool(interface).parse(),
+                    'vlan': vlan,
+                    'bonding': bonding,
+                    'bonding_slaves': bonding_slaves,
                 }
                 self.nics.append(nic)
 
     def get_network_cards(self):
         return self.nics
 
+    def get_netbox_network_card(self, nic):
+        if nic['mac'] is None:
+            interface = nb.dcim.interfaces.get(
+                device_id=self.device.id,
+                name=nic['name'],
+            )
+        else:
+            interface = nb.dcim.interfaces.get(
+                device_id=self.device.id,
+                mac_address=nic['mac'],
+                name=nic['name'],
+            )
+        return interface
+
+    def get_netbox_network_cards(self):
+        return nb.dcim.interfaces.filter(
+            device_id=self.device.id,
+        )
+
     def get_netbox_type_for_nic(self, nic):
+        if nic['bonding']:
+            return IFACE_TYPE_LAG
         if nic.get('ethtool') is None:
             return IFACE_TYPE_OTHER
         if nic['ethtool']['speed'] == '10000Mb/s':
@@ -79,28 +117,26 @@ class Network():
             return IFACE_TYPE_1GE_FIXED
         return IFACE_TYPE_OTHER
 
-    def create_netbox_nic(self, device, nic):
+    def create_netbox_nic(self, nic):
         # TODO: add Optic Vendor, PN and Serial
         type = self.get_netbox_type_for_nic(nic)
         logging.info('Creating NIC {name} ({mac}) on {device}'.format(
-            name=nic['name'], mac=nic['mac'], device=device.name))
+            name=nic['name'], mac=nic['mac'], device=self.device.name))
         return nb.dcim.interfaces.create(
-            device=device.id,
+            device=self.device.id,
             name=nic['name'],
             mac_address=nic['mac'],
             type=type,
+            mode=200 if nic['vlan'] else None,
         )
 
     def create_netbox_network_cards(self):
         logging.debug('Creating NIC...')
-        device = self.server.get_netbox_server()
         for nic in self.nics:
-            interface = nb.dcim.interfaces.get(
-                mac_address=nic['mac'],
-                )
+            interface = self.get_netbox_network_card(nic)
             # if network doesn't exist we create it
             if not interface:
-                new_interface = self.create_netbox_nic(device, nic)
+                new_interface = self.create_netbox_nic(nic)
                 if nic['ip']:
                     # for each ip, we try to find it
                     # assign the device's interface to it
@@ -126,11 +162,20 @@ class Network():
 
     def update_netbox_network_cards(self):
         logging.debug('Updating NIC...')
-        device = self.server.get_netbox_server()
+
+        # delete unknown interface
+        nb_nics = self.get_netbox_network_cards()
+        local_nics = [x['name'] for x in self.nics]
+        for nic in nb_nics:
+            if nic.name not in local_nics:
+                logging.info('Deleting netbox interface {name} because not present locally'.format(
+                    name=nic.name
+                ))
+                nic.delete()
 
         # delete IP on netbox that are not known on this server
         netbox_ips = nb.ipam.ip_addresses.filter(
-            device=device
+            device_id=self.device.id
         )
         all_local_ips = list(chain.from_iterable([
             x['ip'] for x in self.nics if x['ip'] is not None
@@ -144,14 +189,12 @@ class Network():
 
         # update each nic
         for nic in self.nics:
-            interface = nb.dcim.interfaces.get(
-                mac_address=nic['mac'],
-                )
+            interface = self.get_netbox_network_card(nic)
             if not interface:
-                logging.info('Interface {} not found, creating..'.format(
+                logging.info('Interface {mac_address} not found, creating..'.format(
                     mac_address=nic['mac'])
                 )
-                interface = self.create_netbox_nic(device, nic)
+                interface = self.create_netbox_nic(nic)
 
             nic_update = False
             if nic['name'] != interface.name:
@@ -167,7 +210,7 @@ class Network():
                         address=ip,
                     )
                     if not netbox_ip:
-                        # create netbbox_ip on device
+                        # create netbox_ip on device
                         netbox_ip = nb.ipam.ip_addresses.create(
                             address=ip,
                             interface=interface.id,

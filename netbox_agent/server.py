@@ -17,7 +17,7 @@ class ServerBase():
         self.system = self.dmi.get_by_type('System')
         self.bios = self.dmi.get_by_type('BIOS')
 
-        self.network = Network(server=self)
+        self.network = None
 
     def get_datacenter(self):
         dc = Datacenter()
@@ -198,6 +198,7 @@ class ServerBase():
             if not server:
                 self._netbox_create_server(datacenter)
 
+        self.network = Network(server=self)
         self.network.create_netbox_network_cards()
         logging.debug('Server created!')
 
@@ -264,6 +265,7 @@ class ServerBase():
             update = True
             server.hostname = self.get_hostname()
         # check network cards
+        self.network = Network(server=self)
         self.network.update_netbox_network_cards()
         if update:
             server.save()
