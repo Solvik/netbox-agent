@@ -26,12 +26,26 @@ netbox:
  url: 'http://netbox.internal.company.com'
  token: supersecrettoken
 
+network:
+  ignore_interfaces: "(dummy.*|docker.*)"
+  ignore_ips: (127\.0\.0\..*)
+
 datacenter_location:
- # driver_file: /opt/netbox_driver_dc.py
- driver: file:/etc/qualification
- regex: "datacenter: (?P<datacenter>[A-Za-z0-9]+)"
+ driver: "cmd:cat /etc/qualification | tr [a-z] [A-Z]"
+ regex: "DATACENTER: (?P<datacenter>[A-Za-z0-9]+)"
 # driver: 'cmd:lldpctl'
-# regex = 'SysName: .*\.(?P<datacenter>[A-Za-z0-9]+)'```
+# regex: 'SysName: .*\.([A-Za-z0-9]+)'
+#
+# driver: "file:/tmp/datacenter"
+# regex: "(.*)"
+
+rack_location:
+# driver: 'cmd:lldpctl'
+# match SysName: sw-dist-a1.dc42
+# regex: 'SysName:[ ]+[A-Za-z]+-[A-Za-z]+-([A-Za-z0-9]+)'
+#
+# driver: "file:/tmp/datacenter"
+# regex: "(.*)"
 ```
 
 # Hardware
