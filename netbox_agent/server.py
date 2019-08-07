@@ -182,7 +182,7 @@ class ServerBase():
         else:
             server = nb.dcim.devices.get(serial=self.get_service_tag())
             if not server:
-                self._netbox_create_server()
+                self._netbox_create_server(datacenter)
 
         self.network.create_netbox_network_cards()
         logging.debug('Server created!')
