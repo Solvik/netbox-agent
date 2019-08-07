@@ -93,7 +93,7 @@ class Network():
             ))
             for slave in nic['bonding_slaves']:
                 slave_nic = next(item for item in self.nics if item['name'] == slave)
-                slave_int  = self.get_netbox_network_card(slave_nic)
+                slave_int = self.get_netbox_network_card(slave_nic)
                 logging.debug('Settting interface {name} as slave of {master}'.format(
                     name=slave_int.name, master=bond_int.name
                 ))
@@ -223,6 +223,23 @@ class Network():
                 logging.info('Updating interface {interface} name to: {name}'.format(
                     interface=interface, name=nic['name']))
                 interface.name = nic['name']
+
+            if nic['vlan'] is None and interface.mode is not None:
+                logging.info('Interface is not tagged, reseting mode')
+                nic_update = True
+                interface.mode = None
+
+            type = self.get_netbox_type_for_nic(nic)
+            if type != interface.type.value:
+                logging.info('Interface type is wrong, resetting')
+                nic_update = True
+                interface.type = type
+
+            if interface.lag is not None:
+                if nic['name'] not in self.nics[interface.lag.name]['bonding_slaves']:
+                    logging.info('Interface has no LAG, resetting')
+                    nic_update = True
+                    interface.lag = None
 
             if nic['ip']:
                 # sync local IPs
