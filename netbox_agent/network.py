@@ -147,6 +147,11 @@ class Network():
             interface = nb.dcim.interfaces.get(
                 mac_address=nic['mac'],
                 )
+            if not interface:
+                logging.info('Interface {} not found, creating..'.format(
+                    mac_address=nic['mac'])
+                )
+                interface = self.create_netbox_nic(device, nic)
 
             nic_update = False
             if nic['name'] != interface.name:
