@@ -24,13 +24,20 @@ class HPHost(ServerBase):
 
     def get_blade_slot(self):
         if self.is_blade():
-            return int(self.hp_rack_locator['Server Bay'].strip())
+            return 'Bay {}'.format(
+                int(self.hp_rack_locator['Server Bay'].strip())
+                )
         return None
 
     def get_chassis(self):
         if self.is_blade():
             return self.hp_rack_locator['Enclosure Model'].strip()
         return self.get_product_name()
+
+    def get_chassis_name(self):
+        if not self.is_blade():
+            return None
+        return self.hp_rack_locator['Enclosure Name'].strip()
 
     def get_chassis_service_tag(self):
         if self.is_blade():
