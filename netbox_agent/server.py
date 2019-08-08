@@ -192,7 +192,7 @@ class ServerBase():
                 blade = self._netbox_create_blade(chassis, datacenter)
 
             # Set slot for blade
-            self._netbox_set_blade_slot(chassis, server)
+            self._netbox_set_blade_slot(chassis, blade)
         else:
             server = nb.dcim.devices.get(serial=self.get_service_tag())
             if not server:
@@ -207,6 +207,7 @@ class ServerBase():
             server.parent_device.device_bay.id
         )
         netbox_chassis_serial = server.parent_device.device_bay.device.serial
+        move_device_bay = False
 
         # check chassis serial with dmidecode
         if netbox_chassis_serial != self.get_chassis_service_tag():

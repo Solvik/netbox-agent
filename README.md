@@ -42,10 +42,7 @@ Tested on:
 
 ### Blades
 
-* PowerEdge M1000e
-
-your DeviceType should have slots named `Slot 01` and so on
-
+* PowerEdge M1000e (your `DeviceType` should have slots named `Slot 01` and so on)
 * PowerEdge M640
 * PowerEdge M630
 * PowerEdge M620
@@ -59,10 +56,7 @@ your DeviceType should have slots named `Slot 01` and so on
 
 ### Blades
 
-* HP BladeSystem c7000 Enclosure G2 / G3
-
-your DeviceType should have slots named `Bay 1` and so on
-
+* HP BladeSystem c7000 Enclosure G2 / G3 (your `DeviceType` should have slots named `Bay 1` and so on)
 * HP ProLiant BL460c Gen8
 * HP ProLiant BL460c Gen9
 
