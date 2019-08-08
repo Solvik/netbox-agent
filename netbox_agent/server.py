@@ -64,6 +64,9 @@ class ServerBase():
     def get_chassis(self):
         raise NotImplementedError
 
+    def get_chassis_name(self):
+        raise NotImplementedError
+
     def get_chassis_service_tag(self):
         raise NotImplementedError
 
@@ -91,7 +94,7 @@ class ServerBase():
         logging.info('Creating chassis blade (serial: {serial})'.format(
             serial=serial))
         new_chassis = nb.dcim.devices.create(
-            name=''.format(),
+            name=self.get_chassis_name(),
             device_type=device_type.id,
             serial=serial,
             device_role=device_role.id,
@@ -121,6 +124,27 @@ class ServerBase():
             site=datacenter.id if datacenter else None,
         )
         return new_blade
+
+    def _netbox_set_blade_slot(self, chassis, server):
+        slot = self.get_blade_slot()
+        # Find the slot and update it with our blade
+        device_bays = nb.dcim.device_bays.filter(
+            device_id=chassis.id,
+            name=slot,
+        )
+        if len(device_bays) > 0:
+            logging.info(
+                'Setting device ({serial}) new slot on {slot} '
+                '(Chassis {chassis_serial})..'.format(
+                    serial=server.serial, slot=slot, chassis_serial=chassis.serial
+                ))
+            device_bay = device_bays[0]
+            device_bay.installed_device = server
+            device_bay.save()
+        else:
+            logging.error('Could not find slot {slot} for chassis'.format(
+                slot=slot
+            ))
 
     def _netbox_create_server(self, datacenter):
         device_role = nb.dcim.device_roles.get(
@@ -167,18 +191,8 @@ class ServerBase():
 
                 blade = self._netbox_create_blade(chassis, datacenter)
 
-            # Find the slot and update it with our blade
-            slot = self.get_blade_slot()
-            device_bays = nb.dcim.device_bays.filter(
-                device_id=chassis.id,
-                name='Blade {}'.format(slot),
-                )
-            if len(device_bays) > 0:
-                logging.info('Updating blade ({serial}) slot on: Blade {slot}'.format(
-                    serial=serial, slot=slot))
-                device_bay = device_bays[0]
-                device_bay.installed_device = blade
-                device_bay.save()
+            # Set slot for blade
+            self._netbox_set_blade_slot(chassis, server)
         else:
             server = nb.dcim.devices.get(serial=self.get_service_tag())
             if not server:
@@ -186,6 +200,31 @@ class ServerBase():
 
         self.network.create_netbox_network_cards()
         logging.debug('Server created!')
+
+    def _netbox_update_chassis_for_blade(self, server, datacenter):
+        chassis = server.parent_device.device_bay.device
+        device_bay = nb.dcim.device_bays.get(
+            server.parent_device.device_bay.id
+        )
+        netbox_chassis_serial = server.parent_device.device_bay.device.serial
+
+        # check chassis serial with dmidecode
+        if netbox_chassis_serial != self.get_chassis_service_tag():
+            move_device_bay = True
+            # try to find the new netbox chassis
+            chassis = nb.dcim.devices.get(
+                serial=self.get_chassis_service_tag()
+            )
+            if not chassis:
+                chassis = self._netbox_create_blade_chassis(datacenter)
+        if move_device_bay or device_bay.name != self.get_blade_slot():
+            logging.info('Device ({serial}) seems to have moved, reseting old slot..'.format(
+                serial=server.serial))
+            device_bay.installed_device = None
+            device_bay.save()
+
+            # Set slot for blade
+            self._netbox_set_blade_slot(chassis, server)
 
     def netbox_update(self):
         """
@@ -204,47 +243,19 @@ class ServerBase():
                             'it before updating it'.format(self.get_service_tag()))
         update = False
         if self.is_blade():
-            # get current chassis device bay
-            device_bay = nb.dcim.device_bays.get(
-                server.parent_device.device_bay.id
-                )
-            netbox_chassis_serial = server.parent_device.device_bay.device.serial
-            chassis = server.parent_device.device_bay.device
-            move_device_bay = False
-
-            # check chassis serial with dmidecode
-            if netbox_chassis_serial != self.get_chassis_service_tag():
-                move_device_bay = True
-                # try to find the new netbox chassis
+            datacenter = self.get_netbox_datacenter()
+            # if it's already linked to a chassis
+            if server.parent_device:
+                self._netbox_update_chassis_for_blade(server, datacenter)
+            else:
+                logging.info('Blade is not in a chassis, fixing...')
                 chassis = nb.dcim.devices.get(
                     serial=self.get_chassis_service_tag()
                 )
-                # create the new chassis if it doesn't exist
                 if not chassis:
-                    datacenter = self.get_netbox_datacenter()
                     chassis = self._netbox_create_blade_chassis(datacenter)
-
-            if move_device_bay or device_bay.name != 'Blade {}'.format(self.get_blade_slot()):
-                logging.info('Device ({serial}) seems to have moved, reseting old slot..'.format(
-                    serial=server.serial))
-                device_bay.installed_device = None
-                device_bay.save()
-
-                slot = self.get_blade_slot()
-                # Find the slot and update it with our blade
-                device_bays = nb.dcim.device_bays.filter(
-                    device_id=chassis.id,
-                    name='Blade {}'.format(slot),
-                )
-                if len(device_bays) > 0:
-                    logging.info(
-                        'Setting device ({serial}) new slot on Blade {slot} '
-                        '(Chassis {chassis_serial})..'.format(
-                            serial=server.serial, slot=slot, chassis_serial=chassis.serial
-                        ))
-                    device_bay = device_bays[0]
-                    device_bay.installed_device = server
-                    device_bay.save()
+                # Set slot for blade
+                self._netbox_set_blade_slot(chassis, server)
 
         # for every other specs
         # check hostname
