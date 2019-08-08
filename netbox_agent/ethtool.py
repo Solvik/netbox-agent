@@ -73,8 +73,6 @@ class Ethtool():
     def parse(self):
         if which('ethtool') is None:
             return None
-        # TODO >= py35: return {**a, **b}
-        return merge_two_dicts(
-            self._parse_ethtool_output(),
-            self._parse_ethtool_module_output()
-        )
+        output = self._parse_ethtool_output()
+        output.update(self._parse_ethtool_module_output())
+        return output
