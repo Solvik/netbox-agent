@@ -9,10 +9,17 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 
 * Create servers, chassis and blade through standard tools (`dmidecode`)
 * Create physical, bonding and vlan network interfaces with IPs
+* Create IPMI interface if found
 * Generic ability to guess datacenters and rack location through drivers (`cmd` and `file` and custom ones)
 * Update existing `Device` and `Interfaces`
 * Handle blade moving (new slot, new chassis)
 
+# Requirements
+
+- Netbox >= 2.6
+- Python >= 3.4
+- [python3-netaddr](https://github.com/drkjam/netaddr)
+- [python3-netifaces](https://github.com/al45tair/netifaces)
 
 # Known limitations
 
