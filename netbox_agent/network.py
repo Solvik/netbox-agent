@@ -57,6 +57,11 @@ class Network():
                 continue
             else:
                 ip_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET)
+                if NETWORK_IGNORE_IPS and ip_addr:
+                    for i, ip in enumerate(ip_addr):
+                        if re.match(NETWORK_IGNORE_IPS, ip['addr']):
+                            ip_addr.pop(i)
+
                 mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
                 vlan = None
                 if len(interface.split('.')) > 1:
@@ -75,7 +80,7 @@ class Network():
                         '{}/{}'.format(
                             x['addr'],
                             IPAddress(x['netmask']).netmask_bits()
-                        ) for x in ip_addr if not re.match(NETWORK_IGNORE_IPS, x['addr'])
+                        ) for x in ip_addr
                         ] if ip_addr else None,  # FIXME: handle IPv6 addresses
                     'ethtool': Ethtool(interface).parse(),
                     'vlan': vlan,
@@ -230,7 +235,8 @@ class Network():
                 interface.mode = None
 
             type = self.get_netbox_type_for_nic(nic)
-            if type != interface.type.value:
+            if not interface.type or \
+               type != interface.type.value:
                 logging.info('Interface type is wrong, resetting')
                 nic_update = True
                 interface.type = type
@@ -257,13 +263,14 @@ class Network():
                         logging.info('Created new IP {ip} on {interface}'.format(
                             ip=ip, interface=interface))
                     else:
-                        if netbox_ip.interface.id != interface.id:
+                        if not netbox_ip.interface or \
+                           netbox_ip.interface.id != interface.id:
                             logging.info(
-                                'Detected interface change: old interface is {old_interface} '
+                                'Detected interface change for ip {ip}: old interface is {old_interface} '
                                 '(id: {old_id}), new interface is {new_interface} (id: {new_id})'
                                 .format(
                                     old_interface=netbox_ip.interface, new_interface=interface,
-                                    old_id=netbox_ip.id, new_id=interface.id
+                                    old_id=netbox_ip.id, new_id=interface.id, ip=netbox_ip.address
                                 ))
                             netbox_ip.interface = interface
                             netbox_ip.save()
