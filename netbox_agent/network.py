@@ -294,7 +294,8 @@ class Network():
                 interface.type = type
 
             if interface.lag is not None:
-                if nic['name'] not in self.nics[interface.lag.name]['bonding_slaves']:
+                local_lag_int = next(item for item in self.nics if item['name'] == interface.lag.name)
+                if nic['name'] not in local_lag_int['bonding_slaves']:
                     logging.info('Interface has no LAG, resetting')
                     nic_update = True
                     interface.lag = None
