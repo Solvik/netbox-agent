@@ -266,8 +266,9 @@ class Network():
                         if not netbox_ip.interface or \
                            netbox_ip.interface.id != interface.id:
                             logging.info(
-                                'Detected interface change for ip {ip}: old interface is {old_interface} '
-                                '(id: {old_id}), new interface is {new_interface} (id: {new_id})'
+                                'Detected interface change for ip {ip}: old interface is '
+                                '{old_interface} (id: {old_id}), new interface is {new_interface} '
+                                ' (id: {new_id})'
                                 .format(
                                     old_interface=netbox_ip.interface, new_interface=interface,
                                     old_id=netbox_ip.id, new_id=interface.id, ip=netbox_ip.address
