@@ -19,6 +19,12 @@ field_map = {
 }
 
 
+def merge_two_dicts(x, y):
+    z = x.copy()
+    z.update(y)
+    return z
+
+
 class Ethtool():
     """
     This class aims to parse ethtool output
@@ -67,7 +73,6 @@ class Ethtool():
     def parse(self):
         if which('ethtool') is None:
             return None
-        return {
-            **self._parse_ethtool_output(),
-            **self._parse_ethtool_module_output(),
-            }
+        output = self._parse_ethtool_output()
+        output.update(self._parse_ethtool_module_output())
+        return output
