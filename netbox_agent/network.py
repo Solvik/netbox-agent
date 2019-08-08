@@ -3,12 +3,13 @@ import logging
 import os
 import re
 
-from netaddr import IPAddress
+from netaddr import IPAddress, IPNetwork
 import netifaces
 
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.config import NETWORK_IGNORE_INTERFACES, NETWORK_IGNORE_IPS
 from netbox_agent.ethtool import Ethtool
+from netbox_agent.ipmi import Ipmi
 
 IFACE_TYPE_100ME_FIXED = 800
 IFACE_TYPE_1GE_FIXED = 1000
@@ -142,6 +143,57 @@ class Network():
             return IFACE_TYPE_1GE_FIXED
         return IFACE_TYPE_OTHER
 
+    def get_ipmi(self):
+        ipmi = Ipmi().parse()
+        return ipmi
+
+    def get_netbox_ipmi(self):
+        ipmi = self.get_ipmi()
+        mac = ipmi['MAC Address']
+        return nb.dcim.interfaces.get(
+            mac=mac
+        )
+
+    def create_or_update_ipmi(self):
+        ipmi = self.get_ipmi()
+        mac = ipmi['MAC Address']
+        ip = ipmi['IP Address']
+        netmask = ipmi['Subnet Mask']
+        vlan = ipmi['802.1q VLAN ID'] if ipmi['802.1q VLAN ID'] != 'Disabled' else None
+
+        address = IPNetwork('{}/{}'.format(ip, netmask)).__str__()
+
+        device = nb.dcim.interfaces.get(
+            device_id=self.device.id,
+            mgmt_only=True,
+            )
+        if device is None:
+            return nb.dcim.interfaces.create(
+                device=self.device.id,
+                name='IPMI',
+                mac_address=ipmi['MAC Address'],
+                address=address,
+                mode=200 if vlan else None,
+                type=IFACE_TYPE_1GE_FIXED,
+                mgmt_only=True,
+            )
+        else:
+            # let the user chose the name of mgmt ?
+            # guess it with manufacturer (IDRAC, ILO, ...) ?
+            update = False
+            if device.address != address:
+                device.address = address
+                update = True
+            if vlan and device.mode != 200:
+                device.mode = 200
+                update = True
+            if mac != device.mac_address:
+                device.mac_address = mac
+                update = True
+            if update:
+                device.save()
+            return device
+
     def create_netbox_nic(self, nic):
         # TODO: add Optic Vendor, PN and Serial
         type = self.get_netbox_type_for_nic(nic)
@@ -266,8 +318,9 @@ class Network():
                         if not netbox_ip.interface or \
                            netbox_ip.interface.id != interface.id:
                             logging.info(
-                                'Detected interface change for ip {ip}: old interface is {old_interface} '
-                                '(id: {old_id}), new interface is {new_interface} (id: {new_id})'
+                                'Detected interface change for ip {ip}: old interface is '
+                                '{old_interface} (id: {old_id}), new interface is {new_interface} '
+                                ' (id: {new_id})'
                                 .format(
                                     old_interface=netbox_ip.interface, new_interface=interface,
                                     old_id=netbox_ip.id, new_id=interface.id, ip=netbox_ip.address
@@ -278,4 +331,5 @@ class Network():
                 interface.save()
 
         self._set_bonding_interfaces()
+        self.create_or_update_ipmi()
         logging.debug('Finished updating NIC!')
