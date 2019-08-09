@@ -22,6 +22,10 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 - [python3-netaddr](https://github.com/drkjam/netaddr)
 - [python3-netifaces](https://github.com/al45tair/netifaces)
 
+- ethtool
+- dmidecode
+- ipmitool
+
 # Known limitations
 
 * The project is only compatible with Linux.
