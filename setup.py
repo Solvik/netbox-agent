@@ -10,6 +10,7 @@ setup(
     author_email='solvik@solvik.fr',
     license='Apache2',
     include_package_data=True,
+    packages=['netbox_agent'],
     use_scm_version=True,
     install_requires=[
         'pynetbox==4.0.6',
