@@ -1,6 +1,7 @@
 import logging
 import subprocess
 
+
 class Ipmi():
     """
     Parse IPMI output
@@ -34,16 +35,15 @@ class Ipmi():
     """
     def __init__(self):
         self.ret, self.output = subprocess.getstatusoutput('ipmitool lan print')
-        if not self.ret:
+        if self.ret != 0:
             logging.error('Cannot get ipmi info: {}'.format(self.output))
-
 
     def parse(self):
         ret = {}
         if self.ret != 0:
             return ret
         for line in self.output.split('\n'):
-            key = line.split(':')[0]
-            value = ':'.join(line.split(':')[1:])
+            key = line.split(':')[0].strip()
+            value = ':'.join(line.split(':')[1:]).strip()
             ret[key] = value
         return ret
