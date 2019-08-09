@@ -11,8 +11,11 @@ setup(
     license='Apache2',
     include_package_data=True,
     use_scm_version=True,
-    packages=find_packages(),
-    install_requires=find_packages(),
+    install_requires=[
+        'pynetbox==4.0.6',
+        'netaddr==0.7.19',
+        'netifaces==0.10.9',
+        ],
     zip_safe=False,
     keywords=['netbox'],
     classifiers=[
