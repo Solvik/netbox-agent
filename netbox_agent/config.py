@@ -34,5 +34,5 @@ if config.get('rack_location'):
 NETWORK_IGNORE_INTERFACES = None
 NETWORK_IGNORE_IPS = None
 if config.get('network'):
-    NETWORK_IGNORE_INTERFACES = config['network']['ignore_interfaces']
-    NETWORK_IGNORE_IPS = config['network']['ignore_ips']
+    NETWORK_IGNORE_INTERFACES = config['network'].get('ignore_interfaces')
+    NETWORK_IGNORE_IPS = config['network'].get('ignore_ips')

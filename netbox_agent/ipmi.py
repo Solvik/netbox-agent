@@ -2,7 +2,7 @@ import logging
 import subprocess
 
 
-class Ipmi():
+class IPMI():
     """
     Parse IPMI output
     ie:
@@ -42,7 +42,7 @@ class Ipmi():
         ret = {}
         if self.ret != 0:
             return ret
-        for line in self.output.split('\n'):
+        for line in self.output.splitlines():
             key = line.split(':')[0].strip()
             value = ':'.join(line.split(':')[1:]).strip()
             ret[key] = value
