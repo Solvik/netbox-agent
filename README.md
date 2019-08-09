@@ -8,16 +8,26 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 # Features
 
 * Create servers, chassis and blade through standard tools (`dmidecode`)
-* Create physical network interfaces with IPs
+* Create physical, bonding and vlan network interfaces with IPs
+* Create IPMI interface if found
+* Create or get existing VLAN and associate it to interfaces
 * Generic ability to guess datacenters and rack location through drivers (`cmd` and `file` and custom ones)
 * Update existing `Device` and `Interfaces`
 * Handle blade moving (new slot, new chassis)
+
+# Requirements
+
+- Netbox >= 2.6
+- Python >= 3.4
+- [python3-netaddr](https://github.com/drkjam/netaddr)
+- [python3-netifaces](https://github.com/al45tair/netifaces)
 
 # Known limitations
 
 * The project is only compatible with Linux.
 Since it uses `ethtool` and parses `/sys/` directory, it's not compatible with *BSD distributions.
 * Netbox `>=2.6.0,<=2.6.2` has a caching problem ; if the cache lifetime is too high, the script can get stale data after modification.
+We advise to set `CACHE_TIME` to `0`.
 
 # Configuration
 
@@ -26,12 +36,26 @@ netbox:
  url: 'http://netbox.internal.company.com'
  token: supersecrettoken
 
+network:
+  ignore_interfaces: "(dummy.*|docker.*)"
+  ignore_ips: (127\.0\.0\..*)
+
 datacenter_location:
- # driver_file: /opt/netbox_driver_dc.py
- driver: file:/etc/qualification
- regex: "datacenter: (?P<datacenter>[A-Za-z0-9]+)"
+ driver: "cmd:cat /etc/qualification | tr [a-z] [A-Z]"
+ regex: "DATACENTER: (?P<datacenter>[A-Za-z0-9]+)"
 # driver: 'cmd:lldpctl'
-# regex = 'SysName: .*\.(?P<datacenter>[A-Za-z0-9]+)'```
+# regex: 'SysName: .*\.([A-Za-z0-9]+)'
+#
+# driver: "file:/tmp/datacenter"
+# regex: "(.*)"
+
+rack_location:
+# driver: 'cmd:lldpctl'
+# match SysName: sw-dist-a1.dc42
+# regex: 'SysName:[ ]+[A-Za-z]+-[A-Za-z]+-([A-Za-z0-9]+)'
+#
+# driver: "file:/tmp/datacenter"
+# regex: "(.*)"
 ```
 
 # Hardware

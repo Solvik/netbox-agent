@@ -30,3 +30,9 @@ if config.get('rack_location'):
     RACK_LOCATION_DRIVER_FILE = rack_location.get('driver_file')
     RACK_LOCATION = rack_location.get('driver')
     RACK_LOCATION_REGEX = rack_location.get('regex')
+
+NETWORK_IGNORE_INTERFACES = None
+NETWORK_IGNORE_IPS = None
+if config.get('network'):
+    NETWORK_IGNORE_INTERFACES = config['network']['ignore_interfaces']
+    NETWORK_IGNORE_IPS = config['network']['ignore_ips']

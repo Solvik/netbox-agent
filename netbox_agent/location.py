@@ -22,11 +22,9 @@ class LocationBase():
         self.driver = driver
         self.driver_value = driver_value
         self.driver_file = driver_file
-        print(self.driver_file)
         self.regex = regex
 
         if self.driver_file:
-            print('if', self.driver_file)
             try:
                 # FIXME: Works with Python 3.3+, support older version?
                 loader = importlib.machinery.SourceFileLoader('driver_file', self.driver_file)
