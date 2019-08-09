@@ -3,9 +3,11 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+  - "pypy3"
 # command to install dependencies
 install:
   - pip install -r requirements.txt
+  - pip install tox-travis
 # command to run tests
 script:
   - tox
