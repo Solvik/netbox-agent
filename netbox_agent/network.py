@@ -9,7 +9,7 @@ import netifaces
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.config import NETWORK_IGNORE_INTERFACES, NETWORK_IGNORE_IPS
 from netbox_agent.ethtool import Ethtool
-from netbox_agent.ipmi import Ipmi
+from netbox_agent.ipmi import IPMI
 
 IFACE_TYPE_100ME_FIXED = 800
 IFACE_TYPE_1GE_FIXED = 1000
@@ -56,53 +56,55 @@ class Network():
                re.match(NETWORK_IGNORE_INTERFACES, interface):
                 logging.debug('Ignore interface {interface}'.format(interface=interface))
                 continue
-            else:
-                ip_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET)
-                if NETWORK_IGNORE_IPS and ip_addr:
-                    for i, ip in enumerate(ip_addr):
-                        if re.match(NETWORK_IGNORE_IPS, ip['addr']):
-                            ip_addr.pop(i)
 
-                mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
-                vlan = None
-                if len(interface.split('.')) > 1:
-                    vlan = int(interface.split('.')[1])
-                bonding = False
-                bonding_slaves = []
-                if os.path.isdir('/sys/class/net/{}/bonding'.format(interface)):
-                    bonding = True
-                    bonding_slaves = open(
-                        '/sys/class/net/{}/bonding/slaves'.format(interface)
-                    ).read().split()
-                nic = {
-                    'name': interface,
-                    'mac': mac if mac != '00:00:00:00:00:00' else None,
-                    'ip': [
-                        '{}/{}'.format(
-                            x['addr'],
-                            IPAddress(x['netmask']).netmask_bits()
-                        ) for x in ip_addr
-                        ] if ip_addr else None,  # FIXME: handle IPv6 addresses
-                    'ethtool': Ethtool(interface).parse(),
-                    'vlan': vlan,
-                    'bonding': bonding,
-                    'bonding_slaves': bonding_slaves,
-                }
-                self.nics.append(nic)
+            ip_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET)
+            if NETWORK_IGNORE_IPS and ip_addr:
+                for i, ip in enumerate(ip_addr):
+                    if re.match(NETWORK_IGNORE_IPS, ip['addr']):
+                        ip_addr.pop(i)
+
+            mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
+            vlan = None
+            if len(interface.split('.')) > 1:
+                vlan = int(interface.split('.')[1])
+            bonding = False
+            bonding_slaves = []
+            if os.path.isdir('/sys/class/net/{}/bonding'.format(interface)):
+                bonding = True
+                bonding_slaves = open(
+                    '/sys/class/net/{}/bonding/slaves'.format(interface)
+                ).read().split()
+            nic = {
+                'name': interface,
+                'mac': mac if mac != '00:00:00:00:00:00' else None,
+                'ip': [
+                    '{}/{}'.format(
+                        x['addr'],
+                        IPAddress(x['netmask']).netmask_bits()
+                    ) for x in ip_addr
+                    ] if ip_addr else None,  # FIXME: handle IPv6 addresses
+                'ethtool': Ethtool(interface).parse(),
+                'vlan': vlan,
+                'bonding': bonding,
+                'bonding_slaves': bonding_slaves,
+            }
+            self.nics.append(nic)
 
     def _set_bonding_interfaces(self):
         bonding_nics = [x for x in self.nics if x['bonding']]
         if not len(bonding_nics):
             return False
+
         logging.debug('Setting bonding interfaces..')
         for nic in bonding_nics:
             bond_int = self.get_netbox_network_card(nic)
             logging.debug('Setting slave interface for {name}'.format(
                 name=bond_int.name
             ))
-            for slave in nic['bonding_slaves']:
-                slave_nic = next(item for item in self.nics if item['name'] == slave)
-                slave_int = self.get_netbox_network_card(slave_nic)
+            for slave_int in (
+                    self.get_netbox_network_card(slave_nic)
+                    for slave_nic in self.nics
+                    if slave_nic['name'] in nic['bonding_slaves']):
                 logging.debug('Settting interface {name} as slave of {master}'.format(
                     name=slave_int.name, master=bond_int.name
                 ))
@@ -149,7 +151,7 @@ class Network():
         return IFACE_TYPE_OTHER
 
     def get_ipmi(self):
-        ipmi = Ipmi().parse()
+        ipmi = IPMI().parse()
         return ipmi
 
     def get_netbox_ipmi(self):
@@ -199,7 +201,7 @@ class Network():
         ip = ipmi['IP Address']
         netmask = ipmi['Subnet Mask']
         vlan = int(ipmi['802.1q VLAN ID']) if ipmi['802.1q VLAN ID'] != 'Disabled' else None
-        address = IPNetwork('{}/{}'.format(ip, netmask)).__str__()
+        address = str(IPNetwork('{}/{}'.format(ip, netmask)))
 
         interface = nb.dcim.interfaces.get(
             device_id=self.device.id,
