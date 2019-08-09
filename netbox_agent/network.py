@@ -91,11 +91,7 @@ class Network():
             self.nics.append(nic)
 
     def _set_bonding_interfaces(self):
-        bonding_nics = [x for x in self.nics if x['bonding']]
-        if not len(bonding_nics):
-            return False
-
-        logging.debug('Setting bonding interfaces..')
+        bonding_nics = (x for x in self.nics if x['bonding'])
         for nic in bonding_nics:
             bond_int = self.get_netbox_network_card(nic)
             logging.debug('Setting slave interface for {name}'.format(
@@ -105,11 +101,14 @@ class Network():
                     self.get_netbox_network_card(slave_nic)
                     for slave_nic in self.nics
                     if slave_nic['name'] in nic['bonding_slaves']):
-                logging.debug('Settting interface {name} as slave of {master}'.format(
-                    name=slave_int.name, master=bond_int.name
-                ))
-                slave_int.lag = bond_int
-                slave_int.save()
+                if slave_int.lag is None or slave_int.lag.id != bond_int.id:
+                    logging.debug('Settting interface {name} as slave of {master}'.format(
+                        name=slave_int.name, master=bond_int.name
+                    ))
+                    slave_int.lag = bond_int
+                    slave_int.save()
+        else:
+            return False
         return True
 
     def get_network_cards(self):
