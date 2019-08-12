@@ -1,0 +1,35 @@
+sudo: false
+dist: xenial
+language: python
+
+matrix:
+    include:
+        - python: 3.5
+          env: TOXENV=py35
+        - python: 3.6
+          env: TOXENV=py36
+        - python: 3.7
+          env: TOXENV=py37
+        - python: pypy3
+          env: TOXENV=pypy3
+        - python: 3.5
+          env: TOXENV=pep8
+        - python: 3.7
+          env: TOXENV=pep8
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+
+install:
+  - pip install tox
+  - if [[ $TOXENV == py* ]]; then pip install coveralls; fi
+
+script:
+  - tox
+
+notifications:
+  email: false
+
+after_success:
+  - if [[ $TOXENV == py* ]]; then coveralls; fi
