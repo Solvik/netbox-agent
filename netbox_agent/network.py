@@ -221,7 +221,9 @@ class Network():
             update = False
             self.create_or_update_netbox_ip_on_interface(address, interface)
             update, interface = self.reset_vlan_on_interface(nic['vlan'], interface)
-            if mac != interface.mac_address:
+            if mac.upper() != interface.mac_address:
+                logging.info('IPMI mac changed from {old_mac} to {new_mac}'.format(
+                    old_mac=interface.mac_address, new_mac=mac.upper()))
                 interface.mac_address = mac
                 update = True
             if update:
