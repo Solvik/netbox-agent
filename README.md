@@ -19,6 +19,7 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 
 - Netbox >= 2.6
 - Python >= 3.4
+- [pynetbox](https://github.com/digitalocean/pynetbox/)
 - [python3-netaddr](https://github.com/drkjam/netaddr)
 - [python3-netifaces](https://github.com/al45tair/netifaces)
 
