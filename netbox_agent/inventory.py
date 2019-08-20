@@ -1,3 +1,4 @@
+import logging
 import subprocess
 import re
 
@@ -86,7 +87,7 @@ class Inventory():
 
         controllers = self.raid.get_controllers()
         if len(self.raid.get_controllers()):
-            return self.raid.get_controllers()
+            return controllers
 
     def get_netbox_raid_cards(self):
         raid_cards = nb.dcim.inventory_items.filter(
@@ -97,7 +98,7 @@ class Inventory():
 
     def find_or_create_manufacturer(self, name):
         if name is None:
-            return none
+            return None
         manufacturer = nb.dcim.manufacturers.get(
             name=name,
         )
@@ -115,7 +116,7 @@ class Inventory():
         nb_raid_card = nb.dcim.inventory_items.create(
             device=self.device_id,
             discovered=True,
-            manufacturer=manufacturer.id,
+            manufacturer=manufacturer.id if manufacturer else None,
             tags=[INVENTORY_TAG['raid_card']['name']],
             name='{}'.format(raid_card.get_product_name()),
             serial='{}'.format(raid_card.get_serial_number()),
@@ -151,16 +152,48 @@ class Inventory():
                 self.create_netbox_raid_card(raid_card)
 
     def get_disks(self):
-        pass
+        ret = []
+        for raid_card in self.get_raid_cards():
+            ret += raid_card.get_physical_disks()
+        return ret
 
     def get_netbox_disks(self):
-        pass
+        disks = nb.dcim.inventory_items.filter(
+            device_id=self.device_id,
+            tag=INVENTORY_TAG['disk']['slug'],
+            )
+        return disks
 
     def create_netbox_disks(self):
-        pass
+        for disk in self.get_disks():
+            disk = nb.dcim.inventory_items.create(
+                device=self.device_id,
+                discovered=True,
+                tags=[INVENTORY_TAG['disk']['name']],
+                name='{} ({})'.format(disk['Model'], disk['Size']),
+                serial=disk['SN'],
+            )
 
     def update_netbox_disks(self):
-        pass
+        nb_disks = self.get_netbox_disks()
+        disks = self.get_disks()
+
+        # delete disks that are in netbox but not locally
+        # use the serial_number has the comparison element
+        for nb_disk in nb_disks:
+            if nb_disk.serial not in [x['SN'] for x in disks]:
+                nb_disk.delete()
+
+        # create disks that are not in netbox
+        for disk in disks:
+            if disk['SN'] not in [x.serial for x in nb_disks]:
+                disk = nb.dcim.inventory_items.create(
+                    device=self.device_id,
+                    discovered=True,
+                    tags=[INVENTORY_TAG['disk']['name']],
+                    name='{} ({})'.format(disk['Model'], disk['Size']),
+                    serial=disk['SN'],
+                )
 
     def get_memory(self):
         memories = []
@@ -221,3 +254,4 @@ class Inventory():
         # assume we don't update CPU?
         self.update_netbox_memory()
         self.update_netbox_raid_cards()
+        self.update_netbox_disks()
