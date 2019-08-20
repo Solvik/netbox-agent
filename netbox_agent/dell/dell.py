@@ -27,5 +27,5 @@ class DellHost(ServerBase):
 
     def get_chassis_service_tag(self):
         if self.is_blade():
-            return self.dmi.get_by_type('chassis')[0]['Serial Number']
+            return self.dmi.get_by_type('Chassis')[0]['Serial Number']
         return self.get_service_tag()
