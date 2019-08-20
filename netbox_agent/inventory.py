@@ -74,6 +74,19 @@ class Inventory():
                 discovered=True,
             )
 
+    def update_netbox_cpus(self):
+        cpus_number, model = self.get_cpus()
+        nb_cpus = nb.dcim.inventory_items.filter(
+            device_id=self.device_id,
+            tag=INVENTORY_TAG['cpu']['slug'],
+        )
+
+        if not len(nb_cpus) or \
+           len(nb_cpus) and cpus_number != len(nb_cpus):
+            for x in nb_cpus:
+                x.delete()
+            self.create_netbox_cpus()
+
     def get_raid_cards(self):
         if self.server.manufacturer == 'Dell':
             if is_tool('storcli'):
@@ -206,6 +219,7 @@ class Inventory():
                     'PN': value['Part Number'].strip(),
                     'SN': value['Serial Number'].strip(),
                     'Locator': value['Locator'].strip(),
+                    'Type': value['Type'].strip(),
                     })
         return memories
 
@@ -222,28 +236,41 @@ class Inventory():
             )
         return memories
 
-    def create_netbox_memory(self):
+    def create_netbox_memory(self, memory):
+        manufacturer = nb.dcim.manufacturers.get(
+            name=memory['Manufacturer']
+        )
+        if not manufacturer:
+            manufacturer = nb.dcim.manufacturers.create(
+                name=memory['Manufacturer'],
+                slug=memory['Manufacturer'].lower(),
+            )
+        memory = nb.dcim.inventory_items.create(
+            device=self.device_id,
+            discovered=True,
+            manufacturer=manufacturer.id,
+            tags=[INVENTORY_TAG['memory']['name']],
+            name='{} ({} {})'.format(memory['Locator'], memory['Size'], memory['Type']),
+            part_id=memory['PN'],
+            serial=memory['SN'],
+        )
+        return memory
+
+    def create_netbox_memories(self):
         for memory in self.get_memory():
-            manufacturer = nb.dcim.manufacturers.get(
-                name=memory['Manufacturer']
-            )
-            if not manufacturer:
-                manufacturer = nb.dcim.manufacturers.create(
-                    name=memory['Manufacturer'],
-                    slug=memory['Manufacturer'].lower(),
-                    )
-            memories = nb.dcim.inventory_items.create(
-                device=self.device_id,
-                discovered=True,
-                manufacturer=manufacturer.id,
-                tags=[INVENTORY_TAG['memory']['name']],
-                name='{} ({})'.format(memory['Locator'], memory['Size']),
-                part_id=memory['PN'],
-                serial=memory['SN'],
-            )
+            self.create_netbox_memory(memory)
 
     def update_netbox_memory(self):
-        pass
+        memories = self.get_memory()
+        nb_memories = self.get_netbox_memory()
+
+        for nb_memory in nb_memories:
+            if nb_memory.serial not in [x['SN'] for x in memories]:
+                nb_memory.delete()
+
+        for memory in memories:
+            if memory['SN'] not in [x.serial for x in nb_memories]:
+                self.create_netbox_memory(memory)
 
     def create(self):
         self.create_netbox_cpus()
@@ -255,3 +282,5 @@ class Inventory():
         self.update_netbox_memory()
         self.update_netbox_raid_cards()
         self.update_netbox_disks()
+        self.update_netbox_cpus()
+        self.update_netbox_memory()
