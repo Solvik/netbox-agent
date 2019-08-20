@@ -3,6 +3,7 @@ import json
 
 from netbox_agent.raid.base import Raid, RaidController
 
+
 class StorcliController(RaidController):
     def __init__(self, controller_index, data):
         self.data = data
@@ -22,14 +23,18 @@ class StorcliController(RaidController):
 
     def get_physical_disks(self):
         ret = []
-        output = subprocess.getoutput('storcli /c{}/eall/sall show all J'.format(self.controller_index))
+        output = subprocess.getoutput(
+            'storcli /c{}/eall/sall show all J'.format(self.controller_index)
+        )
         drive_infos = json.loads(output)['Controllers'][self.controller_index]['Response Data']
 
         for physical_drive in self.data['PD LIST']:
             enclosure = physical_drive.get('EID:Slt').split(':')[0]
             slot = physical_drive.get('EID:Slt').split(':')[1]
             size = physical_drive.get('Size').strip()
-            drive_identifier = 'Drive /c{}/e{}/s{}'.format(str(self.controller_index), str(enclosure), str(slot))
+            drive_identifier = 'Drive /c{}/e{}/s{}'.format(
+                str(self.controller_index), str(enclosure), str(slot)
+            )
             drive_attr = drive_infos['{} - Detailed Information'.format(drive_identifier)]\
                          ['{} Device attributes'.format(drive_identifier)]
             ret.append({
@@ -46,7 +51,7 @@ class StorcliRaid(Raid):
         self.controllers = []
 
         if len([
-                x for x in self.data['Controllers'] \
+                x for x in self.data['Controllers']
                 if x['Command Status']['Status'] == 'Success'
         ]) > 0:
             for controller in self.data['Controllers']:

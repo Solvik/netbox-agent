@@ -6,7 +6,6 @@ from netbox_agent.config import netbox_instance as nb
 from netbox_agent.misc import is_tool
 from netbox_agent.raid.hp import HPRaid
 from netbox_agent.raid.dell import StorcliRaid
-import netbox_agent.dmidecode as dmidecode
 
 INVENTORY_TAG = {
     'cpu': {'name': 'hw:cpu', 'slug': 'hw-cpu'},
@@ -67,7 +66,7 @@ class Inventory():
     def create_netbox_cpus(self):
         nb_cpus, model = self.get_cpus()
         for i in range(nb_cpus):
-            cpu = nb.dcim.inventory_items.create(
+            _ = nb.dcim.inventory_items.create(
                 device=self.device_id,
                 tags=[INVENTORY_TAG['cpu']['name']],
                 name=model,
@@ -134,6 +133,7 @@ class Inventory():
             name='{}'.format(raid_card.get_product_name()),
             serial='{}'.format(raid_card.get_serial_number()),
         )
+        return nb_raid_card
 
     def create_netbox_raid_cards(self):
         for raid_card in self.get_raid_cards():

@@ -5,9 +5,11 @@ from netbox_agent.raid.base import Raid, RaidController
 
 REGEXP_CONTROLLER_HP = re.compile(r'Smart Array ([a-zA-Z0-9- ]+) in Slot ([0-9]+)')
 
+
 def _get_indentation(string):
     """Return the number of spaces before the current line."""
     return len(string) - len(string.lstrip(' '))
+
 
 def _get_key_value(string):
     """Return the (key, value) as a tuple from a string."""
@@ -35,6 +37,7 @@ def _get_key_value(string):
             return None, None
 
     return key.lstrip(' ').rstrip(' '), value.lstrip(' ').rstrip(' ')
+
 
 def _get_dict(lines, start_index, indentation):
     """Recursive function for parsing hpssacli/ssacli output."""
@@ -85,6 +88,7 @@ def _get_dict(lines, start_index, indentation):
 
     return info, i
 
+
 class HPRaidController(RaidController):
     def __init__(self, controller_name, data):
         self.controller_name = controller_name
@@ -101,6 +105,7 @@ class HPRaidController(RaidController):
 
     def get_firmware_version(self):
         return self.data['Firmware Version']
+
 
 class HPRaid(Raid):
     def __init__(self):
@@ -119,7 +124,7 @@ class HPRaid(Raid):
                 product_name = REGEXP_CONTROLLER_HP.search(_product_name)
                 if product_name:
                      self.controllers.append(
-                        HPRaidController(product_name.group(1), info_dict[_product_name])
+                         HPRaidController(product_name.group(1), info_dict[_product_name])
                     )
 
     def get_controllers(self):
