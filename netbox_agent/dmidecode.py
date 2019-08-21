@@ -68,6 +68,7 @@ def parse():
     _data = _parse(buffer)
     return _data
 
+
 def get_by_type(type_id):
     """
     filter the output of dmidecode per type
@@ -130,7 +131,7 @@ def get_by_type(type_id):
 
 
 def _execute_cmd():
-    return _subprocess.check_output(['dmidecode',], stderr=_subprocess.PIPE)
+    return _subprocess.check_output(['dmidecode', ], stderr=_subprocess.PIPE)
 
 
 def _parse(buffer):
