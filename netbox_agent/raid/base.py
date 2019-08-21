@@ -12,6 +12,7 @@ class RaidController():
     def get_firmware_version(self):
         raise NotImplementedError
 
+
 class Raid():
     def get_controllers(self):
         raise NotImplementedError

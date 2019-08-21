@@ -25,6 +25,7 @@ for key, tag in INVENTORY_TAG.items():
             comments=tag['name'],
             )
 
+
 class Inventory():
     """
     Better Inventory items coming, see:
@@ -72,6 +73,7 @@ class Inventory():
                 name=model,
                 discovered=True,
             )
+            logging.info('Created CPU model {model}'.format(model=model))
 
     def update_netbox_cpus(self):
         cpus_number, model = self.get_cpus()
@@ -119,20 +121,27 @@ class Inventory():
                 name=name,
                 slug=name.lower(),
             )
+            logging.info('Created missing manufacturer {name}'.format(name=name))
         return manufacturer
 
     def create_netbox_raid_card(self, raid_card):
         manufacturer = self.find_or_create_manufacturer(
             raid_card.get_manufacturer()
         )
+        name = raid_card.get_product_name()
+        serial = raid_card.get_serial_number()
         nb_raid_card = nb.dcim.inventory_items.create(
             device=self.device_id,
             discovered=True,
             manufacturer=manufacturer.id if manufacturer else None,
             tags=[INVENTORY_TAG['raid_card']['name']],
-            name='{}'.format(raid_card.get_product_name()),
-            serial='{}'.format(raid_card.get_serial_number()),
+            name='{}'.format(name),
+            serial='{}'.format(serial),
         )
+        logging.info('Created RAID Card {name} (SN: {serial})'.format(
+            name=name,
+            serial=serial,
+        ))
         return nb_raid_card
 
     def create_netbox_raid_cards(self):
@@ -157,6 +166,9 @@ class Inventory():
         # use the serial_number has the comparison element
         for nb_raid_card in nb_raid_cards:
             if nb_raid_card.serial not in [x.get_serial_number() for x in raid_cards]:
+                logging.info('Deleting unknown locally RAID Card {serial}'.format(
+                    serial=nb_raid_card.serial,
+                ))
                 nb_raid_card.delete()
 
         # create card that are not in netbox
@@ -195,6 +207,9 @@ class Inventory():
         # use the serial_number has the comparison element
         for nb_disk in nb_disks:
             if nb_disk.serial not in [x['SN'] for x in disks]:
+                logging.info('Deleting unknown locally Disk {serial}'.format(
+                    serial=nb_disk.serial,
+                ))
                 nb_disk.delete()
 
         # create disks that are not in netbox
@@ -207,6 +222,10 @@ class Inventory():
                     name='{} ({})'.format(disk['Model'], disk['Size']),
                     serial=disk['SN'],
                 )
+                logging.info('Creating Disk {model} {serial}'.format(
+                    model=disk['Model'],
+                    serial=disk['SN'],
+                ))
 
     def get_memory(self):
         memories = []
@@ -254,6 +273,10 @@ class Inventory():
             part_id=memory['PN'],
             serial=memory['SN'],
         )
+        logging.info('Creating Memory {type} {size}'.format(
+            type=memory['Type'],
+            size=memory['Size'],
+        ))
         return memory
 
     def create_netbox_memories(self):
@@ -266,8 +289,10 @@ class Inventory():
 
         for nb_memory in nb_memories:
             if nb_memory.serial not in [x['SN'] for x in memories]:
+                logging.info('Deleting unknown locally Memory {serial}'.format(
+                    serial=nb_memory.serial,
+                ))
                 nb_memory.delete()
-
         for memory in memories:
             if memory['SN'] not in [x.serial for x in nb_memories]:
                 self.create_netbox_memory(memory)
@@ -276,11 +301,10 @@ class Inventory():
         self.create_netbox_cpus()
         self.create_netbox_memory()
         self.create_netbox_raid_cards()
+        self.create_netbox_disks()
 
     def update(self):
-        # assume we don't update CPU?
+        self.update_netbox_cpus()
         self.update_netbox_memory()
         self.update_netbox_raid_cards()
         self.update_netbox_disks()
-        self.update_netbox_cpus()
-        self.update_netbox_memory()

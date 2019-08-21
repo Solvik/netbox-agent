@@ -123,8 +123,8 @@ class HPRaid(Raid):
                 _product_name = list(info_dict.keys())[0]
                 product_name = REGEXP_CONTROLLER_HP.search(_product_name)
                 if product_name:
-                     self.controllers.append(
-                         HPRaidController(product_name.group(1), info_dict[_product_name])
+                    self.controllers.append(
+                        HPRaidController(product_name.group(1), info_dict[_product_name])
                     )
 
     def get_controllers(self):

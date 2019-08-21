@@ -35,14 +35,15 @@ class StorcliController(RaidController):
             drive_identifier = 'Drive /c{}/e{}/s{}'.format(
                 str(self.controller_index), str(enclosure), str(slot)
             )
-            drive_attr = drive_infos['{} - Detailed Information'.format(drive_identifier)]\
-                         ['{} Device attributes'.format(drive_identifier)]
+            drive_attr = drive_infos['{} - Detailed Information'.format(drive_identifier)][
+                '{} Device attributes'.format(drive_identifier)]
             ret.append({
                 'Model': drive_attr.get('Model Number', '').strip(),
                 'SN': drive_attr.get('SN', '').strip(),
                 'Size': size,
                 })
         return ret
+
 
 class StorcliRaid(Raid):
     def __init__(self):
