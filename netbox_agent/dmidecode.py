@@ -117,7 +117,9 @@ def get_by_type(type_id):
     42   Management Controller Host Interface
     """
     if isinstance(type_id, str):
-        type_id = _str2type[type_id]
+        type_id = _str2type.get(type_id)
+        if type_id is None:
+            return None
 
     data = parse()
     result = []
@@ -129,7 +131,7 @@ def get_by_type(type_id):
 
 
 def _execute_cmd():
-    return _subprocess.check_output('dmidecode', stderr=_subprocess.PIPE)
+    return _subprocess.check_output(['dmidecode', ], stderr=_subprocess.PIPE)
 
 
 def _parse(buffer):
@@ -168,14 +170,13 @@ def _parse(buffer):
                 break
             #  Check whether we are inside a \t\t block
             if in_block_elemet != '':
-
-                in_block_data = _in_block_re.findall(record_element[1])
+                in_block_data = _in_block_re.findall(record_element[i])
 
                 if in_block_data:
                     if not in_block_list:
-                        in_block_list = in_block_data[0][0]
+                        in_block_list = [in_block_data[0]]
                     else:
-                        in_block_list = in_block_list + '\t\t' + in_block_data[0][1]
+                        in_block_list.append(in_block_data[0])
 
                     output_data[dmi_handle][in_block_elemet] = in_block_list
                     continue
@@ -194,11 +195,12 @@ def _parse(buffer):
             #  Didn't findall regular entry, maybe an array of data?
 
             record_data2 = _record2_re.findall(record_element[i])
-
             if record_data2:
                 #  This is an array of data - let the loop know we are inside
                 #  an array block
-                in_block_elemet = record_data2[0][0]
+                in_block_elemet = record_data2[0]
+                in_block_list = ''
+
                 continue
 
     if not output_data:

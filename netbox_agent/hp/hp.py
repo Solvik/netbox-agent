@@ -18,9 +18,16 @@ class HPHost(ServerBase):
         """
         # FIXME: make a dmidecode function get_by_dminame() ?
         if self.is_blade():
-            for key, value in self.dmi.parse().items():
-                if value['DMIName'] == 'HP ProLiant System/Rack Locator':
-                    return value
+            locator = self.dmi.get_by_type(204)
+            if self.get_product_name() == 'ProLiant BL460c Gen10':
+                locator = locator[0]['Strings']
+                return {
+                    'Enclosure Model': locator[2].strip(),
+                    'Enclosure Name': locator[0].strip(),
+                    'Server Bay': locator[3].strip(),
+                    'Enclosure Serial': locator[4].strip(),
+                    }
+            return locator[0]
 
     def get_blade_slot(self):
         if self.is_blade():
