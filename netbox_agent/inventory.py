@@ -72,8 +72,9 @@ class Inventory():
                 tags=[INVENTORY_TAG['cpu']['name']],
                 name=model,
                 discovered=True,
+                description='CPU',
             )
-            logging.info('Created CPU model {model}'.format(model=model))
+            logging.info('Creating CPU model {model}'.format(model=model))
 
     def update_netbox_cpus(self):
         cpus_number, model = self.get_cpus()
@@ -121,7 +122,7 @@ class Inventory():
                 name=name,
                 slug=name.lower(),
             )
-            logging.info('Created missing manufacturer {name}'.format(name=name))
+            logging.info('Creating missing manufacturer {name}'.format(name=name))
         return manufacturer
 
     def create_netbox_raid_card(self, raid_card):
@@ -137,8 +138,9 @@ class Inventory():
             tags=[INVENTORY_TAG['raid_card']['name']],
             name='{}'.format(name),
             serial='{}'.format(serial),
+            description='RAID Card',
         )
-        logging.info('Created RAID Card {name} (SN: {serial})'.format(
+        logging.info('Creating RAID Card {name} (SN: {serial})'.format(
             name=name,
             serial=serial,
         ))
@@ -191,13 +193,17 @@ class Inventory():
 
     def create_netbox_disks(self):
         for disk in self.get_disks():
-            disk = nb.dcim.inventory_items.create(
+            _ = nb.dcim.inventory_items.create(
                 device=self.device_id,
                 discovered=True,
                 tags=[INVENTORY_TAG['disk']['name']],
                 name='{} ({})'.format(disk['Model'], disk['Size']),
                 serial=disk['SN'],
             )
+            logging.info('Creating Disk {model} {serial}'.format(
+                model=disk['Model'],
+                serial=disk['SN'],
+            ))
 
     def update_netbox_disks(self):
         nb_disks = self.get_netbox_disks()
@@ -215,12 +221,13 @@ class Inventory():
         # create disks that are not in netbox
         for disk in disks:
             if disk['SN'] not in [x.serial for x in nb_disks]:
-                disk = nb.dcim.inventory_items.create(
+                nb_disk = nb.dcim.inventory_items.create(
                     device=self.device_id,
                     discovered=True,
                     tags=[INVENTORY_TAG['disk']['name']],
                     name='{} ({})'.format(disk['Model'], disk['Size']),
                     serial=disk['SN'],
+                    description=disk.get('Type', ''),
                 )
                 logging.info('Creating Disk {model} {serial}'.format(
                     model=disk['Model'],
@@ -264,7 +271,7 @@ class Inventory():
                 name=memory['Manufacturer'],
                 slug=memory['Manufacturer'].lower(),
             )
-        memory = nb.dcim.inventory_items.create(
+        nb_memory = nb.dcim.inventory_items.create(
             device=self.device_id,
             discovered=True,
             manufacturer=manufacturer.id,
@@ -272,12 +279,13 @@ class Inventory():
             name='{} ({} {})'.format(memory['Locator'], memory['Size'], memory['Type']),
             part_id=memory['PN'],
             serial=memory['SN'],
+            description='RAM',
         )
         logging.info('Creating Memory {type} {size}'.format(
             type=memory['Type'],
             size=memory['Size'],
         ))
-        return memory
+        return nb_memory
 
     def create_netbox_memories(self):
         for memory in self.get_memory():

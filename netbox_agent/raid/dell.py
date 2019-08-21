@@ -32,6 +32,7 @@ class StorcliController(RaidController):
             enclosure = physical_drive.get('EID:Slt').split(':')[0]
             slot = physical_drive.get('EID:Slt').split(':')[1]
             size = physical_drive.get('Size').strip()
+            media_type = physical_drive.get('Med').strip()
             drive_identifier = 'Drive /c{}/e{}/s{}'.format(
                 str(self.controller_index), str(enclosure), str(slot)
             )
@@ -41,6 +42,7 @@ class StorcliController(RaidController):
                 'Model': drive_attr.get('Model Number', '').strip(),
                 'SN': drive_attr.get('SN', '').strip(),
                 'Size': size,
+                'Type': media_type,
                 })
         return ret
 

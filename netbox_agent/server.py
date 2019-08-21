@@ -284,9 +284,9 @@ class ServerBase():
     def print_debug(self):
         self.inventory = Inventory(server=self)
         # FIXME: do something more generic by looping on every get_* methods
-        print(self.inventory.get_memory())
-        print(self.inventory.get_raid_cards())
-        print(self.inventory.get_netbox_raid_cards())
+#        print(self.inventory.get_memory())
+#        print(self.inventory.get_raid_cards())
+#        print(self.inventory.get_netbox_raid_cards())
         print(self.inventory.get_disks())
         return
         print('Datacenter:', self.get_datacenter())
