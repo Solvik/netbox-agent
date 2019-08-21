@@ -106,6 +106,29 @@ class HPRaidController(RaidController):
     def get_firmware_version(self):
         return self.data['Firmware Version']
 
+    def get_physical_disks(self):
+        ret = []
+        output = subprocess.getoutput(
+            'ssacli ctrl slot={slot} pd all show detail'.format(slot=self.data['Slot'])
+        )
+        lines = output.split('\n')
+        lines = list(filter(None, lines))
+        j = -1
+        while j < len(lines):
+            info_dict, j = _get_dict(lines, j + 1, 0)
+
+        key = next(iter(info_dict))
+        for array, physical_disk in info_dict[key].items():
+            for _, pd_attr in physical_disk.items():
+                ret.append({
+                    'Model': pd_attr.get('Model', '').strip(),
+                    'SN': pd_attr.get('Serial Number', '').strip(),
+                    'Size': pd_attr.get('Size', '').strip(),
+                    'Type': 'SSD' if pd_attr.get('Interface Type') == 'Solid State SATA'
+                    else 'HDD',
+                })
+        return ret
+
 
 class HPRaid(Raid):
     def __init__(self):

@@ -12,6 +12,9 @@ class RaidController():
     def get_firmware_version(self):
         raise NotImplementedError
 
+    def get_physical_disks(self):
+        raise NotImplementedError
+
 
 class Raid():
     def get_controllers(self):
