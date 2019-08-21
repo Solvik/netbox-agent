@@ -5,7 +5,7 @@ import re
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.misc import is_tool
 from netbox_agent.raid.hp import HPRaid
-from netbox_agent.raid.dell import StorcliRaid
+from netbox_agent.raid.storcli import StorcliRaid
 
 INVENTORY_TAG = {
     'cpu': {'name': 'hw:cpu', 'slug': 'hw-cpu'},
