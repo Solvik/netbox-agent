@@ -274,7 +274,7 @@ class ServerBase():
         # check network cards
         self.network = Network(server=self)
         self.network.update_netbox_network_cards()
-        # check raid_cards
+        # update inventory
         self.inventory = Inventory(server=self)
         self.inventory.update()
         if update:
@@ -282,13 +282,7 @@ class ServerBase():
         logging.debug('Finished updating Server!')
 
     def print_debug(self):
-        self.inventory = Inventory(server=self)
-        # FIXME: do something more generic by looping on every get_* methods
-#        print(self.inventory.get_memory())
-#        print(self.inventory.get_raid_cards())
-#        print(self.inventory.get_netbox_raid_cards())
-        print(self.inventory.get_disks())
-        return
+        self.network = Network(server=self)
         print('Datacenter:', self.get_datacenter())
         print('Netbox Datacenter:', self.get_netbox_datacenter())
         print('Rack:', self.get_rack())

@@ -65,6 +65,8 @@ rack_location:
 #
 # driver: "file:/tmp/datacenter"
 # regex: "(.*)"
+
+inventory: true
 ```
 
 # Hardware

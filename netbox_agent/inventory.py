@@ -2,7 +2,7 @@ import logging
 import subprocess
 import re
 
-from netbox_agent.config import netbox_instance as nb
+from netbox_agent.config import netbox_instance as nb, INVENTORY_ENABLED
 from netbox_agent.misc import is_tool
 from netbox_agent.raid.hp import HPRaid
 from netbox_agent.raid.storcli import StorcliRaid
@@ -43,6 +43,10 @@ class Inventory():
     * get netbox item
     * create netbox item
     * update netbox item
+
+    Known issues:
+    - no scan of non-raid devices
+    - no scan of NVMe devices
     """
 
     def __init__(self, server):
@@ -306,13 +310,19 @@ class Inventory():
                 self.create_netbox_memory(memory)
 
     def create(self):
+        if not INVENTORY_ENABLED:
+            return False
         self.create_netbox_cpus()
         self.create_netbox_memory()
         self.create_netbox_raid_cards()
         self.create_netbox_disks()
+        return True
 
     def update(self):
+        if not INVENTORY_ENABLED:
+            return False
         self.update_netbox_cpus()
         self.update_netbox_memory()
         self.update_netbox_raid_cards()
         self.update_netbox_disks()
+        return True
