@@ -241,7 +241,7 @@ class Network():
         nb_vlan = None
         if nic['vlan']:
             nb_vlan = self.get_or_create_vlan(nic['vlan'])
-        return nb.dcim.interfaces.create(
+        interface = nb.dcim.interfaces.create(
             device=self.device.id,
             name=nic['name'],
             mac_address=nic['mac'],
@@ -250,6 +250,17 @@ class Network():
             tagged_vlans=[nb_vlan.id] if nb_vlan is not None else [],
             mgmt_only=mgmt,
         )
+        # cable the interface
+        if NETWORK_LLDP:
+            switch_ip = self.lldp.get_switch_ip(interface.name)
+            switch_interface = self.lldp.get_switch_port(interface.name)
+            if switch_ip is not None and switch_interface is not None:
+                nic_update, interface = self.create_or_update_cable(
+                    switch_ip, switch_interface, interface
+                )
+                if nic_update:
+                    interface.save()
+        return interface
 
     def create_or_update_netbox_ip_on_interface(self, ip, interface):
         netbox_ip = nb.ipam.ip_addresses.get(
@@ -281,23 +292,6 @@ class Network():
                 status=1,
             )
         return netbox_ip
-
-    def create_netbox_network_cards(self):
-        logging.debug('Creating NIC...')
-        for nic in self.nics:
-            interface = self.get_netbox_network_card(nic)
-            # if network doesn't exist we create it
-            if not interface:
-                new_interface = self.create_netbox_nic(nic)
-                if nic['ip']:
-                    # for each ip, we try to find it
-                    # assign the device's interface to it
-                    # or simply create it
-                    for ip in nic['ip']:
-                        self.create_or_update_netbox_ip_on_interface(ip, new_interface)
-        self._set_bonding_interfaces()
-        self.create_or_update_ipmi()
-        logging.debug('Finished creating NIC!')
 
     def connect_interface_to_switch(self, switch_ip, switch_interface, nb_server_interface):
         logging.info('Interface {} is not connected to switch, trying to connect..'.format(
@@ -390,13 +384,29 @@ class Network():
                 cable = nb.dcim.cables.get(
                     nb_server_interface.cable.id
                 )
-                print(cable)
                 cable.delete()
                 update = True
                 nb_server_interface = self.connect_interface_to_switch(
                     switch_ip, switch_interface, nb_server_interface
                 )
         return update, nb_server_interface
+
+    def create_netbox_network_cards(self):
+        logging.debug('Creating NIC...')
+        for nic in self.nics:
+            interface = self.get_netbox_network_card(nic)
+            # if network doesn't exist we create it
+            if not interface:
+                new_interface = self.create_netbox_nic(nic)
+                if nic['ip']:
+                    # for each ip, we try to find it
+                    # assign the device's interface to it
+                    # or simply create it
+                    for ip in nic['ip']:
+                        self.create_or_update_netbox_ip_on_interface(ip, new_interface)
+        self._set_bonding_interfaces()
+        self.create_or_update_ipmi()
+        logging.debug('Finished creating NIC!')
 
     def update_netbox_network_cards(self):
         logging.debug('Updating NIC...')
