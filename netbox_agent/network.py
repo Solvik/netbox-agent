@@ -175,25 +175,43 @@ class Network():
             )
         return vlan
 
-    def reset_vlan_on_interface(self, vlan_id, interface):
+    def reset_vlan_on_interface(self, nic, interface):
         update = False
-        if vlan_id is None and \
+        vlan_id = nic['vlan']
+        lldp_vlan = self.lldp.get_switch_vlan(nic['name'])
+
+        # if local interface isn't a interface vlan or lldp doesn't report a vlan-id
+        if vlan_id is None and lldp_vlan is None and \
            (interface.mode is not None or len(interface.tagged_vlans) > 0):
             logging.info('Interface {interface} is not tagged, reseting mode'.format(
                 interface=interface))
             update = True
             interface.mode = None
             interface.tagged_vlans = []
+            interface.untagged_vlan = None
+        # if it's a vlan interface
         elif vlan_id and (
-                interface.mode is None or
+                interface.mode.value != 200 or
                 len(interface.tagged_vlans) != 1 or
                 interface.tagged_vlans[0].vid != vlan_id):
-            logging.info('Resetting VLAN on interface {interface}'.format(
+            logging.info('Resetting tagged VLAN(s) on interface {interface}'.format(
                 interface=interface))
             update = True
             nb_vlan = self.get_or_create_vlan(vlan_id)
             interface.mode = 200
             interface.tagged_vlans = [nb_vlan] if nb_vlan else []
+            interface.untagged_vlan = None
+        # if lldp reports a vlan-id
+        elif lldp_vlan and (
+                interface.mode.value != 100 or
+                interface.untagged_vlan is None or
+                interface.untagged_vlan.vid != lldp_vlan):
+            logging.info('Resetting access VLAN on interface {interface}'.format(
+                interface=interface))
+            update = True
+            nb_vlan = self.get_or_create_vlan(lldp_vlan)
+            interface.mode = 100
+            interface.untagged_vlan = nb_vlan.id
         return update, interface
 
     def create_or_update_ipmi(self):
@@ -222,7 +240,7 @@ class Network():
             # guess it with manufacturer (IDRAC, ILO, ...) ?
             update = False
             self.create_or_update_netbox_ip_on_interface(address, interface)
-            update, interface = self.reset_vlan_on_interface(nic['vlan'], interface)
+            update, interface = self.reset_vlan_on_interface(nic, interface)
             if mac.upper() != interface.mac_address:
                 logging.info('IPMI mac changed from {old_mac} to {new_mac}'.format(
                     old_mac=interface.mac_address, new_mac=mac.upper()))
@@ -239,21 +257,31 @@ class Network():
             name=nic['name'], mac=nic['mac'], device=self.device.name))
 
         nb_vlan = None
-        if nic['vlan']:
-            nb_vlan = self.get_or_create_vlan(nic['vlan'])
         interface = nb.dcim.interfaces.create(
             device=self.device.id,
             name=nic['name'],
             mac_address=nic['mac'],
             type=type,
-            mode=200 if nic['vlan'] else None,
-            tagged_vlans=[nb_vlan.id] if nb_vlan is not None else [],
             mgmt_only=mgmt,
         )
+        if nic['vlan']:
+            nb_vlan = self.get_or_create_vlan(nic['vlan'])
+            interface.mode = 200
+            interface.tagged_vlans = [nb_vlan.id]
+            interface.save()
+        elif self.lldp.get_switch_vlan(nic['name']) is not None:
+            # if lldp reports a vlan on an interface, tag the interface in access and set the vlan
+            vlan_id = self.lldp.get_switch_vlan(nic['name'])
+            nb_vlan = self.get_or_create_vlan(vlan_id)
+            interface.mode = 100
+            interface.untagged_vlan = nb_vlan.id
+            interface.save()
+
         # cable the interface
         if NETWORK_LLDP:
             switch_ip = self.lldp.get_switch_ip(interface.name)
             switch_interface = self.lldp.get_switch_port(interface.name)
+
             if switch_ip is not None and switch_interface is not None:
                 nic_update, interface = self.create_or_update_cable(
                     switch_ip, switch_interface, interface
@@ -450,21 +478,22 @@ class Network():
                 )
                 interface = self.create_netbox_nic(nic)
 
-            nic_update = False
+            nic_update = 0
             if nic['name'] != interface.name:
-                nic_update = True
                 logging.info('Updating interface {interface} name to: {name}'.format(
                     interface=interface, name=nic['name']))
                 interface.name = nic['name']
+                nic_update += 1
 
-            nic_update, interface = self.reset_vlan_on_interface(nic['vlan'], interface)
+            ret, interface = self.reset_vlan_on_interface(nic, interface)
+            nic_update += ret
 
             type = self.get_netbox_type_for_nic(nic)
             if not interface.type or \
                type != interface.type.value:
                 logging.info('Interface type is wrong, resetting')
-                nic_update = True
                 interface.type = type
+                nic_update += 1
 
             if interface.lag is not None:
                 local_lag_int = next(
@@ -472,22 +501,24 @@ class Network():
                 )
                 if nic['name'] not in local_lag_int['bonding_slaves']:
                     logging.info('Interface has no LAG, resetting')
-                    nic_update = True
+                    nic_update += 1
                     interface.lag = None
 
             # cable the interface
             if NETWORK_LLDP:
                 switch_ip = self.lldp.get_switch_ip(interface.name)
                 switch_interface = self.lldp.get_switch_port(interface.name)
-                nic_update, interface = self.create_or_update_cable(
+                ret, interface = self.create_or_update_cable(
                     switch_ip, switch_interface, interface
                 )
+                if ret:
+                    nic_update += 1
 
             if nic['ip']:
                 # sync local IPs
                 for ip in nic['ip']:
                     self.create_or_update_netbox_ip_on_interface(ip, interface)
-            if nic_update:
+            if nic_update > 0:
                 interface.save()
 
         self._set_bonding_interfaces()
