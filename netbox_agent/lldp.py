@@ -9,6 +9,8 @@ class LLDP():
     def parse(self):
         output_dict = {}
         for entry in self.output.splitlines():
+            if '=' not in entry:
+                continue
             path, value = entry.strip().split("=", 1)
             path = path.split(".")
             path_components, final = path[:-1], path[-1]
@@ -37,6 +39,10 @@ class LLDP():
         if self.data['lldp'].get(interface) is None:
             return None
 
-        if self.data['lldp'][interface].get('vlan'):
-            return int(self.data['lldp'][interface]['vlan'].replace('vlan-', ''))
+        lldp = self.data['lldp'][interface]
+        if lldp.get('vlan'):
+            if lldp['vlan'].get('vlan-id'):
+                return int(lldp['vlan'].get('vlan-id'))
+            elif type(lldp['vlan']) is str:
+                return int(lldp['vlan'].replace('vlan-', ''))
         return None
