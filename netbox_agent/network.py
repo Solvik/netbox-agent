@@ -348,13 +348,13 @@ class Network():
         return nb_server_interface
 
     def create_or_update_cable(self, switch_ip, switch_interface, nb_server_interface):
+        update = False
         if nb_server_interface.cable is None:
             update = True
             nb_server_interface = self.connect_interface_to_switch(
                 switch_ip, switch_interface, nb_server_interface
             )
         else:
-            update = False
             nb_sw_int = nb_server_interface.cable.termination_b
             nb_sw = nb_sw_int.device
             nb_mgmt_int = nb.dcim.interfaces.get(
@@ -365,7 +365,12 @@ class Network():
                 interface_id=nb_mgmt_int.id
             )
             if nb_mgmt_ip is None:
-                pass
+                logging.error(
+                    'Switch {switch_ip} does not have IP on its management interface'.format(
+                        switch_ip=switch_ip,
+                    )
+                )
+                return update, nb_server_interface
 
             # Netbox IP is always IP/Netmask
             nb_mgmt_ip = nb_mgmt_ip.address.split('/')[0]
