@@ -7,9 +7,10 @@ from netaddr import IPAddress, IPNetwork
 import netifaces
 
 from netbox_agent.config import netbox_instance as nb
-from netbox_agent.config import NETWORK_IGNORE_INTERFACES, NETWORK_IGNORE_IPS
+from netbox_agent.config import NETWORK_IGNORE_INTERFACES, NETWORK_IGNORE_IPS, NETWORK_LLDP
 from netbox_agent.ethtool import Ethtool
 from netbox_agent.ipmi import IPMI
+from netbox_agent.lldp import LLDP
 
 IFACE_TYPE_100ME_FIXED = 800
 IFACE_TYPE_1GE_FIXED = 1000
@@ -44,6 +45,7 @@ class Network():
 
         self.server = server
         self.device = self.server.get_netbox_server()
+        self.lldp = LLDP()
         self.scan()
 
     def scan(self):
@@ -297,6 +299,105 @@ class Network():
         self.create_or_update_ipmi()
         logging.debug('Finished creating NIC!')
 
+    def connect_interface_to_switch(self, switch_ip, switch_interface, nb_server_interface):
+        logging.info('Interface {} is not connected to switch, trying to connect..'.format(
+            nb_server_interface.name
+        ))
+        nb_mgmt_ip = nb.ipam.ip_addresses.get(
+            address=switch_ip,
+        )
+        if not nb_mgmt_ip:
+            logging.error('Switch IP {} cannot be found in Netbox'.format(switch_ip))
+            return nb_server_interface
+
+        try:
+            nb_switch = nb_mgmt_ip.interface.device
+            logging.info('Found a switch in Netbox based on LLDP infos: {} (id: {})'.format(
+                switch_ip,
+                nb_switch.id
+            ))
+        except KeyError:
+            logging.error(
+                'Switch IP {} is found but not associated to a Netbox Switch Device'.format(
+                    switch_ip
+                )
+            )
+            return nb_server_interface
+
+        switch_interface = self.lldp.get_switch_port(nb_server_interface.name)
+        nb_switch_interface = nb.dcim.interfaces.get(
+            device=nb_switch,
+            name=switch_interface,
+        )
+        if nb_switch_interface is None:
+            logging.error('Switch interface {} cannot be found'.format(switch_interface))
+            return nb_server_interface
+
+        logging.info('Found interface {} on switch {}'.format(
+            switch_interface,
+            switch_ip,
+        ))
+        cable = nb.dcim.cables.create(
+            termination_a_id=nb_server_interface.id,
+            termination_a_type="dcim.interface",
+            termination_b_id=nb_switch_interface.id,
+            termination_b_type="dcim.interface",
+        )
+        nb_server_interface.cable = cable
+        logging.info(
+            'Connected interface {interface} with {switch_interface} of {switch_ip}'.format(
+                interface=nb_server_interface.name,
+                switch_interface=switch_interface,
+                switch_ip=switch_ip,
+            )
+        )
+        return nb_server_interface
+
+    def create_or_update_cable(self, switch_ip, switch_interface, nb_server_interface):
+        if nb_server_interface.cable is None:
+            update = True
+            nb_server_interface = self.connect_interface_to_switch(
+                switch_ip, switch_interface, nb_server_interface
+            )
+        else:
+            update = False
+            nb_sw_int = nb_server_interface.cable.termination_b
+            nb_sw = nb_sw_int.device
+            nb_mgmt_int = nb.dcim.interfaces.get(
+                device_id=nb_sw.id,
+                mgmt_only=True
+            )
+            nb_mgmt_ip = nb.ipam.ip_addresses.get(
+                interface_id=nb_mgmt_int.id
+            )
+            if nb_mgmt_ip is None:
+                pass
+
+            # Netbox IP is always IP/Netmask
+            nb_mgmt_ip = nb_mgmt_ip.address.split('/')[0]
+            if nb_mgmt_ip != switch_ip or \
+               nb_sw_int.name != switch_interface:
+                logging.info('Netbox cable is not connected to correct ports, fixing..')
+                logging.info(
+                    'Deleting cable {cable_id} from {interface} to {switch_interface} of '
+                    '{switch_ip}'.format(
+                        cable_id=nb_server_interface.cable.id,
+                        interface=nb_server_interface.name,
+                        switch_interface=nb_sw_int.name,
+                        switch_ip=nb_mgmt_ip,
+                    )
+                )
+                cable = nb.dcim.cables.get(
+                    nb_server_interface.cable.id
+                )
+                print(cable)
+                cable.delete()
+                update = True
+                nb_server_interface = self.connect_interface_to_switch(
+                    switch_ip, switch_interface, nb_server_interface
+                )
+        return update, nb_server_interface
+
     def update_netbox_network_cards(self):
         logging.debug('Updating NIC...')
 
@@ -359,12 +460,17 @@ class Network():
                     nic_update = True
                     interface.lag = None
 
+            # cable the interface
+            if NETWORK_LLDP:
+                switch_ip = self.lldp.get_switch_ip(interface.name)
+                switch_interface = self.lldp.get_switch_port(interface.name)
+                nic_update, interface = self.create_or_update_cable(
+                    switch_ip, switch_interface, interface
+                )
+
             if nic['ip']:
                 # sync local IPs
                 for ip in nic['ip']:
-                    netbox_ip = nb.ipam.ip_addresses.get(
-                        address=ip,
-                    )
                     self.create_or_update_netbox_ip_on_interface(ip, interface)
             if nic_update:
                 interface.save()
