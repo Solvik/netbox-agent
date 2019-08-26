@@ -60,6 +60,7 @@ class Network():
                 continue
 
             ip_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET)
+            ip_addr += netifaces.ifaddresses(interface).get(netifaces.AF_INET6)
             if NETWORK_IGNORE_IPS and ip_addr:
                 for i, ip in enumerate(ip_addr):
                     if re.match(NETWORK_IGNORE_IPS, ip['addr']):
