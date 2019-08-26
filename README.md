@@ -44,6 +44,8 @@ netbox:
 network:
   ignore_interfaces: "(dummy.*|docker.*)"
   ignore_ips: (127\.0\.0\..*)
+  # enable auto-cabling
+  lldp: true
 
 datacenter_location:
  driver: "cmd:cat /etc/qualification | tr [a-z] [A-Z]"
