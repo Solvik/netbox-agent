@@ -112,6 +112,16 @@ Feel free to send me a dmidecode output for Supermicro's blade!
 * SSG-6028R
 * SYS-6018R
 
+## QCT
+
+### Blades
+
+* QuantaMicro X10E-9N
+
+### Pizzas
+
+* Nothing ATM, feel free to send me a dmidecode or make a PR!
+
 # TODO
 
 - [ ] CPU, RAID Card(s), RAM, Disks in `Device`'s `Inventory`
