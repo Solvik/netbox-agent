@@ -178,7 +178,7 @@ class Network():
     def reset_vlan_on_interface(self, nic, interface):
         update = False
         vlan_id = nic['vlan']
-        lldp_vlan = self.lldp.get_switch_vlan(nic['name'])
+        lldp_vlan = self.lldp.get_switch_vlan(nic['name']) if NETWORK_LLDP else None
 
         # if local interface isn't a interface vlan or lldp doesn't report a vlan-id
         if vlan_id is None and lldp_vlan is None and \
@@ -264,12 +264,13 @@ class Network():
             type=type,
             mgmt_only=mgmt,
         )
+
         if nic['vlan']:
             nb_vlan = self.get_or_create_vlan(nic['vlan'])
             interface.mode = 200
             interface.tagged_vlans = [nb_vlan.id]
             interface.save()
-        elif self.lldp.get_switch_vlan(nic['name']) is not None:
+        elif NETWORK_LLDP and self.lldp.get_switch_vlan(nic['name']) is not None:
             # if lldp reports a vlan on an interface, tag the interface in access and set the vlan
             vlan_id = self.lldp.get_switch_vlan(nic['name'])
             nb_vlan = self.get_or_create_vlan(vlan_id)
@@ -511,8 +512,7 @@ class Network():
                 ret, interface = self.create_or_update_cable(
                     switch_ip, switch_interface, interface
                 )
-                if ret:
-                    nic_update += 1
+                nic_update += ret
 
             if nic['ip']:
                 # sync local IPs
