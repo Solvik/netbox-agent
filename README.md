@@ -105,7 +105,7 @@ Tested on:
 
 ### Blades
 
-TODO
+Feel free to send me a dmidecode output for Supermicro's blade!
 
 ### Pizzas
 
