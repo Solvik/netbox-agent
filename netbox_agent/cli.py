@@ -3,6 +3,7 @@ import argparse
 from netbox_agent.vendors.dell import DellHost
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.vendors.hp import HPHost
+from netbox_agent.vendors.qct import QCTHost
 from netbox_agent.vendors.supermicro import SupermicroHost
 from netbox_agent.logging import logging # NOQA
 
@@ -11,6 +12,7 @@ MANUFACTURERS = {
    'HP': HPHost,
    'HPE': HPHost,
    'Supermicro': SupermicroHost,
+   'Quanta Cloud Technology Inc.': QCTHost,
    }
 
 
