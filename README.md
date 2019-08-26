@@ -85,7 +85,7 @@ Tested on:
 
 * DSS7500
 
-## HP
+## HP / HPE
 
 ### Blades
 
@@ -97,10 +97,20 @@ Tested on:
 ### Pizzas
 
 * ProLiant DL380p Gen8
+* ProLiant SL4540 Gen8
+* ProLiant SL4540 Gen9
+* ProLiant XL450 Gen10
 
-## HPE
+## Supermicro
 
-* HPE ProLiant XL450 Gen10
+### Blades
+
+Feel free to send me a dmidecode output for Supermicro's blade!
+
+### Pizzas
+
+* SSG-6028R
+* SYS-6018R
 
 # TODO
 

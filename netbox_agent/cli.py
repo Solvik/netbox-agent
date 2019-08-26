@@ -1,14 +1,16 @@
 import argparse
 
-from netbox_agent.dell.dell import DellHost
+from netbox_agent.vendors.dell import DellHost
 import netbox_agent.dmidecode as dmidecode
-from netbox_agent.hp.hp import HPHost
+from netbox_agent.vendors.hp import HPHost
+from netbox_agent.vendors.supermicro import SupermicroHost
 from netbox_agent.logging import logging # NOQA
 
 MANUFACTURERS = {
    'Dell Inc.': DellHost,
    'HP': HPHost,
    'HPE': HPHost,
+   'Supermicro': SupermicroHost,
    }
 
 
