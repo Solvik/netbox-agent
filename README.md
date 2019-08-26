@@ -15,6 +15,7 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 * Update existing `Device` and `Interface`
 * Handle blade moving (new slot, new chassis)
 * Automatic cabling (server's interface to switch's interface) using lldp
+* Local inventory using `Inventory Item` for CPU, RAM, RAID cards, physical disks (behind raid cards)
 
 # Requirements
 
