@@ -5,6 +5,7 @@ import socket
 from netbox_agent.config import netbox_instance as nb
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.location import Datacenter, Rack
+from netbox_agent.inventory import Inventory
 from netbox_agent.network import Network
 
 
@@ -204,6 +205,8 @@ class ServerBase():
 
         self.network = Network(server=self)
         self.network.create_netbox_network_cards()
+        self.inventory = Inventory(server=self)
+        self.inventory.create()
         logging.debug('Server created!')
 
     def _netbox_update_chassis_for_blade(self, server, datacenter):
@@ -271,12 +274,15 @@ class ServerBase():
         # check network cards
         self.network = Network(server=self)
         self.network.update_netbox_network_cards()
+        # update inventory
+        self.inventory = Inventory(server=self)
+        self.inventory.update()
         if update:
             server.save()
         logging.debug('Finished updating Server!')
 
     def print_debug(self):
-        # FIXME: do something more generic by looping on every get_* methods
+        self.network = Network(server=self)
         print('Datacenter:', self.get_datacenter())
         print('Netbox Datacenter:', self.get_netbox_datacenter())
         print('Rack:', self.get_rack())

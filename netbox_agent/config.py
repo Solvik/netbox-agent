@@ -38,3 +38,5 @@ if config.get('network'):
     NETWORK_IGNORE_INTERFACES = config['network'].get('ignore_interfaces')
     NETWORK_IGNORE_IPS = config['network'].get('ignore_ips')
     NETWORK_LLDP = config['network'].get('lldp') is True
+
+INVENTORY_ENABLED = config.get('inventory') is True

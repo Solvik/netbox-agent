@@ -65,6 +65,8 @@ rack_location:
 #
 # driver: "file:/tmp/datacenter"
 # regex: "(.*)"
+
+inventory: true
 ```
 
 # Hardware
@@ -124,5 +126,5 @@ Feel free to send me a dmidecode output for Supermicro's blade!
 
 # TODO
 
-- [ ] CPU, RAID Card(s), RAM, Disks in `Device`'s `Inventory`
+- [ ] handle non-raid and NVMe drive in Inventory
 - [ ] `CustomFields` support with firmware versions for Device (BIOS), RAID Cards and disks
