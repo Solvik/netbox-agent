@@ -12,8 +12,9 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 * Create IPMI interface if found
 * Create or get existing VLAN and associate it to interfaces
 * Generic ability to guess datacenters and rack location through drivers (`cmd` and `file` and custom ones)
-* Update existing `Device` and `Interfaces`
+* Update existing `Device` and `Interface`
 * Handle blade moving (new slot, new chassis)
+* Automatic cabling (server's interface to switch's interface) using lldp
 
 # Requirements
 
@@ -26,6 +27,7 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 - ethtool
 - dmidecode
 - ipmitool
+- lldpd
 
 # Known limitations
 
@@ -102,6 +104,5 @@ Tested on:
 
 # TODO
 
-- [ ] Handle switch <> NIC connections (using lldp)
 - [ ] CPU, RAID Card(s), RAM, Disks in `Device`'s `Inventory`
 - [ ] `CustomFields` support with firmware versions for Device (BIOS), RAID Cards and disks
