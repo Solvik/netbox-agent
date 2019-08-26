@@ -191,7 +191,7 @@ class Network():
             interface.untagged_vlan = None
         # if it's a vlan interface
         elif vlan_id and (
-                interface.mode.value != 200 or
+                interface.mode is None or interface.mode.value != 200 or
                 len(interface.tagged_vlans) != 1 or
                 interface.tagged_vlans[0].vid != vlan_id):
             logging.info('Resetting tagged VLAN(s) on interface {interface}'.format(
@@ -203,7 +203,7 @@ class Network():
             interface.untagged_vlan = None
         # if lldp reports a vlan-id
         elif lldp_vlan and (
-                interface.mode.value != 100 or
+                interface.mode is None or interface.mode.value != 100 or
                 interface.untagged_vlan is None or
                 interface.untagged_vlan.vid != lldp_vlan):
             logging.info('Resetting access VLAN on interface {interface}'.format(
