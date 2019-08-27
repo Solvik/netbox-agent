@@ -2,8 +2,14 @@ from netbox_agent.server import ServerBase
 
 
 class SupermicroHost(ServerBase):
+    def __init__(self, *args, **kwargs):
+        super(SupermicroHost, self).__init__(*args, **kwargs)
+        self.manufacturer = 'Supermicro'
+
     def is_blade(self):
-        return self.get_product_name().startswith('SBI')
+        blade = self.get_product_name().startswith('SBI')
+        blade |= self.get_product_name().startswith('SYS')
+        return blade
 
     def get_blade_slot(self):
         # No supermicro on hands
