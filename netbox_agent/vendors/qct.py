@@ -5,7 +5,7 @@ class QCTHost(ServerBase):
     def __init__(self, *args, **kwargs):
         super(QCTHost, self).__init__(*args, **kwargs)
         self.manufacturer = 'QCT'
-    
+
     def is_blade(self):
         return 'Location In Chassis' in self.dmi.get_by_type('Baseboard')[0].keys()
 
