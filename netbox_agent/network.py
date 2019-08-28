@@ -60,10 +60,18 @@ class Network():
                 continue
 
             ip_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET)
-            try:
-                ip_addr += netifaces.ifaddresses(interface).get(netifaces.AF_INET6)
-            except:
-                logging.debug('No IPv6 addresses defined.')
+            ip6_addr += netifaces.ifaddresses(interface).get(netifaces.AF_INET6)
+
+            # netifaces returns a ipv6 netmask that netaddr does not understand.
+            # this strips the netmask down to the correct format for netaddr.
+            # ie, this:
+            #   {'addr': 'fe80::ec4:7aff:fe59:ec4a%eno1.50', 'netmask': 'ffff:ffff:ffff:ffff::/64'}
+            # becomes:
+            #   {'addr': 'fe80::ec4:7aff:fe59:ec4a%eno1.50', 'netmask': 'ffff:ffff:ffff:ffff::'}
+            #
+            for addr in ip6_addr:
+                addr["netmask"] = re.sub("/\d+$", "", addr["netmask"])
+                ip_addr.append(addr)
 
             if NETWORK_IGNORE_IPS and ip_addr:
                 for i, ip in enumerate(ip_addr):
