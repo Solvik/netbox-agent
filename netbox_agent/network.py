@@ -60,7 +60,7 @@ class Network():
                 continue
 
             ip_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET)
-            ip6_addr += netifaces.ifaddresses(interface).get(netifaces.AF_INET6)
+            ip6_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET6)
 
             # netifaces returns a ipv6 netmask that netaddr does not understand.
             # this strips the netmask down to the correct format for netaddr.
