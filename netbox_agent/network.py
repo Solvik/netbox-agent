@@ -71,8 +71,8 @@ class Network():
             #   {'addr': 'fe80::ec4:7aff:fe59:ec4a', 'netmask': 'ffff:ffff:ffff:ffff::'}
             #
             for addr in ip6_addr:
-                addr["addr"] = re.sub("\%.*$", "", addr["addr"])
-                addr["netmask"] = re.sub("/\d+$", "", addr["netmask"])
+                addr["addr"] = addr["addr"].replace('%{}'.format(interface), '')
+                addr["netmask"] = addr["netmask"].split('/')[0]
                 ip_addr.append(addr)
 
             if NETWORK_IGNORE_IPS and ip_addr:
