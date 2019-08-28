@@ -63,12 +63,19 @@ class Network():
             ip6_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET6)
 
             # netifaces returns a ipv6 netmask that netaddr does not understand.
-            # this strips the netmask down to the correct format for netaddr, and remove the interface.
+            # this strips the netmask down to the correct format for netaddr,
+            # and remove the interface.
             # ie, this:
-            #   {'addr': 'fe80::ec4:7aff:fe59:ec4a%eno1.50', 'netmask': 'ffff:ffff:ffff:ffff::/64'}
+            #   {
+            #      'addr': 'fe80::ec4:7aff:fe59:ec4a%eno1.50', 
+            #      'netmask': 'ffff:ffff:ffff:ffff::/64'
+            #   }
             #
             # becomes:
-            #   {'addr': 'fe80::ec4:7aff:fe59:ec4a', 'netmask': 'ffff:ffff:ffff:ffff::'}
+            #   {
+            #      'addr': 'fe80::ec4:7aff:fe59:ec4a', 
+            #      'netmask': 'ffff:ffff:ffff:ffff::'
+            #   }
             #
             for addr in ip6_addr:
                 addr["addr"] = addr["addr"].replace('%{}'.format(interface), '')
