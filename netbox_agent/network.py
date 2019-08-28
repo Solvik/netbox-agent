@@ -67,13 +67,13 @@ class Network():
             # and remove the interface.
             # ie, this:
             #   {
-            #      'addr': 'fe80::ec4:7aff:fe59:ec4a%eno1.50', 
+            #      'addr': 'fe80::ec4:7aff:fe59:ec4a%eno1.50',
             #      'netmask': 'ffff:ffff:ffff:ffff::/64'
             #   }
             #
             # becomes:
             #   {
-            #      'addr': 'fe80::ec4:7aff:fe59:ec4a', 
+            #      'addr': 'fe80::ec4:7aff:fe59:ec4a',
             #      'netmask': 'ffff:ffff:ffff:ffff::'
             #   }
             #
