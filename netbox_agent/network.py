@@ -298,7 +298,7 @@ class Network():
         - Anycast IP
         * If IP exists and is in Anycast, create a new Anycast one
         * If IP exists and isn't assigned, take it
-        * If server is decomissioned, the free IP will be taken
+        * If server is decomissioned, then free IP will be taken
 
         - Normal IP (can be associated only once)
         * If IP doesn't exist, create it
