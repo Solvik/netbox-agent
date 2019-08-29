@@ -81,7 +81,7 @@ class Inventory():
             manufacturer = self.find_or_create_manufacturer(self, cpu["vendor"])
             _ = nb.dcim.inventory_items.create(
                 device=self.device_id,
-                manufacturer = manufacturer.id
+                manufacturer = manufacturer.id,
                 discovered=True,
                 tags=[INVENTORY_TAG['cpu']['name']],
                 name=cpu['product'],
