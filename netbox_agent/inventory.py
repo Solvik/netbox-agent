@@ -6,11 +6,13 @@ from netbox_agent.config import netbox_instance as nb, INVENTORY_ENABLED
 from netbox_agent.misc import is_tool
 from netbox_agent.raid.hp import HPRaid
 from netbox_agent.raid.storcli import StorcliRaid
+from netbox_agent.lshw import LSHW
 
 INVENTORY_TAG = {
     'cpu': {'name': 'hw:cpu', 'slug': 'hw-cpu'},
-    'memory': {'name': 'hw:memory', 'slug': 'hw-memory'},
     'disk': {'name': 'hw:disk', 'slug': 'hw-disk'},
+    'memory': {'name': 'hw:memory', 'slug': 'hw-memory'},
+    'network':{'name': 'hw:network', 'slug':'hw-network'},
     'raid_card': {'name': 'hw:raid_card', 'slug': 'hw-raid-card'},
     }
 
@@ -54,6 +56,8 @@ class Inventory():
         self.device_id = self.server.get_netbox_server().id
         self.raid = None
         self.disks = []
+
+        self.lshw = LSHW()
 
     def get_cpus(self):
         model = None
