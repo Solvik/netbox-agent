@@ -2,7 +2,8 @@ import importlib
 import importlib.machinery
 
 from netbox_agent.config import DATACENTER_LOCATION, DATACENTER_LOCATION_DRIVER_FILE, \
-    DATACENTER_LOCATION_REGEX, RACK_LOCATION, RACK_LOCATION_DRIVER_FILE, RACK_LOCATION_REGEX
+    DATACENTER_LOCATION_REGEX, RACK_LOCATION, RACK_LOCATION_DRIVER_FILE, RACK_LOCATION_REGEX, \
+    SLOT_LOCATION, SLOT_LOCATION_DRIVER_FILE, SLOT_LOCATION_REGEX
 
 
 class LocationBase():
@@ -67,3 +68,12 @@ class Rack(LocationBase):
         driver_file = RACK_LOCATION_DRIVER_FILE
         regex = RACK_LOCATION_REGEX
         super().__init__(driver, driver_value, driver_file, regex)
+
+class Slot(LocationBase):
+    def __init__(self):
+        driver = SLOT_LOCATION.split(':')[0] if SLOT_LOCATION else None
+        driver_value = ':'.join(SLOT_LOCATION.split(':')[1:]) if SLOT_LOCATION else None
+        driver_file = SLOT_LOCATION_DRIVER_FILE
+        regex = SLOT_LOCATION_REGEX
+        super().__init__(driver, driver_value, driver_file, regex)
+        

@@ -18,6 +18,9 @@ DATACENTER_LOCATION_REGEX = None
 RACK_LOCATION_DRIVER_FILE = None
 RACK_LOCATION = None
 RACK_LOCATION_REGEX = None
+SLOT_LOCATION_DRIVER_FILE = None
+SLOT_LOCATION = None
+SLOT_LOCATION_REGEX = None
 
 if config.get('datacenter_location'):
     dc_loc = config.get('datacenter_location')
@@ -31,6 +34,13 @@ if config.get('rack_location'):
     RACK_LOCATION = rack_location.get('driver')
     RACK_LOCATION_REGEX = rack_location.get('regex')
 
+if config.get('slot_location'):
+    slot_location = config['slot_location']
+    SLOT_LOCATION_DRIVER_FILE = slot_location.get('driver_file')
+    SLOT_LOCATION = slot_location.get('driver')
+    SLOT_LOCATION_REGEX = slot_location.get('regex')
+
+    
 NETWORK_IGNORE_INTERFACES = None
 NETWORK_IGNORE_IPS = None
 NETWORK_LLDP = None

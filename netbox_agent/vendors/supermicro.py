@@ -1,3 +1,4 @@
+from netbox_agent.location import Slot
 from netbox_agent.server import ServerBase
 
 
@@ -6,6 +7,11 @@ class SupermicroHost(ServerBase):
         return self.get_product_name().startswith('SBI')
 
     def get_blade_slot(self):
+        if self.is_blade():
+            # Some Supermicro servers don't report the slot in dmidecode
+            # let's use a regex
+            slot = Slot()
+            return slot.get()
         # No supermicro on hands
         return None
 
