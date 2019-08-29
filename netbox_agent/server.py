@@ -18,7 +18,7 @@ class ServerBase():
 
         self.system = self.dmi.get_by_type('System')
         self.chassis = self.dmi.get_by_type('Chassis')
-        self.system = self.dmi.get_by_type('Baseboard')
+        self.baseboard = self.dmi.get_by_type('Baseboard')
         self.bios = self.dmi.get_by_type('BIOS')
 
         self.network = None
