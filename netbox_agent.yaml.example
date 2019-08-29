@@ -25,4 +25,10 @@ rack_location:
 # driver: "file:/tmp/datacenter"
 # regex: "(.*)"
 
+# Some servers dont report the slot, since most people put it in the hostname
+# here's a way to extract it and maintain correct slot location in Netbox
+# slot_location:
+#   driver: 'cmd:hostname'
+#   regex: '.*-(\d+)'
+
 inventory: true
