@@ -77,7 +77,7 @@ class Inventory():
         return manufacturer
 
     def create_netbox_cpus(self):
-        for i in self.lshw.get_hw_linux("cpu"):
+        for i in self.lshw.get_hw_linux('cpu'):
             manufacturer = self.find_or_create_manufacturer(self, cpu["vendor"])
             _ = nb.dcim.inventory_items.create(
                 device=self.device_id,
@@ -92,7 +92,7 @@ class Inventory():
             logging.info('Creating CPU model {}'.format(cpu['product']))
 
     def update_netbox_cpus(self):
-        cpus = self.lshw.get_hw_linux(cpu)
+        cpus = self.lshw.get_hw_linux('cpu')
         nb_cpus = nb.dcim.inventory_items.filter(
             device_id=self.device_id,
             tag=INVENTORY_TAG['cpu']['slug'],
