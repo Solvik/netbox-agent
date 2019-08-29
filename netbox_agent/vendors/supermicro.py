@@ -8,9 +8,9 @@ from netbox_agent.server import ServerBase
 
  There are 3 serial numbers in the system
 
-   1) Chassis - this the chassis
+   1) System - this is used for the chassis information.
    2) Baseboard - this is used for the blade.
-   3) System - this is ignored.
+   3) Chassis - this is ignored.
 
 """
 
@@ -43,7 +43,7 @@ class SupermicroHost(ServerBase):
 
     def get_chassis(self):
         if self.is_blade():
-            return "{} Chassis".format(self.system[0]['Product Name'].strip())
+            return self.system[0]['Product Name'].strip()
         return self.get_product_name()
 
     def get_chassis_service_tag(self):
