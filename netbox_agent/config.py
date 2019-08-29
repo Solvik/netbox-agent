@@ -40,7 +40,7 @@ if config.get('slot_location'):
     SLOT_LOCATION = slot_location.get('driver')
     SLOT_LOCATION_REGEX = slot_location.get('regex')
 
-    
+
 NETWORK_IGNORE_INTERFACES = None
 NETWORK_IGNORE_IPS = None
 NETWORK_LLDP = None
