@@ -59,33 +59,40 @@ class Inventory():
 
         self.lshw = LSHW()
 
-    def get_cpus(self):
-        model = None
-        nb = None
+    def find_or_create_manufacturer(self, name):
+        if name is None:
+            return None
 
-        output = subprocess.getoutput('lscpu')
-        model_re = re.search(r'Model name: (.*)', output)
-        if len(model_re.groups()) > 0:
-            model = model_re.groups()[0].strip()
-        socket_re = re.search(r'Socket\(s\): (.*)', output)
-        if len(socket_re.groups()) > 0:
-            nb = int(socket_re.groups()[0].strip())
-        return nb, model
+        manufacturer = nb.dcim.manufacturers.get(
+            name=name,
+        )
+
+        if not manufacturer:
+            manufacturer = nb.dcim.manufacturers.create(
+                name=name,
+                slug=name.lower(),
+            )
+            logging.info('Creating missing manufacturer {name}'.format(name=name))
+
+        return manufacturer
 
     def create_netbox_cpus(self):
-        nb_cpus, model = self.get_cpus()
-        for i in range(nb_cpus):
+        for i in self.get_hw_linux("cpu")
+            manufacturer = self.find_or_create_manufacturer(self, cpu["vendor"])
             _ = nb.dcim.inventory_items.create(
                 device=self.device_id,
-                tags=[INVENTORY_TAG['cpu']['name']],
-                name=model,
+                manufacturer = manufacturer.id
                 discovered=True,
+                tags=[INVENTORY_TAG['cpu']['name']],
+                name=cpu['product'],
                 description='CPU',
+                asset_tag=cpu['location']
             )
-            logging.info('Creating CPU model {model}'.format(model=model))
+
+            logging.info('Creating CPU model {}'.format(cpu['product']))
 
     def update_netbox_cpus(self):
-        cpus_number, model = self.get_cpus()
+        cpus_number, model = self.get_hw_linux(cpu))
         nb_cpus = nb.dcim.inventory_items.filter(
             device_id=self.device_id,
             tag=INVENTORY_TAG['cpu']['slug'],
@@ -118,20 +125,6 @@ class Inventory():
             tag=INVENTORY_TAG['raid_card']['slug'],
             )
         return raid_cards
-
-    def find_or_create_manufacturer(self, name):
-        if name is None:
-            return None
-        manufacturer = nb.dcim.manufacturers.get(
-            name=name,
-        )
-        if not manufacturer:
-            manufacturer = nb.dcim.manufacturers.create(
-                name=name,
-                slug=name.lower(),
-            )
-            logging.info('Creating missing manufacturer {name}'.format(name=name))
-        return manufacturer
 
     def create_netbox_raid_card(self, raid_card):
         manufacturer = self.find_or_create_manufacturer(
@@ -299,7 +292,7 @@ class Inventory():
         for memory in self.get_memory():
             self.create_netbox_memory(memory)
 
-    def update_netbox_memory(self):
+    def update_netbox_memories(self):
         memories = self.get_memory()
         nb_memories = self.get_netbox_memory()
 

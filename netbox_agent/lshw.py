@@ -94,6 +94,7 @@ class LSHW():
         c["product"] = obj["product"]
         c["vendor"] = obj["vendor"]
         c["description"] = obj["description"]
+        c["location"] = obj["slot"]
 
         self.cpus.append(c)
 
