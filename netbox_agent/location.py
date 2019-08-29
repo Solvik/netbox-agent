@@ -69,6 +69,7 @@ class Rack(LocationBase):
         regex = RACK_LOCATION_REGEX
         super().__init__(driver, driver_value, driver_file, regex)
 
+
 class Slot(LocationBase):
     def __init__(self):
         driver = SLOT_LOCATION.split(':')[0] if SLOT_LOCATION else None
@@ -76,4 +77,3 @@ class Slot(LocationBase):
         driver_file = SLOT_LOCATION_DRIVER_FILE
         regex = SLOT_LOCATION_REGEX
         super().__init__(driver, driver_value, driver_file, regex)
-        
