@@ -59,8 +59,29 @@ class Network():
                 logging.debug('Ignore interface {interface}'.format(interface=interface))
                 continue
 
-            ip_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET)
-            ip_addr += netifaces.ifaddresses(interface).get(netifaces.AF_INET6)
+            ip_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET, [])
+            ip6_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET6, [])
+
+            # netifaces returns a ipv6 netmask that netaddr does not understand.
+            # this strips the netmask down to the correct format for netaddr,
+            # and remove the interface.
+            # ie, this:
+            #   {
+            #      'addr': 'fe80::ec4:7aff:fe59:ec4a%eno1.50',
+            #      'netmask': 'ffff:ffff:ffff:ffff::/64'
+            #   }
+            #
+            # becomes:
+            #   {
+            #      'addr': 'fe80::ec4:7aff:fe59:ec4a',
+            #      'netmask': 'ffff:ffff:ffff:ffff::'
+            #   }
+            #
+            for addr in ip6_addr:
+                addr["addr"] = addr["addr"].replace('%{}'.format(interface), '')
+                addr["netmask"] = addr["netmask"].split('/')[0]
+                ip_addr.append(addr)
+
             if NETWORK_IGNORE_IPS and ip_addr:
                 for i, ip in enumerate(ip_addr):
                     if re.match(NETWORK_IGNORE_IPS, ip['addr']):

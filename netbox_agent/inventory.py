@@ -102,7 +102,7 @@ class Inventory():
                 self.raid = HPRaid()
 
         if not self.raid:
-            return
+            return []
 
         controllers = self.raid.get_controllers()
         if len(self.raid.get_controllers()):
