@@ -8,7 +8,7 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 # Features
 
 * Create servers, chassis and blade through standard tools (`dmidecode`)
-* Create physical, bonding and vlan network interfaces with IPs
+* Create physical, bonding and vlan network interfaces with IPs (IPv4 & IPv6)
 * Create IPMI interface if found
 * Create or get existing VLAN and associate it to interfaces
 * Generic ability to guess datacenters and rack location through drivers (`cmd` and `file` and custom ones)
@@ -69,6 +69,24 @@ rack_location:
 
 inventory: true
 ```
+
+# Specific workflow
+
+## Blades
+
+Each vendor class has a `is_blade` method which is later used for `Device` creation using the Netbox [parent/child feature](https://netbox.readthedocs.io/en/stable/core-functionality/devices/).
+
+The `get_blade_slot` method return the name of the `Device Bay`.
+
+
+Certain vendors don't report the blade slot in `dmidecode`, so we can use the `slot_location` regex feature of the configuration file.
+
+## Anycast IP
+
+The default behavior of the agent is to assign an interface to an IP.
+So two servers with anycasted IPs, running update mode, would only trigger IP's interface assignement in a loop.
+
+In order to handle this case, user need to set Netbox IP's mode to `Anycast` so that the agent will create another one if it's present on another server.
 
 # Hardware
 
