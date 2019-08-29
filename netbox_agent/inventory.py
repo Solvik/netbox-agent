@@ -313,7 +313,7 @@ class Inventory():
         if not INVENTORY_ENABLED:
             return False
         self.create_netbox_cpus()
-        self.create_netbox_memory()
+        self.create_netbox_memories()
         self.create_netbox_raid_cards()
         self.create_netbox_disks()
         return True
@@ -322,7 +322,7 @@ class Inventory():
         if not INVENTORY_ENABLED:
             return False
         self.update_netbox_cpus()
-        self.update_netbox_memory()
+        self.update_netbox_memories()
         self.update_netbox_raid_cards()
         self.update_netbox_disks()
         return True
