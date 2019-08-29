@@ -92,14 +92,14 @@ class Inventory():
             logging.info('Creating CPU model {}'.format(cpu['product']))
 
     def update_netbox_cpus(self):
-        cpus_number, model = self.get_hw_linux(cpu))
+        cpus = self.get_hw_linux(cpu))
         nb_cpus = nb.dcim.inventory_items.filter(
             device_id=self.device_id,
             tag=INVENTORY_TAG['cpu']['slug'],
         )
 
         if not len(nb_cpus) or \
-           len(nb_cpus) and cpus_number != len(nb_cpus):
+           len(nb_cpus) and len(cpus) != len(nb_cpus):
             for x in nb_cpus:
                 x.delete()
             self.create_netbox_cpus()
