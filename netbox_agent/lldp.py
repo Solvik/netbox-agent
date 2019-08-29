@@ -41,8 +41,8 @@ class LLDP():
 
         lldp = self.data['lldp'][interface]
         if lldp.get('vlan'):
-            if lldp['vlan'].get('vlan-id'):
-                return int(lldp['vlan'].get('vlan-id'))
-            elif type(lldp['vlan']) is str:
+            if type(lldp['vlan']) is str:
                 return int(lldp['vlan'].replace('vlan-', ''))
+            elif lldp['vlan'].get('vlan-id'):
+                return int(lldp['vlan'].get('vlan-id'))
         return None
