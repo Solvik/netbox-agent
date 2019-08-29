@@ -48,7 +48,7 @@ class SupermicroHost(ServerBase):
 
     def get_chassis_service_tag(self):
         if self.is_blade():
-            return self.chassis[0]['Serial Number'].strip()
+            return self.system[0]['Serial Number'].strip()
         return self.get_service_tag()
 
     def get_chassis_name(self):
