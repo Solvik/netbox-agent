@@ -92,7 +92,7 @@ class Inventory():
             logging.info('Creating CPU model {}'.format(cpu['product']))
 
     def update_netbox_cpus(self):
-        cpus = self.get_hw_linux(cpu))
+        cpus = self.get_hw_linux(cpu)
         nb_cpus = nb.dcim.inventory_items.filter(
             device_id=self.device_id,
             tag=INVENTORY_TAG['cpu']['slug'],
