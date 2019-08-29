@@ -38,6 +38,8 @@ IFACE_TYPE_400GE_QSFP_DD = 1750
 IFACE_TYPE_OTHER = 32767
 IFACE_TYPE_LAG = 200
 
+IPADDRESS_ROLE_ANYCAST = 30
+
 
 class Network():
     def __init__(self, server, *args, **kwargs):
@@ -337,7 +339,7 @@ class Network():
                         address=ip,
                         interface=interface.id,
                         status=1,
-                        role=30,
+                        role=IPADDRESS_ROLE_ANYCAST,
                     )
                 return netbox_ip
             else:
