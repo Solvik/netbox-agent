@@ -7,7 +7,7 @@ import json
 from pprint import pprint
 
 class LSHW():
-    def __init__(self, device_id):
+    def __init__(self):
 
         self.hw_info = json.loads(subprocess.check_output(["lshw", "-quiet", "-json"],encoding='utf8'))
 
@@ -22,7 +22,6 @@ class LSHW():
         self.chassis_serial = self.hw_info["serial"]
         self.motherboard_serial = self.hw_info["children"][0]["serial"]
         self.motherboard = self.hw_info["children"][0]["product"]
-        self.device_id = device_id
 
         for k in self.hw_info["children"]:
             if k["class"] == "power":
@@ -46,7 +45,7 @@ class LSHW():
                     if j["class"] == "bridge":
                         self.walk_bridge(j)
 
-    def get_hw_linux(self, hwclass, device_id):
+    def get_hw_linux(self, hwclass):
         if hwclass == "cpu":
             return self.cpus
         if hwclass == "network":
@@ -58,7 +57,6 @@ class LSHW():
 
     def find_network(self, obj):
         d = {}
-        d["bus info"] = "%s@%s" % ( self.device_id, obj["logicalname"])
         d["name"] = obj["logicalname"]
         d["macaddress"] = obj["serial"]
         d["serial"] = obj["serial"]
@@ -72,7 +70,6 @@ class LSHW():
         if "children" in obj:
             for device in obj["children"]:
                 d = {}
-                d["bus info"] = "%s@%s" % ( self.device_id, device["logicalname"])
                 d["logicalname"] = device["logicalname"]
                 d["product"] = device["product"]
                 d["serial"] = device["serial"]
@@ -84,7 +81,6 @@ class LSHW():
 
         elif "nvme" in obj["configuration"]["driver"]:
             d = {}
-            d["bus info"] = "%s@%s" % ( self.device_id, obj["businfo"])
             d["vendor"] = obj["vendor"]
             d["version"] = obj["version"]
             d["description"] = obj["description"]
@@ -95,7 +91,6 @@ class LSHW():
     def find_cpus(self, obj):
         pprint(obj)
         c = {}
-        c["bus info"] = "%s@%s" % ( self.device_id, obj["businfo"])
         c["product"] = obj["product"]
         c["vendor"] = obj["vendor"]
         c["description"] = obj["description"]
@@ -112,7 +107,6 @@ class LSHW():
                 continue
 
             d = {}
-            d["bus info"] = "%s@%s" % ( self.device_id, dimm["slot"])
             d["slot"] = dimm["slot"]
             d["description"] = dimm["description"]
             d["id"] = dimm["id"]
