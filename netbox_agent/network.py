@@ -322,7 +322,8 @@ class Network():
             if netbox_ip.role and netbox_ip.role.label == 'Anycast':
                 logging.debug('IP {} is Anycast..'.format(ip))
                 unassigned_anycast_ip = [x for x in netbox_ips if x.interface is None]
-                assigned_anycast_ip = [x for x in netbox_ips if x.interface and x.interface.id == interface.id]
+                assigned_anycast_ip = [x for x in netbox_ips if
+                                       x.interface and x.interface.id == interface.id]
                 # use the first available anycast ip
                 if len(unassigned_anycast_ip):
                     logging.info('Assigning existing Anycast IP {} to interface'.format(ip))
