@@ -1,5 +1,3 @@
-import argparse
-
 from netbox_agent.logging import logging # NOQA
 from netbox_agent.vendors.dell import DellHost
 import netbox_agent.dmidecode as dmidecode

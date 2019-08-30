@@ -135,7 +135,8 @@ def get_by_type(type_id):
 
 def _execute_cmd():
     if not is_tool('dmidecode'):
-        logging.error('Dmidecode does not seem to be present on your system. Add it your path or check the compatibility of this project with your distro.')
+        logging.error('Dmidecode does not seem to be present on your system. Add it your path or '
+                      'check the compatibility of this project with your distro.')
         sys.exit(1)
     return _subprocess.check_output(['dmidecode', ], stderr=_subprocess.PIPE)
 

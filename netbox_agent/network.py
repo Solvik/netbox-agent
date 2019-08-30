@@ -502,6 +502,8 @@ class Network():
         logging.debug('Finished creating NIC!')
 
     def update_netbox_network_cards(self):
+        if config.update_all is None or config.update_network is None:
+            return None
         logging.debug('Updating NIC...')
 
         # delete unknown interface

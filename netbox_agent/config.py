@@ -1,6 +1,8 @@
 import logging
 import pynetbox
 import jsonargparse
+import sys
+
 
 def get_config():
     p = jsonargparse.ArgumentParser(
@@ -22,21 +24,23 @@ def get_config():
     p.add_argument('--update-location', action='store_true', help='Update location')
 
     p.add_argument('--log_level', default='debug')
-    p.add_argument('--netbox.url', help='Netbox URL', required=False)
-    p.add_argument('--netbox.token', help='Netbox API Token', required=False)
-    p.add_argument('--datacenter_location.driver', help='Datacenter location driver, ie: cmd, file')
-    p.add_argument('--datacenter_location.driver_file', help='Datacenter location custom driver file path')
+    p.add_argument('--netbox.url', help='Netbox URL')
+    p.add_argument('--netbox.token', help='Netbox API Token')
+    p.add_argument('--datacenter_location.driver',
+                   help='Datacenter location driver, ie: cmd, file')
+    p.add_argument('--datacenter_location.driver_file',
+                   help='Datacenter location custom driver file path')
     p.add_argument('--datacenter_location.regex',
                    help='Datacenter location regex to extract Netbox DC slug')
     p.add_argument('--rack_location.driver', help='Rack location driver, ie: cmd, file')
     p.add_argument('--rack_location.driver_file', help='Rack location custom driver file path')
     p.add_argument('--rack_location.regex', help='Rack location regex to extract Rack name')
     p.add_argument('--slot_location.driver', help='Slot location driver, ie: cmd, file')
-    p.add_argument('--slot.driver_file', help='Slotlocation custom driver file path')
+    p.add_argument('--slot_location.driver_file', help='Slot location custom driver file path')
     p.add_argument('--slot_location.regex', help='Slot location regex to extract slot name')
-    p.add_argument('--network.ignore_interfaces', default='(dummy.*|docker.*)',
+    p.add_argument('--network.ignore_interfaces', default=r'(dummy.*|docker.*)',
                    help='Regex to ignore interfaces')
-    p.add_argument('--network.ignore_ips', default='^(127\.0\.0\..*|fe80.*|::1.*)',
+    p.add_argument('--network.ignore_ips', default=r'^(127\.0\.0\..*|fe80.*|::1.*)',
                    help='Regex to ignore IPs')
     p.add_argument('--network.lldp', help='Enable auto-cabling feature through LLDP infos')
     p.add_argument('--inventory', action='store_true',
@@ -45,15 +49,17 @@ def get_config():
     options = p.parse_args()
     return options
 
+
 def get_netbox_instance():
     config = get_config()
     if config.netbox.url is None or config.netbox.token is None:
         logging.error('Netbox URL and token are mandatory')
-        return None
+        sys.exit(1)
     return pynetbox.api(
         url=get_config().netbox.url,
         token=get_config().netbox.token,
     )
+
 
 config = get_config()
 netbox_instance = get_netbox_instance()

@@ -52,6 +52,8 @@ class Inventory():
     """
 
     def __init__(self, server):
+        if config.inventory is None or config.update_inventory is None:
+            return None
         self.server = server
         netbox_server = self.server.get_netbox_server()
         self.device_id = netbox_server.id if netbox_server else None
@@ -322,7 +324,7 @@ class Inventory():
         return True
 
     def update(self):
-        if not config.inventory:
+        if config.inventory is None or config.update_inventory is None:
             return False
         self.update_netbox_cpus()
         self.update_netbox_memory()
