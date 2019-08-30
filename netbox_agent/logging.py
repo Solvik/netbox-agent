@@ -1,11 +1,11 @@
 import logging
 
-from netbox_agent.config import LOG_LEVEL
+from netbox_agent.config import config
 
 
 logger = logging.getLogger()
 
-if LOG_LEVEL == 'debug':
+if config.log_level == 'debug':
     logger.setLevel(logging.DEBUG)
 else:
     logger.setLevel(logging.INFO)

@@ -1,9 +1,7 @@
 import importlib
 import importlib.machinery
 
-from netbox_agent.config import DATACENTER_LOCATION, DATACENTER_LOCATION_DRIVER_FILE, \
-    DATACENTER_LOCATION_REGEX, RACK_LOCATION, RACK_LOCATION_DRIVER_FILE, RACK_LOCATION_REGEX, \
-    SLOT_LOCATION, SLOT_LOCATION_DRIVER_FILE, SLOT_LOCATION_REGEX
+from netbox_agent.config import config
 
 
 class LocationBase():
@@ -53,27 +51,27 @@ class LocationBase():
 
 class Datacenter(LocationBase):
     def __init__(self):
-        driver = DATACENTER_LOCATION.split(':')[0] if DATACENTER_LOCATION else None
-        driver_value = ':'.join(DATACENTER_LOCATION.split(':')[1:]) if DATACENTER_LOCATION \
+        driver = config.datacenter_location.driver.split(':')[0] if config.datacenter_location.driver else None
+        driver_value = ':'.join(config.datacenter_location.driver.split(':')[1:]) if config.datacenter_location.driver \
             else None
-        driver_file = DATACENTER_LOCATION_DRIVER_FILE
-        regex = DATACENTER_LOCATION_REGEX
+        driver_file = config.datacenter_location.driver_file
+        regex = config.datacenter_location.regex
         super().__init__(driver, driver_value, driver_file, regex)
 
 
 class Rack(LocationBase):
     def __init__(self):
-        driver = RACK_LOCATION.split(':')[0] if RACK_LOCATION else None
-        driver_value = ':'.join(RACK_LOCATION.split(':')[1:]) if RACK_LOCATION else None
-        driver_file = RACK_LOCATION_DRIVER_FILE
-        regex = RACK_LOCATION_REGEX
+        driver = config.rack_location.driver.split(':')[0] if config.rack_location.driver else None
+        driver_value = ':'.join(config.rack_location.driver.split(':')[1:]) if config.rack_location.driver else None
+        driver_file = config.rack_location.driver_file
+        regex = config.rack_location.regex
         super().__init__(driver, driver_value, driver_file, regex)
 
 
 class Slot(LocationBase):
     def __init__(self):
-        driver = SLOT_LOCATION.split(':')[0] if SLOT_LOCATION else None
-        driver_value = ':'.join(SLOT_LOCATION.split(':')[1:]) if SLOT_LOCATION else None
-        driver_file = SLOT_LOCATION_DRIVER_FILE
-        regex = SLOT_LOCATION_REGEX
+        driver = config.slot_location.driver.split(':')[0] if config.slot_location.driver else None
+        driver_value = ':'.join(config.slot_location.driver.split(':')[1:]) if config.slot_location.driver else None
+        driver_file = config.slot_location.driver_file
+        regex = config.slot_location.regex
         super().__init__(driver, driver_value, driver_file, regex)

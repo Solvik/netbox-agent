@@ -6,8 +6,7 @@ import re
 from netaddr import IPAddress, IPNetwork
 import netifaces
 
-from netbox_agent.config import netbox_instance as nb
-from netbox_agent.config import NETWORK_IGNORE_INTERFACES, NETWORK_IGNORE_IPS, NETWORK_LLDP
+from netbox_agent.config import netbox_instance as nb, config
 from netbox_agent.ethtool import Ethtool
 from netbox_agent.ipmi import IPMI
 from netbox_agent.lldp import LLDP
@@ -56,8 +55,8 @@ class Network():
             if not os.path.islink('/sys/class/net/{}'.format(interface)):
                 continue
 
-            if NETWORK_IGNORE_INTERFACES and \
-               re.match(NETWORK_IGNORE_INTERFACES, interface):
+            if config.network.ignore_interfaces and \
+               re.match(config.network.ignore_interfaces, interface):
                 logging.debug('Ignore interface {interface}'.format(interface=interface))
                 continue
 
@@ -84,9 +83,9 @@ class Network():
                 addr["netmask"] = addr["netmask"].split('/')[0]
                 ip_addr.append(addr)
 
-            if NETWORK_IGNORE_IPS and ip_addr:
+            if config.network.ignore_ips and ip_addr:
                 for i, ip in enumerate(ip_addr):
-                    if re.match(NETWORK_IGNORE_IPS, ip['addr']):
+                    if re.match(config.network.ignore_ips, ip['addr']):
                         ip_addr.pop(i)
 
             mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
@@ -202,7 +201,7 @@ class Network():
     def reset_vlan_on_interface(self, nic, interface):
         update = False
         vlan_id = nic['vlan']
-        lldp_vlan = self.lldp.get_switch_vlan(nic['name']) if NETWORK_LLDP else None
+        lldp_vlan = self.lldp.get_switch_vlan(nic['name']) if config.network.lldp else None
 
         # if local interface isn't a interface vlan or lldp doesn't report a vlan-id
         if vlan_id is None and lldp_vlan is None and \
@@ -294,7 +293,7 @@ class Network():
             interface.mode = 200
             interface.tagged_vlans = [nb_vlan.id]
             interface.save()
-        elif NETWORK_LLDP and self.lldp.get_switch_vlan(nic['name']) is not None:
+        elif config.network.lldp and self.lldp.get_switch_vlan(nic['name']) is not None:
             # if lldp reports a vlan on an interface, tag the interface in access and set the vlan
             vlan_id = self.lldp.get_switch_vlan(nic['name'])
             nb_vlan = self.get_or_create_vlan(vlan_id)
@@ -303,7 +302,7 @@ class Network():
             interface.save()
 
         # cable the interface
-        if NETWORK_LLDP:
+        if config.network.lldp:
             switch_ip = self.lldp.get_switch_ip(interface.name)
             switch_interface = self.lldp.get_switch_port(interface.name)
 
@@ -566,7 +565,7 @@ class Network():
                     interface.lag = None
 
             # cable the interface
-            if NETWORK_LLDP:
+            if config.network.lldp:
                 switch_ip = self.lldp.get_switch_ip(interface.name)
                 switch_interface = self.lldp.get_switch_port(interface.name)
                 ret, interface = self.create_or_update_cable(
