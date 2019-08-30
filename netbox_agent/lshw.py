@@ -80,11 +80,18 @@ class LSHW():
                 self.disks.append(d)
 
         elif "nvme" in obj["configuration"]["driver"]:
+            nvme = json.loads(subprocess.check_output(["nvme", '-list', '-o', 'json'],encoding='utf8'))
+
             d = {}
             d["vendor"] = obj["vendor"]
             d["version"] = obj["version"]
-            d["description"] = obj["description"]
             d["product"] = obj["product"]
+
+            d['description'] = "NVME Disk"
+            d['product'] = nvme["Devices"][0]["ModelNumber"]
+            d['size'] = nvme["Devices"][0]["PhysicalSize"]
+            d['serial'] = nvme["Devices"][0]["SerialNumber"]
+            d['logicalname'] = nvme["Devices"][0]["DevicePath"]
 
             self.disks.append(d)
 
