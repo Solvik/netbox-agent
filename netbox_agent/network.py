@@ -38,6 +38,8 @@ IFACE_TYPE_400GE_QSFP_DD = 1750
 IFACE_TYPE_OTHER = 32767
 IFACE_TYPE_LAG = 200
 
+IPADDRESS_ROLE_ANYCAST = 30
+
 
 class Network():
     def __init__(self, server, *args, **kwargs):
@@ -314,27 +316,22 @@ class Network():
         return interface
 
     def create_or_update_netbox_ip_on_interface(self, ip, interface):
-        netbox_ip = nb.ipam.ip_addresses.get(
+        '''
+        Two behaviors:
+        - Anycast IP
+        * If IP exists and is in Anycast, create a new Anycast one
+        * If IP exists and isn't assigned, take it
+        * If server is decomissioned, then free IP will be taken
+
+        - Normal IP (can be associated only once)
+        * If IP doesn't exist, create it
+        * If IP exists and isn't assigned, take it
+        * If IP exists and interface is wrong, change interface
+        '''
+        netbox_ips = nb.ipam.ip_addresses.filter(
             address=ip,
         )
-        if netbox_ip:
-            if netbox_ip.interface is None:
-                logging.info('Assigning existing IP {ip} to {interface}'.format(
-                    ip=ip, interface=interface))
-            elif netbox_ip.interface.id != interface.id:
-                logging.info(
-                    'Detected interface change for ip {ip}: old interface is '
-                    '{old_interface} (id: {old_id}), new interface is {new_interface} '
-                    ' (id: {new_id})'
-                    .format(
-                        old_interface=netbox_ip.interface, new_interface=interface,
-                        old_id=netbox_ip.id, new_id=interface.id, ip=netbox_ip.address
-                    ))
-            else:
-                return netbox_ip
-            netbox_ip.interface = interface
-            netbox_ip.save()
-        else:
+        if not len(netbox_ips):
             logging.info('Create new IP {ip} on {interface}'.format(
                 ip=ip, interface=interface))
             netbox_ip = nb.ipam.ip_addresses.create(
@@ -342,6 +339,47 @@ class Network():
                 interface=interface.id,
                 status=1,
             )
+        else:
+            netbox_ip = netbox_ips[0]
+            # If IP exists in anycast
+            if netbox_ip.role and netbox_ip.role.label == 'Anycast':
+                logging.debug('IP {} is Anycast..'.format(ip))
+                unassigned_anycast_ip = [x for x in netbox_ips if x.interface is None]
+                assigned_anycast_ip = [x for x in netbox_ips if
+                                       x.interface and x.interface.id == interface.id]
+                # use the first available anycast ip
+                if len(unassigned_anycast_ip):
+                    logging.info('Assigning existing Anycast IP {} to interface'.format(ip))
+                    netbox_ip = unassigned_anycast_ip[0]
+                    netbox_ip.interface = interface
+                    netbox_ip.save()
+                # or if everything is assigned to other servers
+                elif not len(assigned_anycast_ip):
+                    logging.info('Creating Anycast IP {} and assigning it to interface'.format(ip))
+                    netbox_ip = nb.ipam.ip_addresses.create(
+                        address=ip,
+                        interface=interface.id,
+                        status=1,
+                        role=IPADDRESS_ROLE_ANYCAST,
+                    )
+                return netbox_ip
+            else:
+                if netbox_ip.interface is None:
+                    logging.info('Assigning existing IP {ip} to {interface}'.format(
+                        ip=ip, interface=interface))
+                elif netbox_ip.interface.id != interface.id:
+                    logging.info(
+                        'Detected interface change for ip {ip}: old interface is '
+                        '{old_interface} (id: {old_id}), new interface is {new_interface} '
+                        ' (id: {new_id})'
+                        .format(
+                            old_interface=netbox_ip.interface, new_interface=interface,
+                            old_id=netbox_ip.id, new_id=interface.id, ip=netbox_ip.address
+                        ))
+                else:
+                    return netbox_ip
+                netbox_ip.interface = interface
+                netbox_ip.save()
         return netbox_ip
 
     def connect_interface_to_switch(self, switch_ip, switch_interface, nb_server_interface):
