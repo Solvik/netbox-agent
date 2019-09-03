@@ -6,11 +6,13 @@ from netbox_agent.config import netbox_instance as nb, config
 from netbox_agent.misc import is_tool
 from netbox_agent.raid.hp import HPRaid
 from netbox_agent.raid.storcli import StorcliRaid
+from netbox_agent.lshw import LSHW
 
 INVENTORY_TAG = {
     'cpu': {'name': 'hw:cpu', 'slug': 'hw-cpu'},
-    'memory': {'name': 'hw:memory', 'slug': 'hw-memory'},
     'disk': {'name': 'hw:disk', 'slug': 'hw-disk'},
+    'memory': {'name': 'hw:memory', 'slug': 'hw-memory'},
+    'network':{'name': 'hw:network', 'slug':'hw-network'},
     'raid_card': {'name': 'hw:raid_card', 'slug': 'hw-raid-card'},
     }
 
@@ -46,6 +48,25 @@ class Inventory():
         self.raid = None
         self.disks = []
 
+<<<<<<< HEAD
+        self.lshw = LSHW()
+
+    def find_or_create_manufacturer(self, name):
+        if name is None:
+            return None
+
+        manufacturer = nb.dcim.manufacturers.get(
+            name=name,
+        )
+
+        if not manufacturer:
+            logging.info('Creating missing manufacturer {name}'.format(name=name))
+            manufacturer = nb.dcim.manufacturers.create(
+                name=name,
+                slug=name.replace(' ','-').lower(),
+            )
+            logging.info('Creating missing manufacturer {name}'.format(name=name))
+=======
     def create_netbox_tags():
         for key, tag in INVENTORY_TAG.items():
             nb_tag = nb.extras.tags.get(
@@ -61,37 +82,34 @@ class Inventory():
     def get_cpus(self):
         model = None
         nb = None
+>>>>>>> d39b692985797707ab33ee927e9d45bef0a73638
 
-        output = subprocess.getoutput('lscpu')
-        model_re = re.search(r'Model name: (.*)', output)
-        if len(model_re.groups()) > 0:
-            model = model_re.groups()[0].strip()
-        socket_re = re.search(r'Socket\(s\): (.*)', output)
-        if len(socket_re.groups()) > 0:
-            nb = int(socket_re.groups()[0].strip())
-        return nb, model
+        return manufacturer
 
     def create_netbox_cpus(self):
-        nb_cpus, model = self.get_cpus()
-        for i in range(nb_cpus):
+        for cpu in self.lshw.get_hw_linux('cpu'):
+            manufacturer = self.find_or_create_manufacturer(cpu["vendor"])
             _ = nb.dcim.inventory_items.create(
                 device=self.device_id,
-                tags=[INVENTORY_TAG['cpu']['name']],
-                name=model,
+                manufacturer = manufacturer.id,
                 discovered=True,
-                description='CPU',
+                tags=[INVENTORY_TAG['cpu']['name']],
+                name=cpu['product'],
+                description='{}'.format(cpu['location']),
+                asset_tag=cpu['location']
             )
-            logging.info('Creating CPU model {model}'.format(model=model))
+
+            logging.info('Creating CPU model {}'.format(cpu['product']))
 
     def update_netbox_cpus(self):
-        cpus_number, model = self.get_cpus()
+        cpus = self.lshw.get_hw_linux('cpu')
         nb_cpus = nb.dcim.inventory_items.filter(
             device_id=self.device_id,
             tag=INVENTORY_TAG['cpu']['slug'],
         )
 
         if not len(nb_cpus) or \
-           len(nb_cpus) and cpus_number != len(nb_cpus):
+           len(nb_cpus) and len(cpus) != len(nb_cpus):
             for x in nb_cpus:
                 x.delete()
             self.create_netbox_cpus()
@@ -117,20 +135,6 @@ class Inventory():
             tag=INVENTORY_TAG['raid_card']['slug'],
             )
         return raid_cards
-
-    def find_or_create_manufacturer(self, name):
-        if name is None:
-            return None
-        manufacturer = nb.dcim.manufacturers.get(
-            name=name,
-        )
-        if not manufacturer:
-            manufacturer = nb.dcim.manufacturers.create(
-                name=name,
-                slug=name.lower(),
-            )
-            logging.info('Creating missing manufacturer {name}'.format(name=name))
-        return manufacturer
 
     def create_netbox_raid_card(self, raid_card):
         manufacturer = self.find_or_create_manufacturer(
@@ -186,10 +190,41 @@ class Inventory():
                 self.create_netbox_raid_card(raid_card)
 
     def get_disks(self):
-        ret = []
+        disks = []
+
+        for disk in self.lshw.get_hw_linux("storage"):
+            print(disk)
+            d = {}
+            d["name"] = ""
+            d['Size'] = '{} GB'.format(int(disk['size']/1024/1024/1024))
+            d['Model'] = disk['product']
+            d['logicalname'] = disk['logicalname']
+            d['description'] = disk['description']
+
+            if 'serial' in disk:
+                d['SN'] = disk['serial']
+
+            if 'vendor' in disk:
+                d['vendor'] = disk['vendor']
+
+            if disk['product'].startswith('ST'):
+                d['vendor'] = 'Seagate'
+
+            if disk['product'].startswith('Crucial'):
+                d['vendor'] = 'Crucial'
+
+            if disk['product'].startswith('INTEL'):
+                d['vendor'] = 'Intel'
+
+            if disk['product'].startswith('Samsung'):
+                d['vendor'] = 'Samsung'
+
+            disks.append(d)
+
         for raid_card in self.get_raid_cards():
-            ret += raid_card.get_physical_disks()
-        return ret
+            disks += raid_card.get_physical_disks()
+
+        return disks
 
     def get_netbox_disks(self):
         disks = nb.dcim.inventory_items.filter(
@@ -200,12 +235,24 @@ class Inventory():
 
     def create_netbox_disks(self):
         for disk in self.get_disks():
+            m_id = 0
+            if "vendor" in disk:
+                manufacturer = self.find_or_create_manufacturer(disk["vendor"])
+                m_id = manufacturer.id
+
+            print("inserting disk")
+            print(disk)
+
             _ = nb.dcim.inventory_items.create(
                 device=self.device_id,
                 discovered=True,
                 tags=[INVENTORY_TAG['disk']['name']],
-                name='{} ({})'.format(disk['Model'], disk['Size']),
+                name='{} - {} ({})'.format(disk.get('description', 'Unknown'), disk.get('logicalname', 'Unknown'), disk.get('Size', 0)),
                 serial=disk['SN'],
+                part_id=disk['Model'],
+                description='{}'.format(disk.get('logicalname', 'Unknown')),
+                # asset_tag=disk['logicalname'],
+                manufacturer=m_id
             )
             logging.info('Creating Disk {model} {serial}'.format(
                 model=disk['Model'],
@@ -298,7 +345,7 @@ class Inventory():
         for memory in self.get_memory():
             self.create_netbox_memory(memory)
 
-    def update_netbox_memory(self):
+    def update_netbox_memories(self):
         memories = self.get_memory()
         nb_memories = self.get_netbox_memory()
 
@@ -316,7 +363,7 @@ class Inventory():
         if config.inventory is None:
             return False
         self.create_netbox_cpus()
-        self.create_netbox_memory()
+        self.create_netbox_memories()
         self.create_netbox_raid_cards()
         self.create_netbox_disks()
         return True
@@ -325,7 +372,7 @@ class Inventory():
         if config.inventory is None or config.update_inventory is None:
             return False
         self.update_netbox_cpus()
-        self.update_netbox_memory()
+        self.update_netbox_memories()
         self.update_netbox_raid_cards()
         self.update_netbox_disks()
         return True
