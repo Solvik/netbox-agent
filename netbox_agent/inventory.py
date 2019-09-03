@@ -1,21 +1,15 @@
-import logging
-import subprocess
-import re
-
 from netbox_agent.config import netbox_instance as nb, config
 from netbox_agent.misc import is_tool
 from netbox_agent.raid.hp import HPRaid
 from netbox_agent.raid.storcli import StorcliRaid
 from netbox_agent.lshw import LSHW
 
-from pprint import pprint
-
 INVENTORY_TAG = {
     'cpu': {'name': 'hw:cpu', 'slug': 'hw-cpu'},
     'disk': {'name': 'hw:disk', 'slug': 'hw-disk'},
-    'interface':{'name': 'hw:interface', 'slug':'hw-interface'},
+    'interface': {'name': 'hw:interface', 'slug': 'hw-interface'},
     'memory': {'name': 'hw:memory', 'slug': 'hw-memory'},
-    'motherboard':{'name': 'hw:motherboard', 'slug':'hw-motherboard'},
+    'motherboard': {'name': 'hw:motherboard', 'slug': 'hw-motherboard'},
     'raid_card': {'name': 'hw:raid_card', 'slug': 'hw-raid-card'},
     }
 
@@ -109,7 +103,12 @@ class Inventory():
             description=description
         )
 
-        logging.info('Creating inventory item {} {}/{} {} '.format(vendor, name, serial, description))
+        logging.info('Creating inventory item {} {}/{} {} '.format(
+            vendor,
+            name,
+            serial,
+            description)
+        )
 
     def get_hw_motherboards(self):
         motherboards = []
@@ -325,28 +324,28 @@ class Inventory():
         return disks
 
     def create_netbox_disk(self, disk):
-            if "vendor" in disk:
-                manufacturer = self.find_or_create_manufacturer(disk["vendor"])
+        if "vendor" in disk:
+            manufacturer = self.find_or_create_manufacturer(disk["vendor"])
 
-            _ = nb.dcim.inventory_items.create(
-                device=self.device_id,
-                discovered=True,
-                tags=[INVENTORY_TAG['disk']['name']],
-                name='{} - {} ({})'.format(
-                    disk.get('description', 'Unknown'),
-                    disk.get('logicalname', 'Unknown'), 
-                    disk.get('size', 0)
-                ),
-                serial=disk['serial'],
-                part_id=disk['model'],
-                description='Device {}'.format(disk.get('logicalname', 'Unknown')),
-                manufacturer=manufacturer.id
-            )
+        _ = nb.dcim.inventory_items.create(
+            device=self.device_id,
+            discovered=True,
+            tags=[INVENTORY_TAG['disk']['name']],
+            name='{} - {} ({})'.format(
+                disk.get('description', 'Unknown'),
+                disk.get('logicalname', 'Unknown'),
+                disk.get('size', 0)
+            ),
+            serial=disk['serial'],
+            part_id=disk['model'],
+            description='Device {}'.format(disk.get('logicalname', 'Unknown')),
+            manufacturer=manufacturer.id
+        )
 
-            logging.info('Creating Disk {model} {serial}'.format(
-                model=disk['model'],
-                serial=disk['serial'],
-            ))
+        logging.info('Creating Disk {model} {serial}'.format(
+            model=disk['model'],
+            serial=disk['serial'],
+        ))
 
     def do_netbox_disks(self):
         nb_disks = self.get_netbox_inventory(

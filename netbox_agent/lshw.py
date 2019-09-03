@@ -1,10 +1,7 @@
-import logging
-
 import subprocess
 import getpass
 import json
 
-from pprint import pprint
 
 class LSHW():
     def __init__(self):
@@ -80,7 +77,8 @@ class LSHW():
                 self.disks.append(d)
 
         elif "nvme" in obj["configuration"]["driver"]:
-            nvme = json.loads(subprocess.check_output(["nvme", '-list', '-o', 'json'],encoding='utf8'))
+            nvme = json.loads(subprocess.check_output(["nvme", '-list', '-o', 'json'],
+                encoding='utf8'))
 
             d = {}
             d["vendor"] = obj["vendor"]
@@ -96,7 +94,6 @@ class LSHW():
             self.disks.append(d)
 
     def find_cpus(self, obj):
-        pprint(obj)
         c = {}
         c["product"] = obj["product"]
         c["vendor"] = obj["vendor"]
@@ -107,7 +104,7 @@ class LSHW():
 
     def find_memories(self, obj):
         if "children" not in obj:
-            print("not a DIMM memory.")
+            # print("not a DIMM memory.")
             return
 
         for dimm in obj["children"]:
@@ -141,5 +138,5 @@ class LSHW():
                         self.find_network(b)
 
 
-if  __name__ == "__main__":
+if __name__ == "__main__":
     pass

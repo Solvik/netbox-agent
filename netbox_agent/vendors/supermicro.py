@@ -1,3 +1,4 @@
+
 from netbox_agent.location import Slot
 from netbox_agent.server import ServerBase
 
@@ -13,6 +14,7 @@ from netbox_agent.server import ServerBase
    3) Chassis - this is ignored.
 
 """
+
 
 class SupermicroHost(ServerBase):
     def __init__(self, *args, **kwargs):
@@ -38,7 +40,7 @@ class SupermicroHost(ServerBase):
 
     def get_product_name(self):
         if self.is_blade():
-           return self.baseboard[0]['Product Name'].strip()
+            return self.baseboard[0]['Product Name'].strip()
         return self.system[0]['Product Name'].strip()
 
     def get_chassis(self):
@@ -55,4 +57,3 @@ class SupermicroHost(ServerBase):
         if not self.is_blade():
             return None
         return 'Chassis {}'.format(self.get_chassis_service_tag())
-
