@@ -1,5 +1,4 @@
 import subprocess
-import getpass
 import json
 
 
@@ -7,9 +6,8 @@ class LSHW():
     def __init__(self):
 
         self.hw_info = json.loads(
-                subprocess.check_output(["lshw", "-quiet", "-json"],
-                encoding='utf8')
-                )
+                                subprocess.check_output(["lshw", "-quiet", "-json"],
+                                encoding='utf8'))  # noqa: E128
 
         self.info = {}
         self.memories = []
@@ -81,9 +79,8 @@ class LSHW():
 
         elif "nvme" in obj["configuration"]["driver"]:
             nvme = json.loads(
-                    subprocess.check_output(["nvme", '-list', '-o', 'json'],
-                    encoding='utf8')
-                    )
+                            subprocess.check_output(["nvme", '-list', '-o', 'json'],
+                            encoding='utf8'))  # noqa: E128
 
             d = {}
             d["vendor"] = obj["vendor"]

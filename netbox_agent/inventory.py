@@ -73,7 +73,7 @@ class Inventory():
             logging.info('Creating missing manufacturer {name}'.format(name=name))
             manufacturer = nb.dcim.manufacturers.create(
                 name=name,
-                slug=name.replace(' ','-').lower(),
+                slug=name.replace(' ', '-').lower(),
             )
 
             logging.info('Creating missing manufacturer {name}'.format(name=name))
@@ -86,7 +86,7 @@ class Inventory():
                 device_id=device_id,
                 tag=tag
             )
-        except:
+        except BaseException:
             logging.info('Tag {tag} is missing, returning empty array.'.format(tag=tag))
             items = []
 
@@ -114,12 +114,12 @@ class Inventory():
 
     def get_hw_motherboards(self):
         motherboards = []
-        
+
         m = {}
-        m['serial']=self.lshw.motherboard_serial
-        m['vendor']=self.lshw.vendor
-        m['name']='{} {}'.format(self.lshw.vendor, self.lshw.motherboard)
-        m['description']='{} Motherboard'.format(self.lshw.motherboard)
+        m['serial'] = self.lshw.motherboard_serial
+        m['vendor'] = self.lshw.vendor
+        m['name'] = '{} {}'.format(self.lshw.vendor, self.lshw.motherboard)
+        m['description'] = '{} Motherboard'.format(self.lshw.motherboard)
 
         motherboards.append(m)
 
@@ -144,7 +144,7 @@ class Inventory():
         for motherboard in motherboards:
             if motherboard.get('serial') not in [x.serial for x in nb_motherboards]:
                 self.create_netbox_inventory_item(
-                    device_id = self.device_id,
+                    device_id=self.device_id,
                     tags=[INVENTORY_TAG['motherboard']['slug']],
                     vendor='{}'.format(motherboard.get('vendor', 'N/A')),
                     serial='{}'.format(motherboard.get('serial', '000000')),
@@ -156,7 +156,7 @@ class Inventory():
         manufacturer = self.find_or_create_manufacturer(iface["vendor"])
         _ = nb.dcim.inventory_items.create(
             device=self.device_id,
-            manufacturer = manufacturer.id,
+            manufacturer=manufacturer.id,
             discovered=True,
             tags=[INVENTORY_TAG['interface']['name']],
             name="{}".format(iface['product']),
