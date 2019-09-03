@@ -1,3 +1,5 @@
+import logging
+
 from netbox_agent.config import netbox_instance as nb, config
 from netbox_agent.misc import is_tool
 from netbox_agent.raid.hp import HPRaid
@@ -95,7 +97,7 @@ class Inventory():
 
         _ = nb.dcim.inventory_items.create(
             device=device_id,
-            manufacturer = manufacturer.id,
+            manufacturer=manufacturer.id,
             discovered=True,
             tags=tags,
             name='{}'.format(name),
@@ -114,10 +116,10 @@ class Inventory():
         motherboards = []
         
         m = {}
-        m['serial'] = self.lshw.motherboard_serial
-        m['vendor'] = self.lshw.vendor
-        m['name'] = '{} {}'.format(self.lshw.vendor, self.lshw.motherboard)
-        m['description'] = '{} Motherboard'.format(self.lshw.motherboard)
+        m['serial']=self.lshw.motherboard_serial
+        m['vendor']=self.lshw.vendor
+        m['name']='{} {}'.format(self.lshw.vendor, self.lshw.motherboard)
+        m['description']='{} Motherboard'.format(self.lshw.motherboard)
 
         motherboards.append(m)
 
@@ -181,13 +183,13 @@ class Inventory():
         for iface in interfaces:
             if iface.get('serial') not in [x.serial for x in nb_interfaces]:
                 self.create_netbox_interface(iface)
-        
+
     def create_netbox_cpus(self):
         for cpu in self.lshw.get_hw_linux('cpu'):
             manufacturer = self.find_or_create_manufacturer(cpu["vendor"])
             _ = nb.dcim.inventory_items.create(
                 device=self.device_id,
-                manufacturer = manufacturer.id,
+                manufacturer=manufacturer.id,
                 discovered=True,
                 tags=[INVENTORY_TAG['cpu']['name']],
                 name=cpu['product'],

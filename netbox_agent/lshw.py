@@ -6,7 +6,10 @@ import json
 class LSHW():
     def __init__(self):
 
-        self.hw_info = json.loads(subprocess.check_output(["lshw", "-quiet", "-json"],encoding='utf8'))
+        self.hw_info = json.loads(
+                subprocess.check_output(["lshw", "-quiet", "-json"],
+                encoding='utf8')
+                )
 
         self.info = {}
         self.memories = []
@@ -77,8 +80,10 @@ class LSHW():
                 self.disks.append(d)
 
         elif "nvme" in obj["configuration"]["driver"]:
-            nvme = json.loads(subprocess.check_output(["nvme", '-list', '-o', 'json'],
-                encoding='utf8'))
+            nvme = json.loads(
+                    subprocess.check_output(["nvme", '-list', '-o', 'json'],
+                    encoding='utf8')
+                    )
 
             d = {}
             d["vendor"] = obj["vendor"]
