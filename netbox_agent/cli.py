@@ -18,14 +18,14 @@ MANUFACTURERS = {
 def run(config):
     manufacturer = dmidecode.get_by_type('Chassis')[0].get('Manufacturer')
     server = MANUFACTURERS[manufacturer](dmi=dmidecode)
-    print(config.netbox.url)
-    print(config.netbox.token)
+
     if config.debug:
         server.print_debug()
     if config.register:
-        server.netbox_create()
-    if config.update_all:
-        server.netbox_update()
+        server.netbox_create(config)
+    if config.update_all or config.update_network or config.update_location or \
+       config.update_inventory:
+        server.netbox_update(config)
     return True
 
 

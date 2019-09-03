@@ -15,19 +15,6 @@ INVENTORY_TAG = {
     }
 
 
-def create_tags():
-    for key, tag in INVENTORY_TAG.items():
-        nb_tag = nb.extras.tags.get(
-            name=tag['name']
-        )
-        if not nb_tag:
-            nb_tag = nb.extras.tags.create(
-                name=tag['name'],
-                slug=tag['slug'],
-                comments=tag['name'],
-            )
-
-
 class Inventory():
     """
     Better Inventory items coming, see:
@@ -52,13 +39,24 @@ class Inventory():
     """
 
     def __init__(self, server):
-        if config.inventory is None or config.update_inventory is None:
-            return None
+        self.create_netbox_tags()
         self.server = server
         netbox_server = self.server.get_netbox_server()
         self.device_id = netbox_server.id if netbox_server else None
         self.raid = None
         self.disks = []
+
+    def create_netbox_tags():
+        for key, tag in INVENTORY_TAG.items():
+            nb_tag = nb.extras.tags.get(
+                name=tag['name']
+            )
+            if not nb_tag:
+                nb_tag = nb.extras.tags.create(
+                    name=tag['name'],
+                    slug=tag['slug'],
+                    comments=tag['name'],
+                )
 
     def get_cpus(self):
         model = None
@@ -315,7 +313,7 @@ class Inventory():
                 self.create_netbox_memory(memory)
 
     def create(self):
-        if not config.inventory:
+        if config.inventory is None:
             return False
         self.create_netbox_cpus()
         self.create_netbox_memory()

@@ -30,6 +30,33 @@ class ServerBase():
         )
         return datacenter
 
+    def update_netbox_location(self, server):
+        dc = self.get_datacenter()
+        rack = self.get_rack()
+        nb_rack = self.get_netbox_rack()
+        nb_dc = self.get_netbox_datacenter()
+
+        update = False
+        if dc and server.site.slug != nb_dc.slug:
+            logging.info('Datacenter location has changed from {} to {}, updating'.format(
+                server.site.slug,
+                nb_dc.slug,
+            ))
+            update = True
+            server.site = nb_dc.id
+
+        if rack and server.rack != nb_rack:
+            logging.info('Rack location has changed from {} to {}, updating'.format(
+                server.rack,
+                nb_rack,
+            ))
+            update = True
+            server.rack = nb_rack
+            if nb_rack is None:
+                server.face = None
+                server.position = None
+        return update, server
+
     def get_rack(self):
         rack = Rack()
         return rack.get()
@@ -175,7 +202,7 @@ class ServerBase():
     def get_netbox_server(self):
         return nb.dcim.devices.get(serial=self.get_service_tag())
 
-    def netbox_create(self):
+    def netbox_create(self, config):
         logging.debug('Creating Server..')
         datacenter = self.get_netbox_datacenter()
         rack = self.get_netbox_rack()
@@ -205,8 +232,9 @@ class ServerBase():
 
         self.network = Network(server=self)
         self.network.create_netbox_network_cards()
-        self.inventory = Inventory(server=self)
-        self.inventory.create()
+        if config.inventory:
+            self.inventory = Inventory(server=self)
+            self.inventory.create()
         logging.debug('Server created!')
 
     def _netbox_update_chassis_for_blade(self, server, datacenter):
@@ -235,7 +263,7 @@ class ServerBase():
             # Set slot for blade
             self._netbox_set_blade_slot(chassis, server)
 
-    def netbox_update(self):
+    def netbox_update(self, config):
         """
         Netbox method to update info about our server/blade
 
@@ -246,11 +274,12 @@ class ServerBase():
         * new network infos
         """
         logging.debug('Updating Server...')
+
         server = nb.dcim.devices.get(serial=self.get_service_tag())
         if not server:
             raise Exception("The server (Serial: {}) isn't yet registered in Netbox, register"
                             'it before updating it'.format(self.get_service_tag()))
-        update = False
+        update = 0
         if self.is_blade():
             datacenter = self.get_netbox_datacenter()
             # if it's already linked to a chassis
@@ -269,14 +298,21 @@ class ServerBase():
         # for every other specs
         # check hostname
         if server.name != self.get_hostname():
-            update = True
+            update += 1
             server.hostname = self.get_hostname()
+
+        if config.update_all or config.update_location:
+            ret, server = self.update_netbox_location(server)
+            update += ret
+
         # check network cards
-        self.network = Network(server=self)
-        self.network.update_netbox_network_cards()
+        if config.update_all or config.update_network:
+            self.network = Network(server=self)
+            self.network.update_netbox_network_cards()
         # update inventory
-        self.inventory = Inventory(server=self)
-        self.inventory.update()
+        if config.update_all or config.update_inventory:
+            self.inventory = Inventory(server=self)
+            self.inventory.update()
         if update:
             server.save()
         logging.debug('Finished updating Server!')
