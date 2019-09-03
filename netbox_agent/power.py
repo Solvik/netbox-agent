@@ -1,6 +1,6 @@
 import logging
 
-from netbox_agent.config import netbox_instance as nb, config
+from netbox_agent.config import netbox_instance as nb
 
 PSU_DMI_TYPE = 39
 
