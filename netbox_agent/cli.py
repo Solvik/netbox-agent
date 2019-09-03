@@ -24,7 +24,7 @@ def run(config):
     if config.register:
         server.netbox_create(config)
     if config.update_all or config.update_network or config.update_location or \
-       config.update_inventory:
+       config.update_inventory or config.update_psu:
         server.netbox_update(config)
     return True
 

@@ -7,6 +7,7 @@ import netbox_agent.dmidecode as dmidecode
 from netbox_agent.location import Datacenter, Rack
 from netbox_agent.inventory import Inventory
 from netbox_agent.network import Network
+from netbox_agent.power import PowerSupply
 
 
 class ServerBase():
@@ -232,6 +233,10 @@ class ServerBase():
 
         self.network = Network(server=self)
         self.network.create_netbox_network_cards()
+
+        self.power = PowerSupply(server=self)
+        self.power.create_or_update_power_supply()
+
         if config.inventory:
             self.inventory = Inventory(server=self)
             self.inventory.create()
@@ -313,6 +318,10 @@ class ServerBase():
         if config.update_all or config.update_inventory:
             self.inventory = Inventory(server=self)
             self.inventory.update()
+        # update psu
+        if config.update_all or config.update_psu:
+            self.power = PowerSupply(server=self)
+            self.power.create_or_update_power_supply()
         if update:
             server.save()
         logging.debug('Finished updating Server!')
