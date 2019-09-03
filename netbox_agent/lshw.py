@@ -96,7 +96,6 @@ class LSHW():
             self.disks.append(d)
 
     def find_cpus(self, obj):
-        pprint(obj)
         c = {}
         c["product"] = obj["product"]
         c["vendor"] = obj["vendor"]
@@ -107,7 +106,6 @@ class LSHW():
 
     def find_memories(self, obj):
         if "children" not in obj:
-            print("not a DIMM memory.")
             return
 
         for dimm in obj["children"]:
