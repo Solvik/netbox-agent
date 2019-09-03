@@ -307,7 +307,7 @@ class Network():
             switch_ip = self.lldp.get_switch_ip(interface.name)
             switch_interface = self.lldp.get_switch_port(interface.name)
 
-            if switch_ip is not None and switch_interface is not None:
+            if switch_ip and switch_interface:
                 nic_update, interface = self.create_or_update_cable(
                     switch_ip, switch_interface, interface
                 )
@@ -569,10 +569,11 @@ class Network():
             if NETWORK_LLDP:
                 switch_ip = self.lldp.get_switch_ip(interface.name)
                 switch_interface = self.lldp.get_switch_port(interface.name)
-                ret, interface = self.create_or_update_cable(
-                    switch_ip, switch_interface, interface
-                )
-                nic_update += ret
+                if switch_ip and switch_interface:
+                    ret, interface = self.create_or_update_cable(
+                        switch_ip, switch_interface, interface
+                    )
+                    nic_update += ret
 
             if nic['ip']:
                 # sync local IPs
