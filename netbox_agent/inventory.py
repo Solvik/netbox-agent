@@ -2,7 +2,7 @@ import logging
 import subprocess
 import re
 
-from netbox_agent.config import netbox_instance as nb, INVENTORY_ENABLED
+from netbox_agent.config import netbox_instance as nb, config
 from netbox_agent.misc import is_tool
 from netbox_agent.raid.hp import HPRaid
 from netbox_agent.raid.storcli import StorcliRaid
@@ -13,17 +13,6 @@ INVENTORY_TAG = {
     'disk': {'name': 'hw:disk', 'slug': 'hw-disk'},
     'raid_card': {'name': 'hw:raid_card', 'slug': 'hw-raid-card'},
     }
-
-for key, tag in INVENTORY_TAG.items():
-    nb_tag = nb.extras.tags.get(
-        name=tag['name']
-        )
-    if not nb_tag:
-        nb_tag = nb.extras.tags.create(
-            name=tag['name'],
-            slug=tag['slug'],
-            comments=tag['name'],
-            )
 
 
 class Inventory():
@@ -50,10 +39,24 @@ class Inventory():
     """
 
     def __init__(self, server):
+        self.create_netbox_tags()
         self.server = server
-        self.device_id = self.server.get_netbox_server().id
+        netbox_server = self.server.get_netbox_server()
+        self.device_id = netbox_server.id if netbox_server else None
         self.raid = None
         self.disks = []
+
+    def create_netbox_tags():
+        for key, tag in INVENTORY_TAG.items():
+            nb_tag = nb.extras.tags.get(
+                name=tag['name']
+            )
+            if not nb_tag:
+                nb_tag = nb.extras.tags.create(
+                    name=tag['name'],
+                    slug=tag['slug'],
+                    comments=tag['name'],
+                )
 
     def get_cpus(self):
         model = None
@@ -310,7 +313,7 @@ class Inventory():
                 self.create_netbox_memory(memory)
 
     def create(self):
-        if not INVENTORY_ENABLED:
+        if config.inventory is None:
             return False
         self.create_netbox_cpus()
         self.create_netbox_memory()
@@ -319,7 +322,7 @@ class Inventory():
         return True
 
     def update(self):
-        if not INVENTORY_ENABLED:
+        if config.inventory is None or config.update_inventory is None:
             return False
         self.update_netbox_cpus()
         self.update_netbox_memory()

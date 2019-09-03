@@ -1,6 +1,9 @@
 import re as _re
 import subprocess as _subprocess
+import sys
 
+from netbox_agent.misc import is_tool
+import logging
 
 _handle_re = _re.compile('^Handle\\s+(.+),\\s+DMI\\s+type\\s+(\\d+),\\s+(\\d+)\\s+bytes$')
 _in_block_re = _re.compile('^\\t\\t(.+)$')
@@ -131,6 +134,10 @@ def get_by_type(type_id):
 
 
 def _execute_cmd():
+    if not is_tool('dmidecode'):
+        logging.error('Dmidecode does not seem to be present on your system. Add it your path or '
+                      'check the compatibility of this project with your distro.')
+        sys.exit(1)
     return _subprocess.check_output(['dmidecode', ], stderr=_subprocess.PIPE)
 
 
