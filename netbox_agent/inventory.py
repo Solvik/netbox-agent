@@ -1,7 +1,8 @@
 import logging
+import pynetbox
 
 from netbox_agent.config import netbox_instance as nb, config
-from netbox_agent.misc import is_tool
+from netbox_agent.misc import is_tool, get_vendor
 from netbox_agent.raid.hp import HPRaid
 from netbox_agent.raid.storcli import StorcliRaid
 from netbox_agent.lshw import LSHW
@@ -50,7 +51,7 @@ class Inventory():
 
         self.lshw = LSHW()
 
-    def create_netbox_tags():
+    def create_netbox_tags(self):
         for key, tag in INVENTORY_TAG.items():
             nb_tag = nb.extras.tags.get(
                 name=tag['name']
@@ -69,15 +70,11 @@ class Inventory():
         manufacturer = nb.dcim.manufacturers.get(
             name=name,
         )
-
-        """
-           No spaces in the slug allowed.
-        """
         if not manufacturer:
             logging.info('Creating missing manufacturer {name}'.format(name=name))
             manufacturer = nb.dcim.manufacturers.create(
                 name=name,
-                slug=name.replace(' ', '-').lower(),
+                slug=name.replace(' ', '-').replace('.', '').lower(),
             )
 
             logging.info('Creating missing manufacturer {name}'.format(name=name))
@@ -90,7 +87,7 @@ class Inventory():
                 device_id=device_id,
                 tag=tag
             )
-        except pynetbox.lib.query.RequestError as e:
+        except pynetbox.core.query.RequestError:
             logging.info('Tag {tag} is missing, returning empty array.'.format(tag=tag))
             items = []
 
@@ -149,9 +146,9 @@ class Inventory():
             if motherboard.get('serial') not in [x.serial for x in nb_motherboards]:
                 self.create_netbox_inventory_item(
                     device_id=self.device_id,
-                    tags=[INVENTORY_TAG['motherboard']['slug']],
+                    tags=[INVENTORY_TAG['motherboard']['name']],
                     vendor='{}'.format(motherboard.get('vendor', 'N/A')),
-                    serial='{}'.format(motherboard.get('serial', '000000')),
+                    serial='{}'.format(motherboard.get('serial', 'No SN')),
                     name='{}'.format(motherboard.get('name')),
                     description='{}'.format(motherboard.get('description'))
                 )
@@ -215,7 +212,7 @@ class Inventory():
             for x in nb_cpus:
                 x.delete()
 
-        self.create_netbox_cpus()
+            self.create_netbox_cpus()
 
     def get_raid_cards(self):
         if self.server.manufacturer == 'Dell':
@@ -257,7 +254,7 @@ class Inventory():
     def create_netbox_raid_cards(self):
         for raid_card in self.get_netbox_inventory(
                 device_id=self.device_id,
-                tag=[INVENTORY_TAG['raid_card']['name']]
+                tag=[INVENTORY_TAG['raid_card']['slug']]
                 ):
             self.create_netbox_raid_card(raid_card)
 
@@ -272,9 +269,9 @@ class Inventory():
         We only need to handle destroy and new cards
         """
 
-        nb_raid_cards = self.self.get_netbox_inventory(
+        nb_raid_cards = self.get_netbox_inventory(
                 device_id=self.device_id,
-                tag=[INVENTORY_TAG['raid_card']['name']]
+                tag=[INVENTORY_TAG['raid_card']['slug']]
                 )
         raid_cards = self.get_raid_cards()
 
@@ -292,36 +289,33 @@ class Inventory():
             if raid_card.get_serial_number() not in [x.serial for x in nb_raid_cards]:
                 self.create_netbox_raid_card(raid_card)
 
+    def is_virtual_disk(self, product):
+        non_raid_disks = [
+            'MR9361-8i',
+        ]
+        if 'virtual' in product or 'logical' in product or product in non_raid_disks:
+            return True
+        return False
+
     def get_hw_disks(self):
         disks = []
 
         for disk in self.lshw.get_hw_linux("storage"):
+            product = disk.get('product')
+            if self.is_virtual_disk(product):
+                continue
+
             d = {}
             d["name"] = ""
-            d['size'] = '{} GB'.format(int(disk['size']/1024/1024/1024))
-            d['model'] = disk['product']
+            d['Size'] = '{} GB'.format(int(disk['size']/1024/1024/1024))
             d['logicalname'] = disk['logicalname']
             d['description'] = disk['description']
-            d['serial'] = disk['serial']
-
-            if 'vendor' in disk:
-                d['vendor'] = disk['vendor']
-
-            if disk['product'].startswith('ST'):
-                d['vendor'] = 'Seagate'
-
-            if disk['product'].startswith('Crucial'):
-                d['vendor'] = 'Crucial'
-
-            if disk['product'].startswith('Micron'):
-                d['vendor'] = 'Micron'
-
-            if disk['product'].startswith('INTEL'):
-                d['vendor'] = 'Intel'
-
-            if disk['product'].startswith('Samsung'):
-                d['vendor'] = 'Samsung'
-
+            d['SN'] = disk.get('serial')
+            d['Model'] = disk.get('product')
+            if disk.get('vendor'):
+                d['Vendor'] = disk['vendor']
+            else:
+                d['Vendor'] = get_vendor(disk['product'])
             disks.append(d)
 
         for raid_card in self.get_raid_cards():
@@ -330,27 +324,35 @@ class Inventory():
         return disks
 
     def create_netbox_disk(self, disk):
-        if "vendor" in disk:
-            manufacturer = self.find_or_create_manufacturer(disk["vendor"])
+        manufacturer = None
+        if "Vendor" in disk:
+            manufacturer = self.find_or_create_manufacturer(disk["Vendor"])
+
+        # nonraid disk
+        if disk.get('logicalname') and disk.get('description'):
+            name = '{} - {} ({})'.format(
+                disk.get('description'),
+                disk.get('logicalname'),
+                disk.get('Size', 0))
+            description = 'Device {}'.format(disk.get('logicalname', 'Unknown'))
+        else:
+            name = '{} ({})'.format(disk['Model'], disk['Size'])
+            description = '{}'.format(disk['Type'])
 
         _ = nb.dcim.inventory_items.create(
             device=self.device_id,
             discovered=True,
             tags=[INVENTORY_TAG['disk']['name']],
-            name='{} - {} ({})'.format(
-                disk.get('description', 'Unknown'),
-                disk.get('logicalname', 'Unknown'),
-                disk.get('size', 0)
-            ),
-            serial=disk['serial'],
-            part_id=disk['model'],
-            description='Device {}'.format(disk.get('logicalname', 'Unknown')),
-            manufacturer=manufacturer.id
+            name=name,
+            serial=disk['SN'],
+            part_id=disk['Model'],
+            description=description,
+            manufacturer=manufacturer.id if manufacturer else None
         )
 
         logging.info('Creating Disk {model} {serial}'.format(
-            model=disk['model'],
-            serial=disk['serial'],
+            model=disk['Model'],
+            serial=disk['SN'],
         ))
 
     def do_netbox_disks(self):
@@ -362,7 +364,7 @@ class Inventory():
         # delete disks that are in netbox but not locally
         # use the serial_number has the comparison element
         for nb_disk in nb_disks:
-            if nb_disk.serial not in [x['serial'] for x in disks]:
+            if nb_disk.serial not in [x['SN'] for x in disks if x.get('SN')]:
                 logging.info('Deleting unknown locally Disk {serial}'.format(
                     serial=nb_disk.serial,
                 ))
@@ -370,7 +372,7 @@ class Inventory():
 
         # create disks that are not in netbox
         for disk in disks:
-            if disk.get('serial') not in [x.serial for x in nb_disks]:
+            if disk.get('SN') not in [x.serial for x in nb_disks]:
                 self.create_netbox_disk(disk)
 
     def create_netbox_memory(self, memory):

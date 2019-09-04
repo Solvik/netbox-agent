@@ -1,6 +1,7 @@
 import subprocess
 import json
 
+from netbox_agent.misc import get_vendor
 from netbox_agent.raid.base import Raid, RaidController
 
 
@@ -38,8 +39,10 @@ class StorcliController(RaidController):
             )
             drive_attr = drive_infos['{} - Detailed Information'.format(drive_identifier)][
                 '{} Device attributes'.format(drive_identifier)]
+            model = drive_attr.get('Model Number', '').strip()
             ret.append({
-                'Model': drive_attr.get('Model Number', '').strip(),
+                'Model': model,
+                'Vendor': get_vendor(model),
                 'SN': drive_attr.get('SN', '').strip(),
                 'Size': size,
                 'Type': media_type,

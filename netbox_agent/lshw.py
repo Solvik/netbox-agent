@@ -1,14 +1,21 @@
 import subprocess
 import json
+import logging
+import sys
+
+from netbox_agent.misc import is_tool
 
 
 class LSHW():
     def __init__(self):
+        if not is_tool('lshw'):
+            logging.error('lshw does not seem to be installed')
+            sys.exit(1)
 
-        self.hw_info = json.loads(
-                                subprocess.check_output(["lshw", "-quiet", "-json"],
-                                encoding='utf8'))  # noqa: E128
-
+        data = subprocess.getoutput(
+            'lshw -quiet -json'
+        )
+        self.hw_info = json.loads(data)
         self.info = {}
         self.memories = []
         self.interfaces = []
