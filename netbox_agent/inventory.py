@@ -15,6 +15,7 @@ INVENTORY_TAG = {
     'raid_card': {'name': 'hw:raid_card', 'slug': 'hw-raid-card'},
     }
 
+
 class Inventory():
     """
     Better Inventory items coming, see:
@@ -89,7 +90,7 @@ class Inventory():
                 device_id=device_id,
                 tag=tag
             )
-        except BaseException:
+        except pynetbox.lib.query.RequestError as e:
             logging.info('Tag {tag} is missing, returning empty array.'.format(tag=tag))
             items = []
 
