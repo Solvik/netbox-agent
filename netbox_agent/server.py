@@ -108,6 +108,9 @@ class ServerBase():
     def get_bios_release_date(self):
         raise NotImplementedError
 
+    def get_power_consumption(self):
+        raise NotImplementedError
+
     def _netbox_create_blade_chassis(self, datacenter, rack):
         device_type = nb.dcim.device_types.get(
             model=self.get_chassis(),
@@ -322,6 +325,7 @@ class ServerBase():
         if config.update_all or config.update_psu:
             self.power = PowerSupply(server=self)
             self.power.create_or_update_power_supply()
+            self.power.report_power_consumption()
         if update:
             server.save()
         logging.debug('Finished updating Server!')

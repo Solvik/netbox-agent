@@ -1,4 +1,8 @@
+import logging
+import subprocess
+
 from netbox_agent.server import ServerBase
+from netbox_agent.misc import is_tool
 
 
 class DellHost(ServerBase):
@@ -33,3 +37,33 @@ class DellHost(ServerBase):
         if self.is_blade():
             return self.dmi.get_by_type('Chassis')[0]['Serial Number']
         return self.get_service_tag()
+
+    def get_power_consumption(self):
+        '''
+        Parse omreport output like this
+
+        Amperage
+        PS1 Current 1 : 1.8 A
+        PS2 Current 2 : 1.4 A
+        '''
+        value = []
+
+        if not is_tool('omreport'):
+            logging.error('omreport does not seem to be installed, please debug')
+            return value
+
+        data = subprocess.getoutput('omreport chassis pwrmonitoring')
+        amperage = False
+        for line in data.splitlines():
+            if line.startswith('Amperage'):
+                amperage = True
+                continue
+
+            if amperage:
+                if line.startswith('PS'):
+                    amp_value = line.split(':')[1].split()[0]
+                    value.append(amp_value)
+                else:
+                    break
+
+        return value

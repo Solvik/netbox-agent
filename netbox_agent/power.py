@@ -8,11 +8,11 @@ PSU_DMI_TYPE = 39
 class PowerSupply():
     def __init__(self, server=None):
         self.server = server
-        netbox_server = self.server.get_netbox_server()
+        self.netbox_server = self.server.get_netbox_server()
         if self.server.is_blade():
-            self.device_id = netbox_server.parent_device.id if netbox_server else None
+            self.device_id = self.netbox_server.parent_device.id if self.netbox_server else None
         else:
-            self.device_id = netbox_server.id if netbox_server else None
+            self.device_id = self.netbox_server.id if self.netbox_server else None
 
     def get_power_supply(self):
         power_supply = []
@@ -79,5 +79,33 @@ class PowerSupply():
                 nb_psu = nb.dcim.power_ports.create(
                     **psu
                     )
+
+        return True
+
+    def report_power_consumption(self):
+        psu_cons = self.server.get_power_consumption()
+        nb_psus = self.get_netbox_power_supply()
+
+        if not len(nb_psus) or not len(psu_cons):
+            return False
+
+        # find power feeds for rack or dc
+        voltage = None
+        pwr_feeds = None
+        if self.netbox_server.rack:
+            pwr_feeds = nb.dcim.power_feeds.filter(
+                rack=self.netbox_server.rack.id
+            )
+        if pwr_feeds is None or not len(pwr_feeds):
+            logging.info('Could not find power feeds for Rack, defaulting value to 230')
+            voltage = 230
+
+        for i, nb_psu in enumerate(nb_psus):
+            nb_psu.allocated_draw = float(psu_cons[i]) * voltage
+            nb_psu.save()
+            logging.info('Updated power consumption for PSU {}: {}W'.format(
+                nb_psu.name,
+                nb_psu.allocated_draw,
+            ))
 
         return True
