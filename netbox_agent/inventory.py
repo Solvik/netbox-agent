@@ -51,12 +51,27 @@ class Inventory():
     """
 
     def __init__(self, server):
+        self.create_netbox_tags()
         self.server = server
-        self.device_id = self.server.get_netbox_server().id
+        netbox_server = self.server.get_netbox_server()
+
+        self.device_id = netbox_server.id if netbox_server else None
         self.raid = None
         self.disks = []
 
         self.lshw = LSHW()
+
+    def create_netbox_tags():
+        for key, tag in INVENTORY_TAG.items():
+            nb_tag = nb.extras.tags.get(
+                name=tag['name']
+            )
+            if not nb_tag:
+                nb_tag = nb.extras.tags.create(
+                    name=tag['name'],
+                    slug=tag['slug'],
+                    comments=tag['name'],
+                )
 
     def find_or_create_manufacturer(self, name):
         if name is None:
