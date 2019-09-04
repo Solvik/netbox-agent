@@ -15,18 +15,6 @@ INVENTORY_TAG = {
     'raid_card': {'name': 'hw:raid_card', 'slug': 'hw-raid-card'},
     }
 
-for key, tag in INVENTORY_TAG.items():
-    nb_tag = nb.extras.tags.get(
-        name=tag['name']
-        )
-    if not nb_tag:
-        nb_tag = nb.extras.tags.create(
-            name=tag['name'],
-            slug=tag['slug'],
-            comments=tag['name'],
-            )
-
-
 class Inventory():
     """
     Better Inventory items coming, see:
