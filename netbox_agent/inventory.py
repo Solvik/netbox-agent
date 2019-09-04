@@ -46,7 +46,7 @@ class Inventory():
         self.raid = None
         self.disks = []
 
-    def create_netbox_tags():
+    def create_netbox_tags(self):
         for key, tag in INVENTORY_TAG.items():
             nb_tag = nb.extras.tags.get(
                 name=tag['name']
