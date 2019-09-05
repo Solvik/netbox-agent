@@ -303,7 +303,7 @@ class Inventory():
            'virtual' in product.lower() or 'logical' in product.lower() or \
            product in non_raid_disks or \
            description == 'SCSI Enclosure' or \
-           'volume' in description.lower() :
+           'volume' in description.lower():
             return True
         return False
 
@@ -316,13 +316,13 @@ class Inventory():
 
             logicalname = disk.get('logicalname')
             description = disk.get('description')
-            size = disk.get('size')
+            size = disk.get('size', 0)
             product = disk.get('product')
             serial = disk.get('serial')
 
             d = {}
             d["name"] = ""
-            d['Size'] = '{} GB'.format(int(disk['size']/1024/1024/1024))
+            d['Size'] = '{} GB'.format(int(size/1024/1024/1024))
             d['logicalname'] = logicalname
             d['description'] = description
             d['SN'] = serial
