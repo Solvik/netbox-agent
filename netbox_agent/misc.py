@@ -4,3 +4,25 @@ from shutil import which
 def is_tool(name):
     '''Check whether `name` is on PATH and marked as executable.'''
     return which(name) is not None
+
+
+def get_vendor(name):
+    vendors = {
+        'ST': 'Seagate',
+        'CRUCIAL': 'Crucial',
+        'MICRON': 'Micron',
+        'INTEL': 'Intel',
+        'SAMSUNG': 'Samsung',
+        'EH0': 'HP',
+        'HGST': 'HGST',
+        'HUH': 'HGST',
+        'MB': 'Toshiba',
+        'MC': 'Toshiba',
+        'MD': 'Toshiba',
+        'MG': 'Toshiba',
+        'WD': 'WDC'
+        }
+    for key, value in vendors.items():
+        if name.upper().startswith(key):
+            return value
+    return name

@@ -2,6 +2,7 @@ import re
 import subprocess
 
 from netbox_agent.raid.base import Raid, RaidController
+from netbox_agent.misc import get_vendor
 
 REGEXP_CONTROLLER_HP = re.compile(r'Smart Array ([a-zA-Z0-9- ]+) in Slot ([0-9]+)')
 
@@ -120,12 +121,23 @@ class HPRaidController(RaidController):
         key = next(iter(info_dict))
         for array, physical_disk in info_dict[key].items():
             for _, pd_attr in physical_disk.items():
+                model = pd_attr.get('Model', '').strip()
+                vendor = None
+                if model.startswith('HP'):
+                    vendor = 'HP'
+                elif len(model.split()) > 1:
+                    vendor = get_vendor(model.split()[1])
+                else:
+                    vendor = get_vendor(model)
+
                 ret.append({
-                    'Model': pd_attr.get('Model', '').strip(),
+                    'Model': model,
+                    'Vendor': vendor,
                     'SN': pd_attr.get('Serial Number', '').strip(),
                     'Size': pd_attr.get('Size', '').strip(),
                     'Type': 'SSD' if pd_attr.get('Interface Type') == 'Solid State SATA'
                     else 'HDD',
+                    '_src': self.__class__.__name__,
                 })
         return ret
 
