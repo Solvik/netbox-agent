@@ -9,13 +9,20 @@ def is_tool(name):
 def get_vendor(name):
     vendors = {
         'ST': 'Seagate',
-        'Crucial': 'Crucial',
-        'Micron': 'Micron',
-        'Intel': 'Intel',
-        'Samsung': 'Samsung',
+        'CRUCIAL': 'Crucial',
+        'MICRON': 'Micron',
+        'INTEL': 'Intel',
+        'SAMSUNG': 'Samsung',
+        'EH0': 'HP',
         'HGST': 'HGST',
+        'HUH': 'HGST',
+        'MB': 'Toshiba',
+        'MC': 'Toshiba',
+        'MD': 'Toshiba',
+        'MG': 'Toshiba',
+        'WD': 'WDC'
         }
     for key, value in vendors.items():
-        if name.startswith(key):
+        if name.upper().startswith(key):
             return value
     return name
