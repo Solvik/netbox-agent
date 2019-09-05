@@ -46,6 +46,7 @@ class StorcliController(RaidController):
                 'SN': drive_attr.get('SN', '').strip(),
                 'Size': size,
                 'Type': media_type,
+                '_src': self.__class__.__name__,
                 })
         return ret
 
