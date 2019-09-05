@@ -289,11 +289,21 @@ class Inventory():
             if raid_card.get_serial_number() not in [x.serial for x in nb_raid_cards]:
                 self.create_netbox_raid_card(raid_card)
 
-    def is_virtual_disk(self, product):
+    def is_virtual_disk(self, disk):
+        logicalname = disk.get('logicalname')
+        description = disk.get('description')
+        size = disk.get('size')
+        product = disk.get('product')
+
         non_raid_disks = [
             'MR9361-8i',
-        ]
-        if 'virtual' in product or 'logical' in product or product in non_raid_disks:
+            ]
+
+        if size is None and logicalname is None or \
+           'virtual' in product.lower() or 'logical' in product.lower() or \
+           product in non_raid_disks or \
+           description == 'SCSI Enclosure' or \
+           'volume' in description.lower() :
             return True
         return False
 
@@ -301,17 +311,22 @@ class Inventory():
         disks = []
 
         for disk in self.lshw.get_hw_linux("storage"):
-            product = disk.get('product')
-            if self.is_virtual_disk(product):
+            if self.is_virtual_disk(disk):
                 continue
+
+            logicalname = disk.get('logicalname')
+            description = disk.get('description')
+            size = disk.get('size')
+            product = disk.get('product')
+            serial = disk.get('serial')
 
             d = {}
             d["name"] = ""
             d['Size'] = '{} GB'.format(int(disk['size']/1024/1024/1024))
-            d['logicalname'] = disk['logicalname']
-            d['description'] = disk['description']
-            d['SN'] = disk.get('serial')
-            d['Model'] = disk.get('product')
+            d['logicalname'] = logicalname
+            d['description'] = description
+            d['SN'] = serial
+            d['Model'] = product
             if disk.get('vendor'):
                 d['Vendor'] = disk['vendor']
             else:
@@ -321,18 +336,25 @@ class Inventory():
         for raid_card in self.get_raid_cards():
             disks += raid_card.get_physical_disks()
 
-        return disks
+        # remove duplicate serials
+        seen = set()
+        uniq = [x for x in disks if x['SN'] not in seen and not seen.add(x['SN'])]
+        return uniq
 
     def create_netbox_disk(self, disk):
         manufacturer = None
         if "Vendor" in disk:
             manufacturer = self.find_or_create_manufacturer(disk["Vendor"])
 
+        logicalname = disk.get('logicalname')
+        desc = disk.get('description')
         # nonraid disk
-        if disk.get('logicalname') and disk.get('description'):
+        if logicalname and desc:
+            if type(logicalname) is list:
+                logicalname = logicalname[0]
             name = '{} - {} ({})'.format(
-                disk.get('description'),
-                disk.get('logicalname'),
+                desc,
+                logicalname,
                 disk.get('Size', 0))
             description = 'Device {}'.format(disk.get('logicalname', 'Unknown'))
         else:

@@ -25,8 +25,8 @@ class LSHW():
         self.vendor = self.hw_info["vendor"]
         self.product = self.hw_info["product"]
         self.chassis_serial = self.hw_info["serial"]
-        self.motherboard_serial = self.hw_info["children"][0]["serial"]
-        self.motherboard = self.hw_info["children"][0]["product"]
+        self.motherboard_serial = self.hw_info["children"][0].get("serial", "No S/N")
+        self.motherboard = self.hw_info["children"][0].get("product", "Motherboard")
 
         for k in self.hw_info["children"]:
             if k["class"] == "power":
@@ -75,12 +75,12 @@ class LSHW():
         if "children" in obj:
             for device in obj["children"]:
                 d = {}
-                d["logicalname"] = device["logicalname"]
-                d["product"] = device["product"]
-                d["serial"] = device["serial"]
-                d["version"] = device["version"]
-                d["size"] = device["size"]
-                d["description"] = device["description"]
+                d["logicalname"] = device.get("logicalname")
+                d["product"] = device.get("product")
+                d["serial"] = device.get("serial")
+                d["version"] = device.get("version")
+                d["size"] = device.get("size")
+                d["description"] = device.get("description")
 
                 self.disks.append(d)
 
@@ -121,13 +121,13 @@ class LSHW():
                 continue
 
             d = {}
-            d["slot"] = dimm["slot"]
-            d["description"] = dimm["description"]
-            d["id"] = dimm["id"]
-            d["serial"] = dimm["serial"]
-            d["vendor"] = dimm["vendor"]
-            d["product"] = dimm["product"]
-            d["size"] = dimm["size"] / 2 ** 20 / 1024
+            d["slot"] = dimm.get("slot")
+            d["description"] = dimm.get("description")
+            d["id"] = dimm.get("id")
+            d["serial"] = dimm.get("serial", 'N/A')
+            d["vendor"] = dimm.get("vendor")
+            d["product"] = dimm.get("product")
+            d["size"] = dimm.get("size", 0) / 2 ** 20 / 1024
 
             self.memories.append(d)
 
