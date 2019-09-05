@@ -122,9 +122,14 @@ class HPRaidController(RaidController):
         for array, physical_disk in info_dict[key].items():
             for _, pd_attr in physical_disk.items():
                 model = pd_attr.get('Model', '').strip()
-                vendor = get_vendor(model)
-                if len(model.split()) > 1:
+                vendor = None
+                if model.startswith('HP'):
+                    vendor = 'HP'
+                elif len(model.split()) > 1:
                     vendor = get_vendor(model.split()[1])
+                else:
+                    vendor = get_vendor(model)
+
                 ret.append({
                     'Model': model,
                     'Vendor': vendor,
