@@ -7,6 +7,7 @@ import netbox_agent.dmidecode as dmidecode
 from netbox_agent.location import Datacenter, Rack
 from netbox_agent.inventory import Inventory
 from netbox_agent.network import Network
+from netbox_agent.power import PowerSupply
 
 
 class ServerBase():
@@ -105,6 +106,9 @@ class ServerBase():
         raise NotImplementedError
 
     def get_bios_release_date(self):
+        raise NotImplementedError
+
+    def get_power_consumption(self):
         raise NotImplementedError
 
     def _netbox_create_blade_chassis(self, datacenter, rack):
@@ -232,6 +236,10 @@ class ServerBase():
 
         self.network = Network(server=self)
         self.network.create_netbox_network_cards()
+
+        self.power = PowerSupply(server=self)
+        self.power.create_or_update_power_supply()
+
         if config.inventory:
             self.inventory = Inventory(server=self)
             self.inventory.create()
@@ -313,6 +321,11 @@ class ServerBase():
         if config.update_all or config.update_inventory:
             self.inventory = Inventory(server=self)
             self.inventory.update()
+        # update psu
+        if config.update_all or config.update_psu:
+            self.power = PowerSupply(server=self)
+            self.power.create_or_update_power_supply()
+            self.power.report_power_consumption()
         if update:
             server.save()
         logging.debug('Finished updating Server!')

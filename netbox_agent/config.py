@@ -22,6 +22,7 @@ def get_config():
     p.add_argument('--update-network', action='store_true', help='Update network')
     p.add_argument('--update-inventory', action='store_true', help='Update inventory')
     p.add_argument('--update-location', action='store_true', help='Update location')
+    p.add_argument('--update-psu', action='store_true', help='Update PSU')
 
     p.add_argument('--log_level', default='debug')
     p.add_argument('--netbox.url', help='Netbox URL')
