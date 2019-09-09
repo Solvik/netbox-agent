@@ -8,7 +8,7 @@ def is_tool(name):
 
 def get_vendor(name):
     vendors = {
-        'DELL(TM)': 'Dell',
+        'DELL': 'Dell',
         'ST': 'Seagate',
         'CRUCIAL': 'Crucial',
         'MICRON': 'Micron',
