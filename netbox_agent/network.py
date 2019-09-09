@@ -224,17 +224,19 @@ class Network():
             interface.mode = 200
             interface.tagged_vlans = [nb_vlan] if nb_vlan else []
             interface.untagged_vlan = None
-        # if lldp reports a vlan-id
-        elif lldp_vlan and (
-                interface.mode is None or interface.mode.value != 100 or
-                interface.untagged_vlan is None or
-                interface.untagged_vlan.vid != lldp_vlan):
-            logging.info('Resetting access VLAN on interface {interface}'.format(
-                interface=interface))
-            update = True
-            nb_vlan = self.get_or_create_vlan(lldp_vlan)
-            interface.mode = 100
-            interface.untagged_vlan = nb_vlan.id
+        # if lldp reports a vlan-id with pvid
+        elif lldp_vlan:
+            pvid_vlan = [key for (key, value) in lldp_vlan.items() if value['pvid']]
+            if len(pvid_vlan) and (
+                    interface.mode is None or interface.mode.value != 100 or
+                    interface.untagged_vlan is None or
+                    interface.untagged_vlan.vid != pvid_vlan[0]):
+                logging.info('Resetting access VLAN on interface {interface}'.format(
+                    interface=interface))
+                update = True
+                nb_vlan = self.get_or_create_vlan(pvid_vlan)
+                interface.mode = 100
+                interface.untagged_vlan = nb_vlan.id
         return update, interface
 
     def create_or_update_ipmi(self):
@@ -295,10 +297,14 @@ class Network():
             interface.save()
         elif config.network.lldp and self.lldp.get_switch_vlan(nic['name']) is not None:
             # if lldp reports a vlan on an interface, tag the interface in access and set the vlan
-            vlan_id = self.lldp.get_switch_vlan(nic['name'])
-            nb_vlan = self.get_or_create_vlan(vlan_id)
-            interface.mode = 100
-            interface.untagged_vlan = nb_vlan.id
+            # report only the interface which has `pvid=yes` (ie: lldp.eth3.vlan.pvid=yes)
+            # if pvid is not present, it'll be processed as a vlan tagged interface
+            vlans = self.lldp.get_switch_vlan(nic['name'])
+            for vid, vlan_infos in vlans.items():
+                nb_vlan = self.get_or_create_vlan(vid)
+                if vlan_infos.get('vid'):
+                    interface.mode = 100
+                    interface.untagged_vlan = nb_vlan.id
             interface.save()
 
         # cable the interface
