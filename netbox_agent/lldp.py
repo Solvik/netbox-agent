@@ -8,18 +8,35 @@ class LLDP():
 
     def parse(self):
         output_dict = {}
+        vlans = {}
+        vid = None
         for entry in self.output.splitlines():
             if '=' not in entry:
                 continue
             path, value = entry.strip().split("=", 1)
-            path = path.split(".")
-            path_components, final = path[:-1], path[-1]
-
+            split_path = path.split(".")
+            interface = split_path[1]
+            path_components, final = split_path[:-1], split_path[-1]
             current_dict = output_dict
+
+            if vlans.get(interface) is None:
+                vlans[interface] = {}
+
             for path_component in path_components:
                 current_dict[path_component] = current_dict.get(path_component, {})
                 current_dict = current_dict[path_component]
-            current_dict[final] = value
+                if 'vlan-id' in path:
+                    vid = value
+                    vlans[interface][value] = vlans[interface].get(vid, {})
+                elif path.endswith('vlan'):
+                    vid = value.replace('vlan-', '')
+                    vlans[interface][vid] = vlans[interface].get(vid, {})
+                elif 'pvid' in path:
+                    vlans[interface][vid]['pvid'] = True
+            if 'vlan' not in path:
+                current_dict[final] = value
+        for interface, vlan in vlans.items():
+            output_dict['lldp'][interface]['vlan'] = vlan
         return output_dict
 
     def get_switch_ip(self, interface):
@@ -38,11 +55,4 @@ class LLDP():
         # lldp.eth0.vlan.vlan-id=296
         if self.data['lldp'].get(interface) is None:
             return None
-
-        lldp = self.data['lldp'][interface]
-        if lldp.get('vlan'):
-            if type(lldp['vlan']) is str:
-                return int(lldp['vlan'].replace('vlan-', ''))
-            elif lldp['vlan'].get('vlan-id'):
-                return int(lldp['vlan'].get('vlan-id'))
-        return None
+        return self.data['lldp'][interface]['vlan']
