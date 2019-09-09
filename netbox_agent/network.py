@@ -46,7 +46,7 @@ class Network():
 
         self.server = server
         self.device = self.server.get_netbox_server()
-        self.lldp = LLDP()
+        self.lldp = LLDP() if config.network.lldp else None
         self.scan()
 
     def scan(self):
