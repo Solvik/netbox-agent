@@ -399,16 +399,16 @@ class Inventory():
 
     def create_netbox_memory(self, memory):
         manufacturer = self.find_or_create_manufacturer(memory['vendor'])
-
+        name = 'Slot {} ({}GB)'.format(memory['slot'], memory['size'])
         nb_memory = nb.dcim.inventory_items.create(
             device=self.device_id,
             discovered=True,
             manufacturer=manufacturer.id,
             tags=[INVENTORY_TAG['memory']['name']],
-            name='{} ({}GB)'.format(memory['description'], memory['size']),
+            name=name,
             part_id=memory['product'],
             serial=memory['serial'],
-            description='Slot {}'.format(memory['slot']),
+            description=memory['description'],
         )
 
         logging.info('Creating Memory {location} {type} {size}GB'.format(
