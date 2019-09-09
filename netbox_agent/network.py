@@ -227,14 +227,15 @@ class Network():
         # if lldp reports a vlan-id with pvid
         elif lldp_vlan:
             pvid_vlan = [key for (key, value) in lldp_vlan.items() if value['pvid']]
-            if len(pvid_vlan) and (
-                    interface.mode is None or interface.mode.value != 100 or
+            if len(pvid_vlan) > 0 and (
+                    interface.mode is None or
+                    interface.mode.value != 100 or
                     interface.untagged_vlan is None or
-                    interface.untagged_vlan.vid != pvid_vlan[0]):
+                    interface.untagged_vlan.vid != int(pvid_vlan[0])):
                 logging.info('Resetting access VLAN on interface {interface}'.format(
                     interface=interface))
                 update = True
-                nb_vlan = self.get_or_create_vlan(pvid_vlan)
+                nb_vlan = self.get_or_create_vlan(pvid_vlan[0])
                 interface.mode = 100
                 interface.untagged_vlan = nb_vlan.id
         return update, interface
