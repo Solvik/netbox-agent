@@ -1,5 +1,4 @@
 import subprocess
-from pprint import pprint
 
 
 class LLDP():
