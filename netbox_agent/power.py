@@ -17,7 +17,7 @@ class PowerSupply():
     def get_power_supply(self):
         power_supply = []
         for psu in self.server.dmi.get_by_type(PSU_DMI_TYPE):
-            if 'Present' not in psu['Status']:
+            if 'Present' not in psu['Status'] or psu['Status'] == 'Not Present':
                 continue
 
             try:
@@ -86,7 +86,11 @@ class PowerSupply():
         return True
 
     def report_power_consumption(self):
-        psu_cons = self.server.get_power_consumption()
+        try:
+            psu_cons = self.server.get_power_consumption()
+        except NotImplementedError:
+            logging.error('Cannot report power consumption for this vendor')
+            return False
         nb_psus = self.get_netbox_power_supply()
 
         if not len(nb_psus) or not len(psu_cons):
