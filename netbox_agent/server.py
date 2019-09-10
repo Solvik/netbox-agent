@@ -76,7 +76,7 @@ class ServerBase():
         """
         Return the Chassis Name from dmidecode info
         """
-        return self.system[0]['Product Name']
+        return self.system[0]['Product Name'].strip()
 
     def get_service_tag(self):
         """
