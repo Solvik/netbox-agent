@@ -20,7 +20,10 @@ class PowerSupply():
             if 'Present' not in psu['Status']:
                 continue
 
-            max_power = psu.get('Max Power Capacity').split()[0]
+            try:
+                max_power = int(psu.get('Max Power Capacity').split()[0])
+            except ValueError:
+                max_power = None
             desc = '{} - {}'.format(
                 psu.get('Manufacturer', 'No Manufacturer').strip(),
                 psu.get('Name', 'No name').strip(),
@@ -29,7 +32,7 @@ class PowerSupply():
                 'name': psu.get('Serial Number', 'No S/N').strip(),
                 'description': desc,
                 'allocated_draw': None,
-                'maximum_draw': int(max_power),
+                'maximum_draw': max_power,
                 'device': self.device_id,
                 })
         return power_supply
