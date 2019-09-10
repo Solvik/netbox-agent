@@ -1,6 +1,6 @@
 import re
 import subprocess
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET # NOQA
 
 from netbox_agent.misc import get_vendor
 from netbox_agent.raid.base import Raid, RaidController
