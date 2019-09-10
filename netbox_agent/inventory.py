@@ -254,14 +254,7 @@ class Inventory():
         ))
         return nb_raid_card
 
-    def create_netbox_raid_cards(self):
-        for raid_card in self.get_netbox_inventory(
-                device_id=self.device_id,
-                tag=[INVENTORY_TAG['raid_card']['slug']]
-                ):
-            self.create_netbox_raid_card(raid_card)
-
-    def update_netbox_raid_cards(self):
+    def do_netbox_raid_cards(self):
         """
         Update raid cards in netbobx
         Since we only push:
@@ -445,7 +438,7 @@ class Inventory():
             return False
         self.do_netbox_cpus()
         self.do_netbox_memories()
-        self.create_netbox_raid_cards()
+        self.do_netbox_raid_cards()
         self.do_netbox_disks()
         self.do_netbox_interfaces()
         self.do_netbox_motherboard()
@@ -456,7 +449,7 @@ class Inventory():
             return False
         self.do_netbox_cpus()
         self.do_netbox_memories()
-        self.update_netbox_raid_cards()
+        self.do_netbox_raid_cards()
         self.do_netbox_disks()
         self.do_netbox_interfaces()
         self.do_netbox_motherboard()
