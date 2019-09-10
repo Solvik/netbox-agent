@@ -70,7 +70,7 @@ class OmreportRaid(Raid):
         for obj in controller_xml.find('Controllers').findall('DCStorageObject'):
             ctrl_index = get_field(obj, 'ControllerNum')
             self.controllers.append(
-                OmreportController(ctrl_index, controller_xml)
+                OmreportController(ctrl_index, obj)
             )
 
     def get_controllers(self):
