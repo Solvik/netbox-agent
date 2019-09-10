@@ -8,6 +8,8 @@ def is_tool(name):
 
 def get_vendor(name):
     vendors = {
+        'PERC': 'Dell',
+        'SANDISK': 'SanDisk',
         'DELL': 'Dell',
         'ST': 'Seagate',
         'CRUCIAL': 'Crucial',
