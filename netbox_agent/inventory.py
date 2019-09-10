@@ -4,6 +4,7 @@ import pynetbox
 from netbox_agent.config import netbox_instance as nb, config
 from netbox_agent.misc import is_tool, get_vendor
 from netbox_agent.raid.hp import HPRaid
+from netbox_agent.raid.omreport import OmreportRaid
 from netbox_agent.raid.storcli import StorcliRaid
 from netbox_agent.lshw import LSHW
 
@@ -216,6 +217,8 @@ class Inventory():
 
     def get_raid_cards(self):
         if self.server.manufacturer == 'Dell':
+            if is_tool('omreport'):
+                self.raid = OmreportRaid()
             if is_tool('storcli'):
                 self.raid = StorcliRaid()
         elif self.server.manufacturer == 'HP':
@@ -251,14 +254,7 @@ class Inventory():
         ))
         return nb_raid_card
 
-    def create_netbox_raid_cards(self):
-        for raid_card in self.get_netbox_inventory(
-                device_id=self.device_id,
-                tag=[INVENTORY_TAG['raid_card']['slug']]
-                ):
-            self.create_netbox_raid_card(raid_card)
-
-    def update_netbox_raid_cards(self):
+    def do_netbox_raid_cards(self):
         """
         Update raid cards in netbobx
         Since we only push:
@@ -442,7 +438,7 @@ class Inventory():
             return False
         self.do_netbox_cpus()
         self.do_netbox_memories()
-        self.create_netbox_raid_cards()
+        self.do_netbox_raid_cards()
         self.do_netbox_disks()
         self.do_netbox_interfaces()
         self.do_netbox_motherboard()
@@ -453,7 +449,7 @@ class Inventory():
             return False
         self.do_netbox_cpus()
         self.do_netbox_memories()
-        self.update_netbox_raid_cards()
+        self.do_netbox_raid_cards()
         self.do_netbox_disks()
         self.do_netbox_interfaces()
         self.do_netbox_motherboard()
