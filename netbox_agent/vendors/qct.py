@@ -12,7 +12,7 @@ class QCTHost(ServerBase):
     def get_blade_slot(self):
         if self.is_blade():
             return 'Slot {}'.format(
-                self.dmi.get_by_type('Baseboard')[0].get('Location In Chassis')
+                self.dmi.get_by_type('Baseboard')[0].get('Location In Chassis').strip()
             )
         return None
 
@@ -23,10 +23,10 @@ class QCTHost(ServerBase):
 
     def get_chassis(self):
         if self.is_blade():
-            return self.dmi.get_by_type('Chassis')[0]['Version']
+            return self.dmi.get_by_type('Chassis')[0]['Version'].strip()
         return self.get_product_name()
 
     def get_chassis_service_tag(self):
         if self.is_blade():
-            return self.dmi.get_by_type('Chassis')[0]['Serial Number']
+            return self.dmi.get_by_type('Chassis')[0]['Serial Number'].strip()
         return self.get_service_tag()

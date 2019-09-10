@@ -20,7 +20,7 @@ class DellHost(ServerBase):
         `        Location In Chassis: Slot 03`
         """
         if self.is_blade():
-            return self.dmi.get_by_type('Baseboard')[0].get('Location In Chassis')
+            return self.dmi.get_by_type('Baseboard')[0].get('Location In Chassis').strip()
         return None
 
     def get_chassis_name(self):
@@ -30,12 +30,12 @@ class DellHost(ServerBase):
 
     def get_chassis(self):
         if self.is_blade():
-            return self.dmi.get_by_type('Chassis')[0]['Version']
+            return self.dmi.get_by_type('Chassis')[0]['Version'].strip()
         return self.get_product_name()
 
     def get_chassis_service_tag(self):
         if self.is_blade():
-            return self.dmi.get_by_type('Chassis')[0]['Serial Number']
+            return self.dmi.get_by_type('Chassis')[0]['Serial Number'].strip()
         return self.get_service_tag()
 
     def get_power_consumption(self):
