@@ -4,6 +4,7 @@ import pynetbox
 from netbox_agent.config import netbox_instance as nb, config
 from netbox_agent.misc import is_tool, get_vendor
 from netbox_agent.raid.hp import HPRaid
+from netbox_agent.raid.omreport import OmreportRaid
 from netbox_agent.raid.storcli import StorcliRaid
 from netbox_agent.lshw import LSHW
 
@@ -216,6 +217,8 @@ class Inventory():
 
     def get_raid_cards(self):
         if self.server.manufacturer == 'Dell':
+            if is_tool('omreport'):
+                self.raid = OmreportRaid()
             if is_tool('storcli'):
                 self.raid = StorcliRaid()
         elif self.server.manufacturer == 'HP':
