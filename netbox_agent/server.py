@@ -68,7 +68,7 @@ class ServerBase():
     def get_netbox_rack(self):
         rack = nb.dcim.racks.get(
             name=self.get_rack(),
-            datacenter=self.get_netbox_datacenter(),
+            site_id=self.get_netbox_datacenter().id,
         )
         return rack
 
