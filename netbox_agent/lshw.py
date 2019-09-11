@@ -125,7 +125,7 @@ class LSHW():
             d["description"] = dimm.get("description")
             d["id"] = dimm.get("id")
             d["serial"] = dimm.get("serial", 'N/A')
-            d["vendor"] = dimm.get("vendor")
+            d["vendor"] = dimm.get("vendor", 'N/A')
             d["product"] = dimm.get("product")
             d["size"] = dimm.get("size", 0) / 2 ** 20 / 1024
 
