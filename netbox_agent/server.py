@@ -1,8 +1,9 @@
 import logging
 from pprint import pprint
 import socket
+import subprocess
 
-from netbox_agent.config import netbox_instance as nb
+from netbox_agent.config import netbox_instance as nb, config
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.location import Datacenter, Rack
 from netbox_agent.inventory import Inventory
@@ -85,7 +86,9 @@ class ServerBase():
         return self.system[0]['Serial Number'].strip()
 
     def get_hostname(self):
-        return '{}'.format(socket.gethostname())
+        if config.hostname_cmd is None:
+            return '{}'.format(socket.gethostname())
+        return subprocess.getoutput(config.hostname_cmd)
 
     def is_blade(self):
         raise NotImplementedError
@@ -310,7 +313,7 @@ class ServerBase():
         # check hostname
         if server.name != self.get_hostname():
             update += 1
-            server.hostname = self.get_hostname()
+            server.name = self.get_hostname()
 
         if config.update_all or config.update_location:
             ret, server = self.update_netbox_location(server)
