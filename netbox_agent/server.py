@@ -42,7 +42,7 @@ class ServerBase():
         nb_dc = self.get_netbox_datacenter()
 
         update = False
-        if dc and server.site.slug != nb_dc.slug:
+        if dc and server.site and server.site.slug != nb_dc.slug:
             logging.info('Datacenter location has changed from {} to {}, updating'.format(
                 server.site.slug,
                 nb_dc.slug,
@@ -50,7 +50,7 @@ class ServerBase():
             update = True
             server.site = nb_dc.id
 
-        if rack and server.rack != nb_rack:
+        if rack and server.rack and server.rack.id != nb_rack.id:
             logging.info('Rack location has changed from {} to {}, updating'.format(
                 server.rack,
                 nb_rack,
