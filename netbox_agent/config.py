@@ -27,6 +27,8 @@ def get_config():
     p.add_argument('--log_level', default='debug')
     p.add_argument('--netbox.url', help='Netbox URL')
     p.add_argument('--netbox.token', help='Netbox API Token')
+    p.add_argument('--hostname_cmd', default=None,
+                   help="Command to output hostname, used as Device's name in netbox")
     p.add_argument('--datacenter_location.driver',
                    help='Datacenter location driver, ie: cmd, file')
     p.add_argument('--datacenter_location.driver_file',
