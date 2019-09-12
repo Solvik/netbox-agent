@@ -50,7 +50,7 @@ class ServerBase():
             update = True
             server.site = nb_dc.id
 
-        if rack and server.rack != nb_rack:
+        if rack and server.rack.id != nb_rack.id:
             logging.info('Rack location has changed from {} to {}, updating'.format(
                 server.rack,
                 nb_rack,
