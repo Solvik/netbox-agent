@@ -216,18 +216,20 @@ class Inventory():
             self.create_netbox_cpus()
 
     def get_raid_cards(self):
+        raid_class = None
         if self.server.manufacturer == 'Dell':
             if is_tool('omreport'):
-                self.raid = OmreportRaid()
+                raid_class = OmreportRaid
             if is_tool('storcli'):
-                self.raid = StorcliRaid()
+                raid_class = StorcliRaid
         elif self.server.manufacturer == 'HP':
             if is_tool('ssacli'):
-                self.raid = HPRaid()
+                raid_class = HPRaid
 
-        if not self.raid:
+        if not raid_class:
             return []
 
+        self.raid = raid_class()
         controllers = self.raid.get_controllers()
         if len(self.raid.get_controllers()):
             return controllers
