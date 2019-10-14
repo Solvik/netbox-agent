@@ -1,5 +1,6 @@
 import logging
 import pynetbox
+import re
 
 from netbox_agent.config import netbox_instance as nb, config
 from netbox_agent.misc import is_tool, get_vendor
@@ -75,7 +76,7 @@ class Inventory():
             logging.info('Creating missing manufacturer {name}'.format(name=name))
             manufacturer = nb.dcim.manufacturers.create(
                 name=name,
-                slug=name.replace(' ', '-').replace('.', '').lower(),
+                slug=re.sub('[^A-Za-z0-9]+', '-', name).lower(),
             )
 
             logging.info('Creating missing manufacturer {name}'.format(name=name))
