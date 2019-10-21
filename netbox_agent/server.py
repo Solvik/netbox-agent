@@ -11,6 +11,24 @@ from netbox_agent.network import Network
 from netbox_agent.power import PowerSupply
 
 
+def get_device_role(role):
+    device_role = nb.dcim.device_roles.get(
+        name=role
+    )
+    if device_role is None:
+        raise Exception('DeviceRole "{}" does not exist, please create it'.format(role))
+    return device_role
+
+
+def get_device_type(type):
+    device_type = nb.dcim.device_types.get(
+        model=type
+    )
+    if device_type is None:
+        raise Exception('DeviceType "{}" does not exist, please create it'.format(type))
+    return device_type
+
+
 class ServerBase():
     def __init__(self, dmi=None):
         if dmi:
@@ -118,16 +136,8 @@ class ServerBase():
         raise NotImplementedError
 
     def _netbox_create_blade_chassis(self, datacenter, rack):
-        device_type = nb.dcim.device_types.get(
-            model=self.get_chassis(),
-        )
-        if not device_type:
-            error_msg = 'Chassis "{}" doesn\'t exist'.format(self.get_chassis())
-            logging.error(error_msg)
-            raise Exception(error_msg)
-        device_role = nb.dcim.device_roles.get(
-            name='Server Chassis',
-        )
+        device_type = get_device_type(self.get_chassis())
+        device_role = get_device_role('Server Chassis')
         serial = self.get_chassis_service_tag()
         logging.info('Creating chassis blade (serial: {serial})'.format(
             serial=serial))
@@ -142,12 +152,8 @@ class ServerBase():
         return new_chassis
 
     def _netbox_create_blade(self, chassis, datacenter, rack):
-        device_role = nb.dcim.device_roles.get(
-            name='Blade',
-        )
-        device_type = nb.dcim.device_types.get(
-            model=self.get_product_name(),
-        )
+        device_role = get_device_role('Blade')
+        device_type = get_device_type(self.get_product_name())
         serial = self.get_service_tag()
         hostname = self.get_hostname()
         logging.info(
@@ -187,12 +193,8 @@ class ServerBase():
             ))
 
     def _netbox_create_server(self, datacenter, rack):
-        device_role = nb.dcim.device_roles.get(
-            name='Server',
-        )
-        device_type = nb.dcim.device_types.get(
-            model=self.get_product_name(),
-        )
+        device_role = get_device_role('Server')
+        device_type = get_device_type(self.get_product_name())
         if not device_type:
             raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
         serial = self.get_service_tag()
