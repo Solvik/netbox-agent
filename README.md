@@ -99,7 +99,7 @@ Tested on:
 
 ### Blades
 
-* PowerEdge M1000e (your `DeviceType` should have slots named `Slot 01` and so on)
+* PowerEdge M1000e (your `DeviceType` should have slots named `Slot 01` and so on, [see example](https://raw.githubusercontent.com/solvik/netbox_agent/docs/docs/img/M1000e.png))
 * PowerEdge M640
 * PowerEdge M630
 * PowerEdge M620
