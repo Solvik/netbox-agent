@@ -99,7 +99,9 @@ Tested on:
 
 ### Blades
 
+* PowerEdge MX7000
 * PowerEdge M1000e (your `DeviceType` should have slots named `Slot 01` and so on)
+* PowerEdge MX740c
 * PowerEdge M640
 * PowerEdge M630
 * PowerEdge M620
