@@ -32,6 +32,7 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 - ipmitool
 - lldpd
 - lshw
+- ovs-vsctl (openvswitch)
 
 # Known limitations
 
@@ -53,6 +54,22 @@ network:
   # enable auto-cabling
   lldp: true
 
+#
+# You can use these to change the roles.
+#
+#device:
+# chassis_role: "Server Chassis"
+# blade_role: "Blade"
+# server_role: "Server"
+# tags: server, blade, ,just a comma,delimited,list
+
+#
+# Can use this to set the tenant
+#
+tenant:
+ driver: "file:/tmp/tenant"
+ regex: "(.*)"
+
 datacenter_location:
  driver: "cmd:cat /etc/qualification | tr [a-z] [A-Z]"
  regex: "DATACENTER: (?P<datacenter>[A-Za-z0-9]+)"
@@ -72,6 +89,13 @@ rack_location:
 
 inventory: true
 ```
+
+# Run agent as normal user
+Use sudo to do this.  Create a file in /etc/sudoers.d/ with the contents as:
+
+agent_account ALL=(ALL) NOPASSWD: /usr/sbin/lshw, /usr/bin/ipmitool, /usr/bin/ovs-vsctl, /usr/sbin/dmidecode, /usr/sbin/ethtool, /usr/sbin/lldpcli, /usr/sbin/nvme
+
+Change agent_account to the account you wish would like to be able to run the agent as.
 
 # Specific workflow
 
