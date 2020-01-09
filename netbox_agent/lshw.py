@@ -26,7 +26,7 @@ class LSHW():
         if "(XXXXXX)" in self.hw_info["product"]:
             self.product = self.hw_info['product'].replace(" (XXXXXX)", "")
         else:
-             self.product = self.hw_info["product"]
+            self.product = self.hw_info["product"]
         self.chassis_serial = self.hw_info["serial"]
         self.motherboard_serial = self.hw_info["children"][0].get("serial", "No S/N")
         self.motherboard = self.hw_info["children"][0].get("product", "Motherboard")
@@ -89,8 +89,9 @@ class LSHW():
 
         elif "nvme" in obj["configuration"]["driver"]:
             nvme = json.loads(
-                            subprocess.check_output(["sudo", "/usr/sbin/nvme", '-list', '-o', 'json'],
-                            encoding='utf8'))  # noqa: E128
+                            subprocess.check_output(
+                                ["sudo", "/usr/sbin/nvme", '-list', '-o', 'json'],
+                                encoding='utf8'))  # noqa: E128
 
             d = {}
             d["vendor"] = obj["vendor"]

@@ -13,7 +13,7 @@ from netbox_agent.ethtool import Ethtool
 INVENTORY_TAG = {
     'cpu': {'name': 'hw:cpu', 'slug': 'hw-cpu'},
     'disk': {'name': 'hw:disk', 'slug': 'hw-disk'},
-    'gbic': {'name': 'hw:gbic', 'slug': 'hw-gbic' },
+    'gbic': {'name': 'hw:gbic', 'slug': 'hw-gbic'},
     'interface': {'name': 'hw:interface', 'slug': 'hw-interface'},
     'memory': {'name': 'hw:memory', 'slug': 'hw-memory'},
     'motherboard': {'name': 'hw:motherboard', 'slug': 'hw-motherboard'},
@@ -177,15 +177,19 @@ class Inventory():
             manufacturer=manufacturer.id,
             discovered=True,
             tags=[INVENTORY_TAG['gbic']['name']],
-            name="{}/GBIC in interface {}".format(info.get('identifier'),iface.get('name')),
+            name="{}/GBIC in interface {}".format(info.get('identifier'), iface.get('name')),
             part_id="{}".format(info.get('partnumber')),
             serial='{}'.format(info.get('serialnumber')),
-            description='{}/{} connector GBIC/{}'.format(info.get('transciever_type'), info.get('connector'), info.get('identifier'))
+            description='{}/{} connector GBIC/{}'.format(
+                                                    info.get('transciever_type'),
+                                                    info.get('connector'),
+                                                    info.get('identifier')
+                                                )
         )
 
     def create_netbox_interface(self, iface):
         if "Controller" in iface['product']:
-           iface['product'] = iface['product'].replace(" Controller", "")
+            iface['product'] = iface['product'].replace(" Controller", "")
 
         print("length %d" % len(iface["product"]))
         manufacturer = self.find_or_create_manufacturer(iface["vendor"])

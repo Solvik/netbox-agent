@@ -5,7 +5,6 @@ import re
 
 from netaddr import IPAddress, IPNetwork
 import netifaces
-from pprint import pprint
 
 from netbox_agent.config import netbox_instance as nb, config
 from netbox_agent.ethtool import Ethtool
@@ -124,12 +123,12 @@ class Network():
             }
 
             if nic["vlan"] is None:
-                if nic["ovs"] != None:
+                if nic["ovs"] is not None:
                     ovs_info = nic.get("ovs")
                     nic["vlan"] = ovs_info.get("vlan")
 
-            if nic["ovs"] != None:
-               nic["description"] = "OVS internal interface"
+            if nic["ovs"] is not None:
+                nic["description"] = "OVS internal interface"
 
             self.nics.append(nic)
 
@@ -159,7 +158,7 @@ class Network():
 
     def get_netbox_network_card(self, nic):
         if self.device is None:
-           return
+            return
 
         if nic['mac'] is None:
             interface = nb.dcim.interfaces.get(
@@ -269,7 +268,7 @@ class Network():
     def create_or_update_ipmi(self):
         ipmi = self.get_ipmi()
         if "MAC Address" not in ipmi:
-          return
+            return
         mac = ipmi['MAC Address']
         ip = ipmi['IP Address']
         netmask = ipmi['Subnet Mask']

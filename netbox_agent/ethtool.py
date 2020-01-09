@@ -1,15 +1,11 @@
 import re
 from shutil import which
-from pprint import pprint
 import subprocess
 
 #  Originally from https://github.com/opencoff/useful-scripts/blob/master/linktest.py
 
-#    'Connector':'connector',
-#    'Transceiver type': 'transciever_type',
-
 module_map = {
-    'Identifier' : 'identifier',
+    'Identifier': 'identifier',
     'Extended identifier': 'extended_identifier',
     'Vendor name': 'vendor',
     'Vendor PN': 'partnumber',
@@ -76,7 +72,9 @@ class Ethtool():
         return fields
 
     def _parse_ethtool_info_output(self):
-        status, output = subprocess.getstatusoutput('sudo /usr/sbin/ethtool -i {}'.format(self.interface))
+        status, output = subprocess.getstatusoutput(
+                             'sudo /usr/sbin/ethtool -i {}'.format(self.interface)
+                         )
 
         if status != 0:
             return {}
@@ -93,7 +91,7 @@ class Ethtool():
                 fields[field] = output
 
         return fields
-         
+
     def _parse_ethtool_module_output(self):
         """
           ethtool output is a mess..  good for human reading, bad for parsing.
@@ -101,7 +99,10 @@ class Ethtool():
           ie, connector and type, plus dropping un needed information.
         """
 
-        status, output = subprocess.getstatusoutput('sudo /usr/sbin/ethtool -m {}'.format(self.interface))
+        status, output = subprocess.getstatusoutput(
+                             'sudo /usr/sbin/ethtool -m {}'.format(self.interface)
+                         )
+
         if status != 0:
             return {}
 

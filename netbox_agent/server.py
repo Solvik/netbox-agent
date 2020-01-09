@@ -56,7 +56,6 @@ class ServerBase():
                     slug=tag
                 )
 
-
     def get_tenant(self):
         tenant = Tenant()
         return tenant.get()
@@ -126,7 +125,7 @@ class ServerBase():
         Return the Service Tag from dmidecode info
         """
         if "Default string" in self.system[0]['Serial Number']:
-           self.system[0]['Serial Number'] = "000000"
+            self.system[0]['Serial Number'] = "000000"
         return self.system[0]['Serial Number'].strip()
 
     def get_hostname(self):

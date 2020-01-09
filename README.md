@@ -58,17 +58,17 @@ network:
 # You can use these to change the roles.
 #
 #device:
-# chassis_role: "Server Chassis"
-# blade_role: "Blade"
-# server_role: "Server"
-# tags: server, blade, ,just a comma,delimited,list
+#  chassis_role: "Server Chassis"
+#  blade_role: "Blade"
+#  server_role: "Server"
+#  tags: server, blade, ,just a comma,delimited,list
 
 #
-# Can use this to set the tenant
+# This sets the tenant
 #
 tenant:
- driver: "file:/tmp/tenant"
- regex: "(.*)"
+  driver: "file:/tmp/tenant"
+  regex: "(.*)"
 
 datacenter_location:
  driver: "cmd:cat /etc/qualification | tr [a-z] [A-Z]"
