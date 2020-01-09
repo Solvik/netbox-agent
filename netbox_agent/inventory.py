@@ -8,10 +8,12 @@ from netbox_agent.raid.hp import HPRaid
 from netbox_agent.raid.omreport import OmreportRaid
 from netbox_agent.raid.storcli import StorcliRaid
 from netbox_agent.lshw import LSHW
+from netbox_agent.ethtool import Ethtool
 
 INVENTORY_TAG = {
     'cpu': {'name': 'hw:cpu', 'slug': 'hw-cpu'},
     'disk': {'name': 'hw:disk', 'slug': 'hw-disk'},
+    'gbic': {'name': 'hw:gbic', 'slug': 'hw-gbic' },
     'interface': {'name': 'hw:interface', 'slug': 'hw-interface'},
     'memory': {'name': 'hw:memory', 'slug': 'hw-memory'},
     'motherboard': {'name': 'hw:motherboard', 'slug': 'hw-motherboard'},
@@ -119,10 +121,23 @@ class Inventory():
         motherboards = []
 
         m = {}
-        m['serial'] = self.lshw.motherboard_serial
+
         m['vendor'] = self.lshw.vendor
-        m['name'] = '{} {}'.format(self.lshw.vendor, self.lshw.motherboard)
-        m['description'] = '{} Motherboard'.format(self.lshw.motherboard)
+
+        if "Default string" in self.lshw.motherboard_serial:
+            m['serial'] = 'No S/N'
+        else:
+            m['serial'] = self.lshw.motherboard_serial
+
+        if "Default string" in self.lshw.motherboard:
+            m['description'] = 'Motherboard'
+        else:
+            m['description'] = '{} Motherboard'.format(self.lshw.motherboard)
+
+        if "Default" in self.lshw.motherboard:
+            m['name'] = '{} {}'.format(self.lshw.vendor, self.lshw.product)
+        else:
+            m['name'] = '{} {}'.format(self.lshw.vendor, self.lshw.motherboard)
 
         motherboards.append(m)
 
@@ -143,7 +158,7 @@ class Inventory():
                 ))
                 nb_motherboard.delete()
 
-        # create interfaces that are not in netbox
+        # create motherboards that are not in netbox
         for motherboard in motherboards:
             if motherboard.get('serial') not in [x.serial for x in nb_motherboards]:
                 self.create_netbox_inventory_item(
@@ -155,7 +170,24 @@ class Inventory():
                     description='{}'.format(motherboard.get('description'))
                 )
 
+    def create_netbox_interface_gbic(self, iface, info):
+        manufacturer = self.find_or_create_manufacturer(info["vendor"])
+        _ = nb.dcim.inventory_items.create(
+            device=self.device_id,
+            manufacturer=manufacturer.id,
+            discovered=True,
+            tags=[INVENTORY_TAG['gbic']['name']],
+            name="{}/GBIC in interface {}".format(info.get('identifier'),iface.get('name')),
+            part_id="{}".format(info.get('partnumber')),
+            serial='{}'.format(info.get('serialnumber')),
+            description='{}/{} connector GBIC/{}'.format(info.get('transciever_type'), info.get('connector'), info.get('identifier'))
+        )
+
     def create_netbox_interface(self, iface):
+        if "Controller" in iface['product']:
+           iface['product'] = iface['product'].replace(" Controller", "")
+
+        print("length %d" % len(iface["product"]))
         manufacturer = self.find_or_create_manufacturer(iface["vendor"])
         _ = nb.dcim.inventory_items.create(
             device=self.device_id,
@@ -186,6 +218,9 @@ class Inventory():
         for iface in interfaces:
             if iface.get('serial') not in [x.serial for x in nb_interfaces]:
                 self.create_netbox_interface(iface)
+                info = Ethtool(iface['name']).parse()
+                if "FIBRE" in info.get("port"):
+                    self.create_netbox_interface_gbic(iface, Ethtool(iface['name']).parse())
 
     def create_netbox_cpus(self):
         for cpu in self.lshw.get_hw_linux('cpu'):

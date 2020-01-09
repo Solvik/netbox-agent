@@ -5,12 +5,15 @@ import re
 
 from netaddr import IPAddress, IPNetwork
 import netifaces
+from pprint import pprint
 
 from netbox_agent.config import netbox_instance as nb, config
 from netbox_agent.ethtool import Ethtool
 from netbox_agent.ipmi import IPMI
 from netbox_agent.lldp import LLDP
+from netbox_agent.ovs import OVS
 
+IFACE_TYPE_VIRTUAL = 0
 IFACE_TYPE_100ME_FIXED = 800
 IFACE_TYPE_1GE_FIXED = 1000
 IFACE_TYPE_1GE_GBIC = 1050
@@ -46,10 +49,13 @@ class Network():
 
         self.server = server
         self.device = self.server.get_netbox_server()
+        self.datacenter = self.server.get_datacenter()
+        self.tenant = self.server.get_netbox_tenant()
         self.lldp = LLDP() if config.network.lldp else None
         self.scan()
 
     def scan(self):
+        ovs = OVS()
         for interface in os.listdir('/sys/class/net/'):
             # ignore if it's not a link (ie: bonding_masters etc)
             if not os.path.islink('/sys/class/net/{}'.format(interface)):
@@ -89,6 +95,7 @@ class Network():
                         ip_addr.pop(i)
 
             mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
+            mtu = open('/sys/class/net/{}/mtu'.format(interface), 'r').read().strip()
             vlan = None
             if len(interface.split('.')) > 1:
                 vlan = int(interface.split('.')[1])
@@ -102,6 +109,7 @@ class Network():
             nic = {
                 'name': interface,
                 'mac': mac if mac != '00:00:00:00:00:00' else None,
+                'mtu': mtu if mtu != 0 else 1500,
                 'ip': [
                     '{}/{}'.format(
                         x['addr'],
@@ -109,10 +117,20 @@ class Network():
                     ) for x in ip_addr
                     ] if ip_addr else None,  # FIXME: handle IPv6 addresses
                 'ethtool': Ethtool(interface).parse(),
+                'ovs': ovs.get_info(interface),
                 'vlan': vlan,
                 'bonding': bonding,
                 'bonding_slaves': bonding_slaves,
             }
+
+            if nic["vlan"] is None:
+                if nic["ovs"] != None:
+                    ovs_info = nic.get("ovs")
+                    nic["vlan"] = ovs_info.get("vlan")
+
+            if nic["ovs"] != None:
+               nic["description"] = "OVS internal interface"
+
             self.nics.append(nic)
 
     def _set_bonding_interfaces(self):
@@ -140,6 +158,9 @@ class Network():
         return self.nics
 
     def get_netbox_network_card(self, nic):
+        if self.device is None:
+           return
+
         if nic['mac'] is None:
             interface = nb.dcim.interfaces.get(
                 device_id=self.device.id,
@@ -160,6 +181,10 @@ class Network():
         )
 
     def get_netbox_type_for_nic(self, nic):
+        o = nic.get('ovs')
+        if o:
+            if o.get("type") == "internal":
+                return IFACE_TYPE_VIRTUAL
         if nic.get('bonding'):
             return IFACE_TYPE_LAG
         if nic.get('ethtool') is None:
@@ -190,6 +215,7 @@ class Network():
         # since users may have same vlan id in multiple dc
         vlan = nb.ipam.vlans.get(
             vid=vlan_id,
+            site=self.datacenter
         )
         if vlan is None:
             vlan = nb.ipam.vlans.create(
@@ -242,6 +268,8 @@ class Network():
 
     def create_or_update_ipmi(self):
         ipmi = self.get_ipmi()
+        if "MAC Address" not in ipmi:
+          return
         mac = ipmi['MAC Address']
         ip = ipmi['IP Address']
         netmask = ipmi['Subnet Mask']
@@ -285,8 +313,9 @@ class Network():
         nb_vlan = None
         interface = nb.dcim.interfaces.create(
             device=self.device.id,
-            name=nic['name'],
-            mac_address=nic['mac'],
+            name=nic.get('name'),
+            mac_address=nic.get('mac'),
+            mtu=nic.get('mtu'),
             type=type,
             mgmt_only=mgmt,
         )
@@ -344,6 +373,7 @@ class Network():
                 address=ip,
                 interface=interface.id,
                 status=1,
+                tenant=self.tenant.id if self.tenant else None,
             )
         else:
             netbox_ip = netbox_ips[0]

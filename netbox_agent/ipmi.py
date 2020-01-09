@@ -34,7 +34,7 @@ class IPMI():
     Bad Password Threshold  : Not Available
     """
     def __init__(self):
-        self.ret, self.output = subprocess.getstatusoutput('ipmitool lan print')
+        self.ret, self.output = subprocess.getstatusoutput('sudo /usr/bin/ipmitool lan print')
         if self.ret != 0:
             logging.error('Cannot get ipmi info: {}'.format(self.output))
 

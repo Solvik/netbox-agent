@@ -1,8 +1,21 @@
 import re
 from shutil import which
+from pprint import pprint
 import subprocess
 
 #  Originally from https://github.com/opencoff/useful-scripts/blob/master/linktest.py
+
+#    'Connector':'connector',
+#    'Transceiver type': 'transciever_type',
+
+module_map = {
+    'Identifier' : 'identifier',
+    'Extended identifier': 'extended_identifier',
+    'Vendor name': 'vendor',
+    'Vendor PN': 'partnumber',
+    'Vendor SN': 'serialnumber',
+    'Vendor rev': 'revision',
+}
 
 # mapping fields from ethtool output to simple names
 field_map = {
@@ -39,7 +52,7 @@ class Ethtool():
         parse ethtool output
         """
 
-        output = subprocess.getoutput('ethtool {}'.format(self.interface))
+        output = subprocess.getoutput('sudo /usr/sbin/ethtool {}'.format(self.interface))
 
         fields = {}
         field = ''
@@ -62,17 +75,75 @@ class Ethtool():
                     fields[field] += ' ' + line.strip()
         return fields
 
-    def _parse_ethtool_module_output(self):
-        status, output = subprocess.getstatusoutput('ethtool -m {}'.format(self.interface))
+    def _parse_ethtool_info_output(self):
+        status, output = subprocess.getstatusoutput('sudo /usr/sbin/ethtool -i {}'.format(self.interface))
+
         if status != 0:
             return {}
-        r = re.search(r'Identifier.*\((\w+)\)', output)
-        if r and len(r.groups()) > 0:
-            return {'form_factor': r.groups()[0]}
+
+        fields = {}
+        field = ''
+
+        for line in output.split('\n'):
+            line = line.rstrip()
+            r = line.find(':')
+            if r > 0:
+                field = line[:r].strip()
+                output = line[r+1:].strip()
+                fields[field] = output
+
+        return fields
+         
+    def _parse_ethtool_module_output(self):
+        """
+          ethtool output is a mess..  good for human reading, bad for parsing.
+          we massage the output to make it move useful for inventory purposes
+          ie, connector and type, plus dropping un needed information.
+        """
+
+        status, output = subprocess.getstatusoutput('sudo /usr/sbin/ethtool -m {}'.format(self.interface))
+        if status != 0:
+            return {}
+
+        fields = {}
+        field = ''
+        transciever = []
+
+        for line in output.split('\n'):
+            line = line.rstrip()
+            r = line.find(':')
+            if r > 0:
+                field = line[:r].strip()
+                if 'Identifier' in field:
+                    c = re.match(r'.*\((?P<identifier>\w+)\).*', line[r+1:].strip())
+                    fields['identifier'] = c.group('identifier')
+                    continue
+                if 'Connector' in field:
+                    c = re.match(r'.*\((?P<connector>\w+)\).*', line[r+1:].strip())
+                    fields['connector'] = c.group('connector')
+                    continue
+                if 'type' in field:
+                    field = line[r+1:].strip().replace('10G Ethernet: ', '')
+                    field = field.strip().replace('100G Ethernet: ', '')
+                    field = field.strip().replace('40G Ethernet: ', '')
+                    field = field.strip().replace('Ethernet: ', '')
+                    if 'FC:' in field:
+                        continue
+                    transciever.append(field)
+                    continue
+                if field not in module_map:
+                    continue
+                fields[module_map[field]] = line[r+1:].strip()
+
+        j = ", "
+        fields['transciever_type'] = j.join(transciever)
+
+        return fields
 
     def parse(self):
         if which('ethtool') is None:
             return None
         output = self._parse_ethtool_output()
+        output.update(self._parse_ethtool_info_output())
         output.update(self._parse_ethtool_module_output())
         return output

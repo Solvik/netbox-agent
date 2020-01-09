@@ -138,7 +138,7 @@ def _execute_cmd():
         logging.error('Dmidecode does not seem to be present on your system. Add it your path or '
                       'check the compatibility of this project with your distro.')
         sys.exit(1)
-    return _subprocess.check_output(['dmidecode', ], stderr=_subprocess.PIPE)
+    return _subprocess.check_output(['sudo', '/usr/sbin/dmidecode', ], stderr=_subprocess.PIPE)
 
 
 def _parse(buffer):

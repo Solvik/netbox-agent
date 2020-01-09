@@ -49,6 +49,17 @@ class LocationBase():
         return getattr(self.driver, 'get')(self.driver_value, self.regex)
 
 
+class Tenant(LocationBase):
+    def __init__(self):
+        driver = config.tenant.driver.split(':')[0] if \
+            config.tenant.driver else None
+        driver_value = ':'.join(config.tenant.driver.split(':')[1:]) if \
+            config.tenant.driver else None
+        driver_file = config.tenant.driver_file
+        regex = config.tenant.regex
+        super().__init__(driver, driver_value, driver_file, regex)
+
+
 class Datacenter(LocationBase):
     def __init__(self):
         driver = config.datacenter_location.driver.split(':')[0] if \
