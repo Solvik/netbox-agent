@@ -258,7 +258,12 @@ class ServerBase():
         device_bay = nb.dcim.device_bays.get(
             server.parent_device.device_bay.id
         )
-        netbox_chassis_serial = server.parent_device.device_bay.device.serial
+
+        parent_chassis = nb.dcim.devices.get(
+            chassis.id
+        )
+
+        netbox_chassis_serial = parent_chassis.serial
         move_device_bay = False
 
         # check chassis serial with dmidecode
