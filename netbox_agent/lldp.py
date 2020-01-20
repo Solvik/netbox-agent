@@ -3,7 +3,7 @@ import subprocess
 
 class LLDP():
     def __init__(self):
-        self.output = subprocess.getoutput('lldpctl -f keyvalue')
+        self.output = subprocess.getoutput('sudo /usr/sbin/lldpctl -f keyvalue')
         self.data = self.parse()
 
     def parse(self):

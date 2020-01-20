@@ -73,6 +73,16 @@ rack_location:
 inventory: true
 ```
 
+# using SUDO.
+
+if you install run as root, no extra configuration is needed.
+
+If you desire to run as a-non-root user, you will need to either create or add to the /etc/sudoers or create a new file in /etc/sudoers.d with a line like so:
+
+USERNAME ALL=(ALL) NOPASSWD: /usr/sbin/lshw, /usr/bin/ipmitool, /usr/bin/ovs-vsctl, /usr/sbin/dmidecode, /usr/sbin/ethtool, /usr/sbin/lldpcli, /usr/sbin/nvme
+
+Replace USERNAME with the username you wish to run the agent under.
+
 # Specific workflow
 
 ## Blades
