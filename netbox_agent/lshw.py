@@ -86,8 +86,10 @@ class LSHW():
 
         elif "nvme" in obj["configuration"]["driver"]:
             nvme = json.loads(
-                            subprocess.check_output(["sudo", "/usr/sbin/nvme", '-list', '-o', 'json'],
-                            encoding='utf8'))  # noqa: E128
+                            subprocess.check_output(
+                                ["sudo", "/usr/sbin/nvme", '-list', '-o', 'json'],
+                                encoding='utf8')
+                            )
 
             d = {}
             d["vendor"] = obj["vendor"]
