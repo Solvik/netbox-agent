@@ -29,7 +29,6 @@ class Network():
             for c in dcim_c[choice]:
                 self.dcim_choices[choice][c['label']] = c['value']
 
-
         self.ipam_choices = {}
         ipam_c = nb.ipam.choices()
 
@@ -37,7 +36,6 @@ class Network():
             self.ipam_choices[choice] = {}
             for c in ipam_c[choice]:
                 self.ipam_choices[choice][c['label']] = c['value']
-
 
     def scan(self):
         for interface in os.listdir('/sys/class/net/'):
@@ -206,7 +204,7 @@ class Network():
             interface.untagged_vlan = None
         # if it's a vlan interface
         elif vlan_id and (
-                interface.mode is None or 
+                interface.mode is None or
                 interface.mode.value != self.dcim_choices['interface:mode']['Access'] or
                 len(interface.tagged_vlans) != 1 or
                 interface.tagged_vlans[0].vid != vlan_id):
