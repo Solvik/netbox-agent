@@ -23,7 +23,7 @@ def run(config):
     try:
         server = MANUFACTURERS[manufacturer](dmi=dmidecode)
     except KeyError:
-        server = MANUFACTURERS["Generic"]
+        server = GenericHost
 
     if config.debug:
         server.print_debug()
