@@ -163,7 +163,7 @@ class Network():
         elif nic['ethtool']['speed'] == '1000Mb/s':
             if nic['ethtool']['port'] == 'FIBRE':
                 return self.dcim_choices['interface:type']['SFP (1GE)']
-            return self.dcim_choices['interface:type']['1000GBASE-T (1GE)']
+            return self.dcim_choices['interface:type']['1000BASE-T (1GE)']
         return self.dcim_choices['interface:type']['Other']
 
     def get_ipmi(self):
