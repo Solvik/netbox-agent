@@ -11,34 +11,6 @@ from netbox_agent.ethtool import Ethtool
 from netbox_agent.ipmi import IPMI
 from netbox_agent.lldp import LLDP
 
-IFACE_TYPE_100ME_FIXED = 800
-IFACE_TYPE_1GE_FIXED = 1000
-IFACE_TYPE_1GE_GBIC = 1050
-IFACE_TYPE_1GE_SFP = 1100
-IFACE_TYPE_2GE_FIXED = 1120
-IFACE_TYPE_5GE_FIXED = 1130
-IFACE_TYPE_10GE_FIXED = 1150
-IFACE_TYPE_10GE_CX4 = 1170
-IFACE_TYPE_10GE_SFP_PLUS = 1200
-IFACE_TYPE_10GE_XFP = 1300
-IFACE_TYPE_10GE_XENPAK = 1310
-IFACE_TYPE_10GE_X2 = 1320
-IFACE_TYPE_25GE_SFP28 = 1350
-IFACE_TYPE_40GE_QSFP_PLUS = 1400
-IFACE_TYPE_50GE_QSFP28 = 1420
-IFACE_TYPE_100GE_CFP = 1500
-IFACE_TYPE_100GE_CFP2 = 1510
-IFACE_TYPE_100GE_CFP4 = 1520
-IFACE_TYPE_100GE_CPAK = 1550
-IFACE_TYPE_100GE_QSFP28 = 1600
-IFACE_TYPE_200GE_CFP2 = 1650
-IFACE_TYPE_200GE_QSFP56 = 1700
-IFACE_TYPE_400GE_QSFP_DD = 1750
-IFACE_TYPE_OTHER = 32767
-IFACE_TYPE_LAG = 200
-
-IPADDRESS_ROLE_ANYCAST = 30
-
 
 class Network():
     def __init__(self, server, *args, **kwargs):
@@ -48,6 +20,22 @@ class Network():
         self.device = self.server.get_netbox_server()
         self.lldp = LLDP() if config.network.lldp else None
         self.scan()
+
+        self.dcim_choices = {}
+        dcim_c = nb.dcim.choices()
+
+        for choice in dcim_c:
+            self.dcim_choices[choice] = {}
+            for c in dcim_c[choice]:
+                self.dcim_choices[choice][c['label']] = c['value']
+
+        self.ipam_choices = {}
+        ipam_c = nb.ipam.choices()
+
+        for choice in ipam_c:
+            self.ipam_choices[choice] = {}
+            for c in ipam_c[choice]:
+                self.ipam_choices[choice][c['label']] = c['value']
 
     def scan(self):
         for interface in os.listdir('/sys/class/net/'):
@@ -161,18 +149,20 @@ class Network():
 
     def get_netbox_type_for_nic(self, nic):
         if nic.get('bonding'):
-            return IFACE_TYPE_LAG
+            return self.dcim_choices['interface:type']['Link Aggregation Group (LAG)']
         if nic.get('ethtool') is None:
-            return IFACE_TYPE_OTHER
+            return self.dcim_choices['interface:type']['Other']
+
         if nic['ethtool']['speed'] == '10000Mb/s':
             if nic['ethtool']['port'] == 'FIBRE':
-                return IFACE_TYPE_10GE_SFP_PLUS
-            return IFACE_TYPE_10GE_FIXED
+                return self.dcim_choices['interface:type']['SFP+ (10GE)']
+            return self.dcim_choices['interface:type']['10GBASE-T (10GE)']
+
         elif nic['ethtool']['speed'] == '1000Mb/s':
             if nic['ethtool']['port'] == 'FIBRE':
-                return IFACE_TYPE_1GE_SFP
-            return IFACE_TYPE_1GE_FIXED
-        return IFACE_TYPE_OTHER
+                return self.dcim_choices['interface:type']['SFP (1GE)']
+            return self.dcim_choices['interface:type']['1000BASE-T (1GE)']
+        return self.dcim_choices['interface:type']['Other']
 
     def get_ipmi(self):
         ipmi = IPMI().parse()
@@ -214,14 +204,15 @@ class Network():
             interface.untagged_vlan = None
         # if it's a vlan interface
         elif vlan_id and (
-                interface.mode is None or interface.mode.value != 200 or
+                interface.mode is None or
+                interface.mode.value != self.dcim_choices['interface:mode']['Access'] or
                 len(interface.tagged_vlans) != 1 or
                 interface.tagged_vlans[0].vid != vlan_id):
             logging.info('Resetting tagged VLAN(s) on interface {interface}'.format(
                 interface=interface))
             update = True
             nb_vlan = self.get_or_create_vlan(vlan_id)
-            interface.mode = 200
+            interface.mode = self.dcim_choices['interface:mode']['Tagged']
             interface.tagged_vlans = [nb_vlan] if nb_vlan else []
             interface.untagged_vlan = None
         # if lldp reports a vlan-id with pvid
@@ -229,14 +220,14 @@ class Network():
             pvid_vlan = [key for (key, value) in lldp_vlan.items() if value['pvid']]
             if len(pvid_vlan) > 0 and (
                     interface.mode is None or
-                    interface.mode.value != 100 or
+                    interface.mode.value != self.dcim_choices['interface:mode']['Access'] or
                     interface.untagged_vlan is None or
                     interface.untagged_vlan.vid != int(pvid_vlan[0])):
                 logging.info('Resetting access VLAN on interface {interface}'.format(
                     interface=interface))
                 update = True
                 nb_vlan = self.get_or_create_vlan(pvid_vlan[0])
-                interface.mode = 100
+                interface.mode = self.dcim_choices['interface:mode']['Access']
                 interface.untagged_vlan = nb_vlan.id
         return update, interface
 
@@ -304,7 +295,7 @@ class Network():
             for vid, vlan_infos in vlans.items():
                 nb_vlan = self.get_or_create_vlan(vid)
                 if vlan_infos.get('vid'):
-                    interface.mode = 100
+                    interface.mode = self.dcim_choices['interface:mode']['Access']
                     interface.untagged_vlan = nb_vlan.id
             interface.save()
 
@@ -366,7 +357,7 @@ class Network():
                         address=ip,
                         interface=interface.id,
                         status=1,
-                        role=IPADDRESS_ROLE_ANYCAST,
+                        role=self.ipam_choices['ip-address:role']['Anycast'],
                     )
                 return netbox_ip
             else:
