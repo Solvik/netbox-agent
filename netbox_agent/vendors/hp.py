@@ -27,14 +27,14 @@ class HPHost(ServerBase):
                     'Enclosure Name': locator[0].strip(),
                     'Server Bay': locator[3].strip(),
                     'Enclosure Serial': locator[4].strip(),
-                    }
+                }
             return locator[0]
 
     def get_blade_slot(self):
         if self.is_blade():
             return 'Bay {}'.format(
                 int(self.hp_rack_locator['Server Bay'].strip())
-                )
+            )
         return None
 
     def get_chassis(self):

@@ -2,6 +2,7 @@
 from netbox_agent.location import Slot
 from netbox_agent.server import ServerBase
 
+
 """
  Supermicro DMI can be messed up.  They depend on the vendor
  to set the correct values.  The endusers cannot

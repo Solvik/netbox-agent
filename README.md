@@ -1,4 +1,4 @@
-# Netbox agent
+# Netbox agent [![Build Status](https://travis-ci.com/Solvik/netbox_agent.svg?branch=master)](https://travis-ci.com/Solvik/netbox_agent)
 
 
 This project aims to create hardware automatically into [Netbox](https://github.com/netbox-community/netbox) based on standard tools (dmidecode, lldpd, parsing /sys/, etc).

@@ -1,5 +1,5 @@
-import subprocess
 import json
+import subprocess
 
 from netbox_agent.misc import get_vendor
 from netbox_agent.raid.base import Raid, RaidController
@@ -47,7 +47,7 @@ class StorcliController(RaidController):
                 'Size': size,
                 'Type': media_type,
                 '_src': self.__class__.__name__,
-                })
+            })
         return ret
 
 

@@ -33,6 +33,7 @@ class IPMI():
                             :     O=OEM
     Bad Password Threshold  : Not Available
     """
+
     def __init__(self):
         self.ret, self.output = subprocess.getstatusoutput('ipmitool lan print')
         if self.ret != 0:

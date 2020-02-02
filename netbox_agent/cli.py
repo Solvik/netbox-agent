@@ -1,18 +1,18 @@
-from netbox_agent.logging import logging # NOQA
-from netbox_agent.vendors.dell import DellHost
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import config
+from netbox_agent.logging import logging  # NOQA
+from netbox_agent.vendors.dell import DellHost
 from netbox_agent.vendors.hp import HPHost
 from netbox_agent.vendors.qct import QCTHost
 from netbox_agent.vendors.supermicro import SupermicroHost
 
 MANUFACTURERS = {
-   'Dell Inc.': DellHost,
-   'HP': HPHost,
-   'HPE': HPHost,
-   'Supermicro': SupermicroHost,
-   'Quanta Cloud Technology Inc.': QCTHost,
-   }
+    'Dell Inc.': DellHost,
+    'HP': HPHost,
+    'HPE': HPHost,
+    'Supermicro': SupermicroHost,
+    'Quanta Cloud Technology Inc.': QCTHost,
+}
 
 
 def run(config):

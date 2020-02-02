@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name='netbox_agent',
@@ -18,7 +18,7 @@ setup(
         'netifaces==0.10.9',
         'pyyaml==5.3',
         'jsonargparse==2.22.2',
-        ],
+    ],
     zip_safe=False,
     keywords=['netbox'],
     classifiers=[

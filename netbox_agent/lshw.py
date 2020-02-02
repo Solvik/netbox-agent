@@ -1,6 +1,6 @@
-import subprocess
 import json
 import logging
+import subprocess
 import sys
 
 from netbox_agent.misc import is_tool

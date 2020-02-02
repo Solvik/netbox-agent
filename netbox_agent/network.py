@@ -1,12 +1,13 @@
-from itertools import chain
 import logging
 import os
 import re
+from itertools import chain
 
-from netaddr import IPAddress, IPNetwork
 import netifaces
+from netaddr import IPAddress, IPNetwork
 
-from netbox_agent.config import netbox_instance as nb, config
+from netbox_agent.config import config
+from netbox_agent.config import netbox_instance as nb
 from netbox_agent.ethtool import Ethtool
 from netbox_agent.ipmi import IPMI
 from netbox_agent.lldp import LLDP
@@ -95,7 +96,7 @@ class Network():
                         x['addr'],
                         IPAddress(x['netmask']).netmask_bits()
                     ) for x in ip_addr
-                    ] if ip_addr else None,  # FIXME: handle IPv6 addresses
+                ] if ip_addr else None,  # FIXME: handle IPv6 addresses
                 'ethtool': Ethtool(interface).parse(),
                 'vlan': vlan,
                 'bonding': bonding,
@@ -242,7 +243,7 @@ class Network():
         interface = nb.dcim.interfaces.get(
             device_id=self.device.id,
             mgmt_only=True,
-            )
+        )
         nic = {
             'name': 'IPMI',
             'mac': mac,

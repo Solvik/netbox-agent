@@ -1,8 +1,8 @@
 import re
 import subprocess
 
-from netbox_agent.raid.base import Raid, RaidController
 from netbox_agent.misc import get_vendor
+from netbox_agent.raid.base import Raid, RaidController
 
 REGEXP_CONTROLLER_HP = re.compile(r'Smart Array ([a-zA-Z0-9- ]+) in Slot ([0-9]+)')
 

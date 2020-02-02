@@ -1,6 +1,6 @@
 import re
 import subprocess
-import xml.etree.ElementTree as ET # NOQA
+import xml.etree.ElementTree as ET  # NOQA
 
 from netbox_agent.misc import get_vendor
 from netbox_agent.raid.base import Raid, RaidController
@@ -43,7 +43,7 @@ class OmreportController(RaidController):
         ret = []
         output = subprocess.getoutput(
             'omreport storage controller controller={} -fmt xml'.format(self.controller_index)
-            )
+        )
         root = ET.fromstring(output)
         et_array_disks = root.find('ArrayDisks')
         if et_array_disks is not None:
@@ -54,7 +54,7 @@ class OmreportController(RaidController):
                     'SN': get_field(obj, 'DeviceSerialNumber'),
                     'Size': '{:.0f}GB'.format(
                         int(get_field(obj, 'Length')) / 1024 / 1024 / 1024
-                        ),
+                    ),
                     'Type': 'HDD' if int(get_field(obj, 'MediaType')) == 1 else 'SSD',
                     '_src': self.__class__.__name__,
                 })
