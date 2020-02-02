@@ -2,6 +2,7 @@ import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import config
 from netbox_agent.logging import logging  # NOQA
 from netbox_agent.vendors.dell import DellHost
+from netbox_agent.vendors.generic import GenericHost
 from netbox_agent.vendors.hp import HPHost
 from netbox_agent.vendors.qct import QCTHost
 from netbox_agent.vendors.supermicro import SupermicroHost
@@ -12,12 +13,17 @@ MANUFACTURERS = {
     'HPE': HPHost,
     'Supermicro': SupermicroHost,
     'Quanta Cloud Technology Inc.': QCTHost,
+    'Generic': GenericHost,
 }
 
 
 def run(config):
     manufacturer = dmidecode.get_by_type('Chassis')[0].get('Manufacturer')
-    server = MANUFACTURERS[manufacturer](dmi=dmidecode)
+
+    try:
+        server = MANUFACTURERS[manufacturer](dmi=dmidecode)
+    except KeyError:
+        server = GenericHost
 
     if config.debug:
         server.print_debug()

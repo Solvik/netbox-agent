@@ -1,0 +1,571 @@
+# dmidecode 3.1
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+44 structures occupying 2055 bytes.
+Table at 0x000E4E00.
+
+Handle 0x0000, DMI type 0, 24 bytes
+BIOS Information
+	Vendor: Online Labs
+	Version: 00.00.00.0007
+	Release Date: 03/04/2016
+	Address: 0xE0000
+	Runtime Size: 128 kB
+	ROM Size: 6144 kB
+	Characteristics:
+		PCI is supported
+		BIOS is upgradeable
+		BIOS shadowing is allowed
+		Boot from CD is supported
+		Selectable boot is supported
+		EDD is supported
+		Japanese floppy for NEC 9800 1.2 MB is supported (int 13h)
+		Japanese floppy for Toshiba 1.2 MB is supported (int 13h)
+		5.25"/360 kB floppy services are supported (int 13h)
+		5.25"/1.2 MB floppy services are supported (int 13h)
+		3.5"/720 kB floppy services are supported (int 13h)
+		3.5"/2.88 MB floppy services are supported (int 13h)
+		8042 keyboard services are supported (int 9h)
+		CGA/mono video services are supported (int 10h)
+		ACPI is supported
+		USB legacy is supported
+		BIOS boot specification is supported
+		Targeted content distribution is supported
+		UEFI is supported
+	BIOS Revision: 0.0
+
+Handle 0x0001, DMI type 1, 27 bytes
+System Information
+	Manufacturer: Online Labs
+	Product Name: SR
+	Version: (^_^)
+	Serial Number: 42
+	UUID: 12345678-1234-5678-90AB-CDDEEFAABBCC
+	Wake-up Type: Power Switch
+	SKU Number: (^_^)
+	Family: Avoton
+
+Handle 0x0002, DMI type 2, 15 bytes
+Base Board Information
+	Manufacturer: Online Labs
+	Product Name: SR
+	Version: 42
+	Serial Number: 42
+	Asset Tag: 42
+	Features:
+		Board is a hosting board
+		Board is replaceable
+	Location In Chassis: <BAD INDEX>
+	Chassis Handle: 0x0003
+	Type: Motherboard
+	Contained Object Handles: 0
+
+Handle 0x0003, DMI type 3, 22 bytes
+Chassis Information
+	Manufacturer: Chassis Manufacturer
+	Type: Desktop
+	Lock: Not Present
+	Version: Chassis Version
+	Serial Number: Chassis Serial Number
+	Asset Tag: Chassis Asset Tag
+	Boot-up State: Safe
+	Power Supply State: Safe
+	Thermal State: Safe
+	Security Status: None
+	OEM Information: 0x00000000
+	Height: Unspecified
+	Number Of Power Cords: 1
+	Contained Elements: 0
+	SKU Number: SKU Number
+
+Handle 0x0004, DMI type 4, 42 bytes
+Processor Information
+	Socket Designation: CPU0
+	Type: Central Processor
+	Family: Atom
+	Manufacturer: Intel(R) Corporation
+	ID: D8 06 04 00 FF FB EB BF
+	Signature: Type 0, Family 6, Model 77, Stepping 8
+	Flags:
+		FPU (Floating-point unit on-chip)
+		VME (Virtual mode extension)
+		DE (Debugging extension)
+		PSE (Page size extension)
+		TSC (Time stamp counter)
+		MSR (Model specific registers)
+		PAE (Physical address extension)
+		MCE (Machine check exception)
+		CX8 (CMPXCHG8 instruction supported)
+		APIC (On-chip APIC hardware supported)
+		SEP (Fast system call)
+		MTRR (Memory type range registers)
+		PGE (Page global enable)
+		MCA (Machine check architecture)
+		CMOV (Conditional move instruction supported)
+		PAT (Page attribute table)
+		PSE-36 (36-bit page size extension)
+		CLFSH (CLFLUSH instruction supported)
+		DS (Debug store)
+		ACPI (ACPI supported)
+		MMX (MMX technology supported)
+		FXSR (FXSAVE and FXSTOR instructions supported)
+		SSE (Streaming SIMD extensions)
+		SSE2 (Streaming SIMD extensions 2)
+		SS (Self-snoop)
+		HTT (Multi-threading)
+		TM (Thermal monitor supported)
+		PBE (Pending break enabled)
+	Version: Intel(R) Atom(TM) CPU  C2750  @ 2.40GHz
+	Voltage: 1.6 V
+	External Clock: 100 MHz
+	Max Speed: 2400 MHz
+	Current Speed: 2400 MHz
+	Status: Populated, Enabled
+	Upgrade: Socket LGA775
+	L1 Cache Handle: 0x0005
+	L2 Cache Handle: 0x0006
+	L3 Cache Handle: Not Provided
+	Serial Number: Not Specified
+	Asset Tag: UNKNOWN
+	Part Number: Not Specified
+	Core Count: 8
+	Core Enabled: 8
+	Thread Count: 8
+	Characteristics:
+		64-bit capable
+
+Handle 0x0005, DMI type 7, 19 bytes
+Cache Information
+	Socket Designation: L1-Cache
+	Configuration: Enabled, Not Socketed, Level 1
+	Operational Mode: Write Back
+	Location: Internal
+	Installed Size: 448 kB
+	Maximum Size: 448 kB
+	Supported SRAM Types:
+		Synchronous
+	Installed SRAM Type: Synchronous
+	Speed: Unknown
+	Error Correction Type: Single-bit ECC
+	System Type: Instruction
+	Associativity: 8-way Set-associative
+
+Handle 0x0006, DMI type 7, 19 bytes
+Cache Information
+	Socket Designation: L2-Cache
+	Configuration: Enabled, Not Socketed, Level 2
+	Operational Mode: Write Back
+	Location: Internal
+	Installed Size: 4096 kB
+	Maximum Size: 4096 kB
+	Supported SRAM Types:
+		Synchronous
+	Installed SRAM Type: Synchronous
+	Speed: Unknown
+	Error Correction Type: Single-bit ECC
+	System Type: Unified
+	Associativity: 16-way Set-associative
+
+Handle 0x0007, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: EC5
+	Internal Connector Type: None
+	External Reference Designator: USB
+	External Connector Type: Access Bus (USB)
+	Port Type: USB
+
+Handle 0x0008, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: EC6
+	Internal Connector Type: None
+	External Reference Designator: USB
+	External Connector Type: Access Bus (USB)
+	Port Type: USB
+
+Handle 0x0009, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: LAN1
+	Internal Connector Type: None
+	External Reference Designator: 1G Network
+	External Connector Type: RJ-45
+	Port Type: Network Port
+
+Handle 0x000A, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: LAN1
+	Internal Connector Type: None
+	External Reference Designator: 1G Network
+	External Connector Type: RJ-45
+	Port Type: Network Port
+
+Handle 0x000B, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: 10GLAN1
+	Internal Connector Type: None
+	External Reference Designator: 10G Network
+	External Connector Type: RJ-45
+	Port Type: Network Port
+
+Handle 0x000C, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: 10GLAN2
+	Internal Connector Type: None
+	External Reference Designator: 10G Network
+	External Connector Type: RJ-45
+	Port Type: Network Port
+
+Handle 0x000D, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI_E_1
+	Type: x8 PCI Express x8
+	Current Usage: Available
+	Length: Other
+	ID: 1
+	Characteristics:
+		PME signal is supported
+		Hot-plug devices are supported
+	Bus Address: 0000:00:01.0
+
+Handle 0x000E, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI_E_2
+	Type: x4 PCI Express x4
+	Current Usage: Available
+	Length: Other
+	ID: 2
+	Characteristics:
+		PME signal is supported
+		Hot-plug devices are supported
+	Bus Address: 0000:00:02.0
+
+Handle 0x000F, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI_E_3
+	Type: x4 PCI Express x4
+	Current Usage: Available
+	Length: Other
+	ID: 3
+	Characteristics:
+		PME signal is supported
+		Hot-plug devices are supported
+	Bus Address: 0000:04:08.0
+
+Handle 0x0010, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI_E_4
+	Type: x16 PCI Express x16
+	Current Usage: Available
+	Length: Other
+	ID: 4
+	Characteristics:
+		PME signal is supported
+		Hot-plug devices are supported
+	Bus Address: 0000:04:09.0
+
+Handle 0x0011, DMI type 11, 5 bytes
+OEM Strings
+	String 1: OemString1
+	String 2: OemString2
+	String 3: OemString3
+
+Handle 0x0012, DMI type 12, 5 bytes
+System Configuration Options
+	Option 1: ConfigOptions1
+	Option 2: ConfigOptions2
+	Option 3: ConfigOptions3
+
+Handle 0x0013, DMI type 13, 22 bytes
+BIOS Language Information
+	Language Description Format: Long
+	Installable Languages: 4
+		en|US|iso8859-1,0
+		fr|CA|iso8859-1,0
+		zh|TW|unicode,0
+		ja|JP|unicode,0
+	Currently Installed Language: en|US|iso8859-1,0
+
+Handle 0x0014, DMI type 15, 29 bytes
+System Event Log
+	Area Length: 0 bytes
+	Header Start Offset: 0x0000
+	Header Length: 8192 bytes
+	Data Start Offset: 0x2000
+	Access Method: General-purpose non-volatile data functions
+	Access Address: 0x0000
+	Status: Valid, Not Full
+	Change Token: 0x12345678
+	Header Format: OEM-specific
+	Supported Log Type Descriptors: 3
+	Descriptor 1: POST memory resize
+	Data Format 1: None
+	Descriptor 2: POST error
+	Data Format 2: POST results bitmap
+	Descriptor 3: Log area reset/cleared
+	Data Format 3: None
+
+Handle 0x0015, DMI type 16, 23 bytes
+Physical Memory Array
+	Location: System Board Or Motherboard
+	Use: System Memory
+	Error Correction Type: None
+	Maximum Capacity: 64 GB
+	Error Information Handle: No Error
+	Number Of Devices: 4
+
+Handle 0x0016, DMI type 17, 40 bytes
+Memory Device
+	Array Handle: 0x0015
+	Error Information Handle: No Error
+	Total Width: Unknown
+	Data Width: Unknown
+	Size: 8192 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM0
+	Bank Locator: BANK 0
+	Type: DDR3
+	Type Detail: Synchronous Unbuffered (Unregistered)
+	Speed: 1600 MT/s
+	Manufacturer: Micron
+	Serial Number: 23115200
+	Asset Tag: 01
+	Part Number: DVM64453C DATARAM
+	Rank: 2
+	Configured Clock Speed: 1600 MT/s
+	Minimum Voltage: Unknown
+	Maximum Voltage: Unknown
+	Configured Voltage: Unknown
+
+Handle 0x0017, DMI type 17, 40 bytes
+Memory Device
+	Array Handle: 0x0015
+	Error Information Handle: No Error
+	Total Width: Unknown
+	Data Width: Unknown
+	Size: 8192 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM0
+	Bank Locator: BANK 1
+	Type: DDR3
+	Type Detail: Synchronous Unbuffered (Unregistered)
+	Speed: 1600 MT/s
+	Manufacturer: Micron
+	Serial Number: 00001639
+	Asset Tag: 02
+	Part Number: DVM64453C DATARAM
+	Rank: 2
+	Configured Clock Speed: 1600 MT/s
+	Minimum Voltage: Unknown
+	Maximum Voltage: Unknown
+	Configured Voltage: Unknown
+
+Handle 0x0018, DMI type 17, 40 bytes
+Memory Device
+	Array Handle: 0x0015
+	Error Information Handle: No Error
+	Total Width: Unknown
+	Data Width: Unknown
+	Size: 8192 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM1
+	Bank Locator: BANK 0
+	Type: DDR3
+	Type Detail: Synchronous Unbuffered (Unregistered)
+	Speed: 1600 MT/s
+	Manufacturer: Micron
+	Serial Number: 23115200
+	Asset Tag: 03
+	Part Number: DVM64453C DATARAM
+	Rank: 2
+	Configured Clock Speed: 1600 MT/s
+	Minimum Voltage: Unknown
+	Maximum Voltage: Unknown
+	Configured Voltage: Unknown
+
+Handle 0x0019, DMI type 17, 40 bytes
+Memory Device
+	Array Handle: 0x0015
+	Error Information Handle: No Error
+	Total Width: Unknown
+	Data Width: Unknown
+	Size: 8192 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM1
+	Bank Locator: BANK 1
+	Type: DDR3
+	Type Detail: Synchronous Unbuffered (Unregistered)
+	Speed: 1600 MT/s
+	Manufacturer: Micron
+	Serial Number: 23115200
+	Asset Tag: 04
+	Part Number: DVM64453C DATARAM
+	Rank: 2
+	Configured Clock Speed: 1600 MT/s
+	Minimum Voltage: Unknown
+	Maximum Voltage: Unknown
+	Configured Voltage: Unknown
+
+Handle 0x001A, DMI type 19, 31 bytes
+Memory Array Mapped Address
+	Starting Address: 0x00000000000
+	Ending Address: 0x007FFFFFFFF
+	Range Size: 32 GB
+	Physical Array Handle: 0x0015
+	Partition Width: 4
+
+Handle 0x001B, DMI type 20, 35 bytes
+Memory Device Mapped Address
+	Starting Address: 0x00000000000
+	Ending Address: 0x001FFFFFFFF
+	Range Size: 8 GB
+	Physical Device Handle: 0x0016
+	Memory Array Mapped Address Handle: 0x0015
+	Partition Row Position: Unknown
+
+Handle 0x001C, DMI type 20, 35 bytes
+Memory Device Mapped Address
+	Starting Address: 0x00200000000
+	Ending Address: 0x003FFFFFFFF
+	Range Size: 8 GB
+	Physical Device Handle: 0x0017
+	Memory Array Mapped Address Handle: 0x0015
+	Partition Row Position: Unknown
+
+Handle 0x001D, DMI type 20, 35 bytes
+Memory Device Mapped Address
+	Starting Address: 0x00400000000
+	Ending Address: 0x005FFFFFFFF
+	Range Size: 8 GB
+	Physical Device Handle: 0x0018
+	Memory Array Mapped Address Handle: 0x0015
+	Partition Row Position: Unknown
+
+Handle 0x001E, DMI type 20, 35 bytes
+Memory Device Mapped Address
+	Starting Address: 0x00600000000
+	Ending Address: 0x007FFFFFFFF
+	Range Size: 8 GB
+	Physical Device Handle: 0x0019
+	Memory Array Mapped Address Handle: 0x0015
+	Partition Row Position: Unknown
+
+Handle 0x001F, DMI type 21, 7 bytes
+Built-in Pointing Device
+	Type: Touch Pad
+	Interface: PS/2
+	Buttons: 4
+
+Handle 0x0020, DMI type 22, 26 bytes
+Portable Battery
+	Location: Fake
+	Manufacturer: -Virtual Battery 0-
+	Manufacture Date: 08/08/2010
+	Serial Number: Battery 0
+	Name: CRB Battery 0
+	Chemistry: Zinc Air
+	Design Capacity: Unknown
+	Design Voltage: Unknown
+	SBDS Version: LithiumPolymer
+	Maximum Error: Unknown
+	OEM-specific Information: 0x00000000
+
+Handle 0x0021, DMI type 26, 24 bytes
+Voltage Probe
+	Description: Voltage Probe Description
+	Location: Unknown
+	Status: Unknown
+	Maximum Value: Unknown
+	Minimum Value: Unknown
+	Resolution: Unknown
+	Tolerance: Unknown
+	Accuracy: Unknown
+	OEM-specific Information: 0x00008000
+	Nominal Value: 0.000 V
+
+Handle 0x0022, DMI type 27, 15 bytes
+Cooling Device
+	Temperature Probe Handle: 0x0023
+	Type: Fan
+	Status: OK
+	OEM-specific Information: 0x00000000
+	Nominal Speed: 8192 rpm
+	Description: Cooling Device Description
+
+Handle 0x0023, DMI type 28, 24 bytes
+Temperature Probe
+	Description: Temperature Probe Description
+	Location: Unknown
+	Status: Unknown
+	Maximum Value: Unknown
+	Minimum Value: Unknown
+	Resolution: Unknown
+	Tolerance: Unknown
+	Accuracy: Unknown
+	OEM-specific Information: 0x00008000
+	Nominal Value: 0.0 deg C
+
+Handle 0x0024, DMI type 32, 11 bytes
+System Boot Information
+	Status: No errors detected
+
+Handle 0x0025, DMI type 39, 22 bytes
+System Power Supply
+	Location: OEM Define 0
+	Name: OEM Define 1
+	Manufacturer: OEM Define 2
+	Serial Number: OEM Define 3
+	Asset Tag: OEM Define 4
+	Model Part Number: OEM Define 5
+	Revision: OEM Define 6
+	Max Power Capacity: 75 W
+	Status: Not Present
+	Type: Regulator
+	Input Voltage Range Switching: Auto-switch
+	Plugged: No
+	Hot Replaceable: No
+
+Handle 0x0026, DMI type 40, 17 bytes
+Additional Information 1
+	Referenced Handle: 0x000c
+	Referenced Offset: 0x05
+	String: PCIExpressx16
+	Value: 0xaa
+Additional Information 2
+	Referenced Handle: 0x0000
+	Referenced Offset: 0x05
+	String: Compiler Version: VC 9.0
+	Value: 0x00
+
+Handle 0x0027, DMI type 128, 8 bytes
+OEM-specific Type
+	Header and Data:
+		80 08 27 00 55 AA 55 AA
+	Strings:
+		Oem Type 128 Test 1
+		Oem Type 128 Test 2
+
+Handle 0x0028, DMI type 129, 8 bytes
+OEM-specific Type
+	Header and Data:
+		81 08 28 00 01 01 02 01
+	Strings:
+		Insyde_ASF_001
+		Insyde_ASF_002
+
+Handle 0x0029, DMI type 130, 20 bytes
+OEM-specific Type
+	Header and Data:
+		82 14 29 00 24 41 4D 54 01 01 01 01 01 A5 1F 02
+		00 00 00 00
+
+Handle 0x002A, DMI type 136, 6 bytes
+OEM-specific Type
+	Header and Data:
+		88 06 2A 00 FF FF
+
+Handle 0xFEFF, DMI type 127, 4 bytes
+End Of Table
+
