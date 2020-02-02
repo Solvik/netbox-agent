@@ -22,6 +22,7 @@ def test_hp_service_tag(fixture):
     server = ServerBase(dmi)
     assert server.get_service_tag() == '4242'
 
+
 @parametrize_with_fixtures(
     'dmidecode/', only_filenames=[
         'unknown.txt'
