@@ -17,6 +17,7 @@ class LocationBase():
     There's also a support for an external driver file outside of this project in case
     the logic isn't supported here.
     """
+
     def __init__(self, driver, driver_value, driver_file, regex, *args, **kwargs):
         self.driver = driver
         self.driver_value = driver_value

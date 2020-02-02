@@ -1,0 +1,16 @@
+netbox:
+ url: 'https://netbox.company.com'
+ token: xx
+
+datacenter_location:
+ driver: "cmd:cat /etc/qualification | tr [A-Z] [a-z]"
+ regex: "datacenter: (?P<datacenter>[A-Za-z0-9]+)"
+
+rack_location:
+ driver: 'cmd:lldpctl'
+ regex: 'SysName:[ ]+[A-Za-z]+-[A-Za-z]+-([A-Za-z0-9]+)'
+
+network:
+  ignore_interfaces: "(dummy.*|docker.*)"
+  ignore_ips: (127\.0\.0\..*)
+  lldp: true

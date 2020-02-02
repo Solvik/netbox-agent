@@ -1,12 +1,13 @@
 import logging
-from pprint import pprint
 import socket
 import subprocess
+from pprint import pprint
 
-from netbox_agent.config import netbox_instance as nb, config
 import netbox_agent.dmidecode as dmidecode
-from netbox_agent.location import Datacenter, Rack
+from netbox_agent.config import config
+from netbox_agent.config import netbox_instance as nb
 from netbox_agent.inventory import Inventory
+from netbox_agent.location import Datacenter, Rack
 from netbox_agent.network import Network
 from netbox_agent.power import PowerSupply
 
@@ -36,10 +37,10 @@ class ServerBase():
         else:
             self.dmi = dmidecode.parse()
 
-        self.baseboard = self.dmi.get_by_type('Baseboard')
-        self.bios = self.dmi.get_by_type('BIOS')
-        self.chassis = self.dmi.get_by_type('Chassis')
-        self.system = self.dmi.get_by_type('System')
+        self.baseboard = dmidecode.get_by_type(self.dmi, 'Baseboard')
+        self.bios = dmidecode.get_by_type(self.dmi, 'BIOS')
+        self.chassis = dmidecode.get_by_type(self.dmi, 'Chassis')
+        self.system = dmidecode.get_by_type(self.dmi, 'System')
 
         self.network = None
 
@@ -229,7 +230,7 @@ class ServerBase():
                 # if it doesn't exist, create it
                 chassis = nb.dcim.devices.get(
                     serial=self.get_chassis_service_tag()
-                    )
+                )
                 if not chassis:
                     chassis = self._netbox_create_blade_chassis(datacenter, rack)
 

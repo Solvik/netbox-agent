@@ -1,8 +1,7 @@
+-r requirements.txt
+
 pytest
 pytest-cov
-mypy
-flake8==3.7.9
-pep8-naming==0.9.1
-flake8-quotes==2.1.1
-flake8-import-order==0.18.1
-Sphinx
+flake8
+flake8-isort
+tox

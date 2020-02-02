@@ -2,8 +2,11 @@ import subprocess
 
 
 class LLDP():
-    def __init__(self):
-        self.output = subprocess.getoutput('lldpctl -f keyvalue')
+    def __init__(self, output=None):
+        if output:
+            self.output = output
+        else:
+            self.output = subprocess.getoutput('lldpctl -f keyvalue')
         self.data = self.parse()
 
     def parse(self):
@@ -49,6 +52,8 @@ class LLDP():
         # lldp.eth0.port.descr=GigabitEthernet1/0/1
         if self.data['lldp'].get(interface) is None:
             return None
+        if self.data['lldp'][interface]['port'].get('ifname'):
+            return self.data['lldp'][interface]['port']['ifname']
         return self.data['lldp'][interface]['port']['descr']
 
     def get_switch_vlan(self, interface):

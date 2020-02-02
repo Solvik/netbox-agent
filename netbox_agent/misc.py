@@ -24,7 +24,7 @@ def get_vendor(name):
         'MD': 'Toshiba',
         'MG': 'Toshiba',
         'WD': 'WDC'
-        }
+    }
     for key, value in vendors.items():
         if name.upper().startswith(key):
             return value

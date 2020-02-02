@@ -1,0 +1,25 @@
+lldp.eno1.via=LLDP
+lldp.eno1.rid=1
+lldp.eno1.age=1 day, 06:17:13
+lldp.eno1.chassis.mac=38:20:56:67:90:80
+lldp.eno1.chassis.name=s35-b12.dc3
+lldp.eno1.chassis.descr=Cisco IOS Software, C2960X Software (C2960X-UNIVERSALK9-M), Version 15.0(2a)EX5, RELEASE SOFTWARE (fc3)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2015 by Cisco Systems, Inc.
+Compiled Mon 16-Feb-15 08:16 by prod_rel_team
+lldp.eno1.chassis.mgmt-ip=10.43.31.35
+lldp.eno1.chassis.Bridge.enabled=on
+lldp.eno1.chassis.Router.enabled=off
+lldp.eno1.port.ifname=Gi1/0/29
+lldp.eno1.port.descr=GigabitEthernet1/0/29
+lldp.eno1.port.auto-negotiation.supported=yes
+lldp.eno1.port.auto-negotiation.enabled=yes
+lldp.eno1.port.auto-negotiation.10Base-T.hd=yes
+lldp.eno1.port.auto-negotiation.10Base-T.fd=yes
+lldp.eno1.port.auto-negotiation.100Base-TX.hd=yes
+lldp.eno1.port.auto-negotiation.100Base-TX.fd=yes
+lldp.eno1.port.auto-negotiation.1000Base-T.hd=no
+lldp.eno1.port.auto-negotiation.1000Base-T.fd=yes
+lldp.eno1.port.auto-negotiation.current=1000BaseTFD - Four-pair Category 5 UTP, full duplex mode
+lldp.eno1.vlan.vlan-id=140
+lldp.eno1.vlan.pvid=yes

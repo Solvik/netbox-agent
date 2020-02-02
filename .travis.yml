@@ -2,20 +2,23 @@ sudo: false
 dist: xenial
 language: python
 
+services:
+  - docker
+
 matrix:
     include:
         - python: 3.5
-          env: TOXENV=py35
+          env: TOXENV=pytest
         - python: 3.6
-          env: TOXENV=py36
+          env: TOXENV=pytest
         - python: 3.7
-          env: TOXENV=py37
+          env: TOXENV=pytest
         - python: pypy3
-          env: TOXENV=pypy3
+          env: TOXENV=pytest
         - python: 3.5
-          env: TOXENV=pep8
+          env: TOXENV=flake8
         - python: 3.7
-          env: TOXENV=pep8
+          env: TOXENV=flake8
 
 cache:
   directories:
@@ -23,7 +26,7 @@ cache:
 
 install:
   - pip install tox
-  - if [[ $TOXENV == py* ]]; then pip install coveralls; fi
+  - if [[ $TOXENV == pytest ]]; then pip install coveralls; fi
 
 script:
   - tox
@@ -32,4 +35,4 @@ notifications:
   email: false
 
 after_success:
-  - if [[ $TOXENV == py* ]]; then coveralls; fi
+  - if [[ $TOXENV == pytest ]]; then coveralls; fi

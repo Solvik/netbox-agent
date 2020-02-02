@@ -34,13 +34,13 @@ class PowerSupply():
                 'allocated_draw': None,
                 'maximum_draw': max_power,
                 'device': self.device_id,
-                })
+            })
         return power_supply
 
     def get_netbox_power_supply(self):
         return nb.dcim.power_ports.filter(
             device_id=self.device_id
-            )
+        )
 
     def create_or_update_power_supply(self):
         nb_psus = self.get_netbox_power_supply()
@@ -78,10 +78,10 @@ class PowerSupply():
             if psu['name'] not in [x.name for x in nb_psus]:
                 logging.info('Creating PSU {name} ({description}), {maximum_draw}W'.format(
                     **psu
-                    ))
+                ))
                 nb_psu = nb.dcim.power_ports.create(
                     **psu
-                    )
+                )
 
         return True
 

@@ -1,8 +1,8 @@
 import logging
 import subprocess
 
-from netbox_agent.server import ServerBase
 from netbox_agent.misc import is_tool
+from netbox_agent.server import ServerBase
 
 
 class DellHost(ServerBase):
