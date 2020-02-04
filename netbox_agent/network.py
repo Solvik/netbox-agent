@@ -19,6 +19,8 @@ class Network():
 
         self.server = server
         self.device = self.server.get_netbox_server()
+        self.datacenter = self.server.get_datacenter()
+        self.tenant = self.server.get_netbox_tenant()
         self.lldp = LLDP() if config.network.lldp else None
         self.scan()
 
@@ -181,6 +183,7 @@ class Network():
         # since users may have same vlan id in multiple dc
         vlan = nb.ipam.vlans.get(
             vid=vlan_id,
+            site=self.datacenter
         )
         if vlan is None:
             vlan = nb.ipam.vlans.create(
@@ -359,6 +362,7 @@ class Network():
                         interface=interface.id,
                         status=1,
                         role=self.ipam_choices['ip-address:role']['Anycast'],
+                        tenant=self.tenant.id if self.tenant else None,
                     )
                 return netbox_ip
             else:
