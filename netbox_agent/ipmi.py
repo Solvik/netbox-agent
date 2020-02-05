@@ -35,14 +35,20 @@ class IPMI():
     """
 
     def __init__(self):
-        self.ret, self.output = subprocess.getstatusoutput('ipmitool lan print')
+        try:
+            self.ret, self.output = subprocess.getstatusoutput('ipmitool lan print')
+        except Exception as e:
+            self.ret = 42
+            self.output = str(e)
+
         if self.ret != 0:
             logging.error('Cannot get ipmi info: {}'.format(self.output))
 
     def parse(self):
-        ret = {}
         if self.ret != 0:
-            return ret
+            return None
+
+        ret = {}
         for line in self.output.splitlines():
             key = line.split(':')[0].strip()
             value = ':'.join(line.split(':')[1:]).strip()

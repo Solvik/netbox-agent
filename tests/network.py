@@ -6,8 +6,8 @@ from tests.conftest import parametrize_with_fixtures
     'lldp/', only_filenames=[
         'dedibox1.txt',
     ])
-def test_lldp_parse_with_port_desc(fixture):
-    lldp = LLDP(fixture)
+def test_lldp_parse_with_port_desc(dmi_fixture):
+    lldp = LLDP(dmi_fixture)
     assert lldp.get_switch_port('enp1s0f0') == 'RJ-9'
 
 
@@ -15,6 +15,6 @@ def test_lldp_parse_with_port_desc(fixture):
     'lldp/', only_filenames=[
         'qfx.txt',
     ])
-def test_lldp_parse_without_ifname(fixture):
-    lldp = LLDP(fixture)
+def test_lldp_parse_without_ifname(dmi_fixture):
+    lldp = LLDP(dmi_fixture)
     assert lldp.get_switch_port('eth0') == 'xe-0/0/1'

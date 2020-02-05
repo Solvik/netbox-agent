@@ -234,6 +234,9 @@ class Network():
 
     def create_or_update_ipmi(self):
         ipmi = self.get_ipmi()
+        if ipmi is None:
+            return None
+
         mac = ipmi['MAC Address']
         ip = ipmi['IP Address']
         netmask = ipmi['Subnet Mask']
