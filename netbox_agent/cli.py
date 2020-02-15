@@ -18,10 +18,11 @@ MANUFACTURERS = {
 
 
 def run(config):
-    manufacturer = dmidecode.get_by_type('Chassis')[0].get('Manufacturer')
+    dmi = dmidecode.parse()
+    manufacturer = dmidecode.get_by_type(dmi, 'Chassis')[0].get('Manufacturer')
 
     try:
-        server = MANUFACTURERS[manufacturer](dmi=dmidecode)
+        server = MANUFACTURERS[manufacturer](dmi=dmi)
     except KeyError:
         server = GenericHost
 
