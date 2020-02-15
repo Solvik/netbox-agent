@@ -1,3 +1,4 @@
+import netbox_agent.dmidecode as dmidecode
 from netbox_agent.server import ServerBase
 
 

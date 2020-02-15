@@ -1,5 +1,6 @@
 import logging
 
+import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import netbox_instance as nb
 
 PSU_DMI_TYPE = 39
