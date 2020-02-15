@@ -16,7 +16,7 @@ class PowerSupply():
 
     def get_power_supply(self):
         power_supply = []
-        for psu in self.server.dmi.get_by_type(PSU_DMI_TYPE):
+        for psu in dmidecode.get_by_type(self.server.dmi, PSU_DMI_TYPE):
             if 'Present' not in psu['Status'] or psu['Status'] == 'Not Present':
                 continue
 
