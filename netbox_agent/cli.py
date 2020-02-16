@@ -24,7 +24,7 @@ def run(config):
     try:
         server = MANUFACTURERS[manufacturer](dmi=dmi)
     except KeyError:
-        server = GenericHost
+        server = GenericHost(dmi=dmi)
 
     if config.debug:
         server.print_debug()
