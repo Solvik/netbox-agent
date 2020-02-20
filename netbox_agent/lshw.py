@@ -110,7 +110,7 @@ class LSHW():
             c["description"] = obj["description"]
             c["location"] = obj["slot"]
 
-           self.cpus.append(c)
+            self.cpus.append(c)
 
     def find_memories(self, obj):
         if "children" not in obj:
