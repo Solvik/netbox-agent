@@ -103,13 +103,14 @@ class LSHW():
             self.disks.append(d)
 
     def find_cpus(self, obj):
-        c = {}
-        c["product"] = obj["product"]
-        c["vendor"] = obj["vendor"]
-        c["description"] = obj["description"]
-        c["location"] = obj["slot"]
+        if "product" in obj:
+            c = {}
+            c["product"] = obj["product"]
+            c["vendor"] = obj["vendor"]
+            c["description"] = obj["description"]
+            c["location"] = obj["slot"]
 
-        self.cpus.append(c)
+           self.cpus.append(c)
 
     def find_memories(self, obj):
         if "children" not in obj:
