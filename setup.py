@@ -16,7 +16,7 @@ setup(
         'pynetbox==4.2.4',
         'netaddr==0.7.19',
         'netifaces==0.10.9',
-        'pyyaml==5.3',
+        'pyyaml==5.3.1',
         'jsonargparse==2.22.2',
     ],
     zip_safe=False,
