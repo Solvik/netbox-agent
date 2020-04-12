@@ -5,6 +5,7 @@ from netbox_agent.logging import logging  # NOQA
 from netbox_agent.misc import get_hostname
 from netbox_agent.network import VirtualNetwork
 
+
 class VirtualMachine(object):
     def __init__(self, dmi=None):
         if dmi:
@@ -23,7 +24,7 @@ class VirtualMachine(object):
     def get_netbox_cluster(self, name):
         cluster = nb.virtualization.clusters.get(
             name=name,
-            )
+        )
         return cluster
 
     def netbox_create(self, config):
@@ -37,9 +38,9 @@ class VirtualMachine(object):
             vm = nb.virtualization.virtual_machines.create(
                 name=hostname,
                 cluster=cluster.id,
-                vcpu=0,
-                memory=0,
-                )
+                vcpu=0,  # FIXME
+                memory=0,  # FIXME
+            )
             self.network = VirtualNetwork(server=self)
             self.network.update_netbox_network_cards()
         else:

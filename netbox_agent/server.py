@@ -8,7 +8,7 @@ from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.inventory import Inventory
 from netbox_agent.location import Datacenter, Rack
-from netbox_agent.network import Network
+from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
 
 

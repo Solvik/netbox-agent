@@ -1,15 +1,6 @@
-import os
-import re
-import netifaces
-from netaddr import IPAddress, IPNetwork
-from shutil import which
 import socket
-
-
-from netbox_agent.ethtool import Ethtool
-from netbox_agent.ipmi import IPMI
-from netbox_agent.lldp import LLDP
-from netbox_agent.logging import logging  # NOQA
+import subprocess
+from shutil import which
 
 
 def is_tool(name):
