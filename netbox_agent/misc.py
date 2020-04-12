@@ -1,4 +1,15 @@
+import os
+import re
+import netifaces
+from netaddr import IPAddress, IPNetwork
 from shutil import which
+import socket
+
+
+from netbox_agent.ethtool import Ethtool
+from netbox_agent.ipmi import IPMI
+from netbox_agent.lldp import LLDP
+from netbox_agent.logging import logging  # NOQA
 
 
 def is_tool(name):
@@ -29,3 +40,9 @@ def get_vendor(name):
         if name.upper().startswith(key):
             return value
     return name
+
+
+def get_hostname(config):
+    if config.hostname_cmd is None:
+        return '{}'.format(socket.gethostname())
+    return subprocess.getoutput(config.hostname_cmd)

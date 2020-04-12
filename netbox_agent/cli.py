@@ -1,6 +1,7 @@
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import config
 from netbox_agent.logging import logging  # NOQA
+from netbox_agent.virtualmachine import VirtualMachine
 from netbox_agent.vendors.dell import DellHost
 from netbox_agent.vendors.generic import GenericHost
 from netbox_agent.vendors.hp import HPHost
@@ -19,12 +20,15 @@ MANUFACTURERS = {
 
 def run(config):
     dmi = dmidecode.parse()
-    manufacturer = dmidecode.get_by_type(dmi, 'Chassis')[0].get('Manufacturer')
 
-    try:
-        server = MANUFACTURERS[manufacturer](dmi=dmi)
-    except KeyError:
-        server = GenericHost(dmi=dmi)
+    if config.virtual.enabled:
+        server = VirtualMachine(dmi=dmi)
+    else:
+        manufacturer = dmidecode.get_by_type(dmi, 'Chassis')[0].get('Manufacturer')
+        try:
+            server = MANUFACTURERS[manufacturer](dmi=dmi)
+        except KeyError:
+            server = GenericHost(dmi=dmi)
 
     if config.debug:
         server.print_debug()

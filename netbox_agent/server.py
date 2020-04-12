@@ -243,7 +243,7 @@ class ServerBase():
             if not server:
                 self._netbox_create_server(datacenter, rack)
 
-        self.network = Network(server=self)
+        self.network = ServerNetwork(server=self)
         self.network.create_netbox_network_cards()
 
         self.power = PowerSupply(server=self)
@@ -329,7 +329,7 @@ class ServerBase():
 
         # check network cards
         if config.update_all or config.update_network:
-            self.network = Network(server=self)
+            self.network = ServerNetwork(server=self)
             self.network.update_netbox_network_cards()
         # update inventory
         if config.update_all or config.update_inventory:
@@ -345,7 +345,7 @@ class ServerBase():
         logging.debug('Finished updating Server!')
 
     def print_debug(self):
-        self.network = Network(server=self)
+        self.network = ServerNetwork(server=self)
         print('Datacenter:', self.get_datacenter())
         print('Netbox Datacenter:', self.get_netbox_datacenter())
         print('Rack:', self.get_rack())
