@@ -20,11 +20,6 @@ class Network(object):
         self.lldp = LLDP() if config.network.lldp else None
         self.nics = self.scan()
         self.ipmi = None
-        if self.get_network_type() == 'server':
-            self.ipmi = self.get_ipmi()
-            if self.ipmi:
-                self.nics.append(self.ipmi)
-
         self.dcim_choices = {}
         dcim_c = nb.dcim.choices()
 
@@ -43,25 +38,6 @@ class Network(object):
 
     def get_network_type():
         return NotImplementedError
-
-    def get_netbox_network_cards(self):
-        return self.nb_net.interfaces.filter(
-            **self.custom_arg_id,
-        )
-
-    def get_netbox_network_card(self, nic):
-        if nic['mac'] is None:
-            interface = self.nb_net.interfaces.get(
-                name=nic['name'],
-                **self.custom_arg_id,
-            )
-        else:
-            interface = self.nb_net.interfaces.get(
-                mac_address=nic['mac'],
-                name=nic['name'],
-                **self.custom_arg_id,
-            )
-        return interface
 
     def scan(self):
         nics = []
@@ -154,6 +130,25 @@ class Network(object):
 
     def get_network_cards(self):
         return self.nics
+
+    def get_netbox_network_card(self, nic):
+        if nic['mac'] is None:
+            interface = self.nb_net.interfaces.get(
+                name=nic['name'],
+                **self.custom_arg_id,
+            )
+        else:
+            interface = self.nb_net.interfaces.get(
+                mac_address=nic['mac'],
+                name=nic['name'],
+                **self.custom_arg_id,
+            )
+        return interface
+
+    def get_netbox_network_cards(self):
+        return self.nb_net.interfaces.filter(
+            **self.custom_arg_id,
+        )
 
     def get_netbox_type_for_nic(self, nic):
         if config.virtual.enabled:
@@ -347,29 +342,10 @@ class Network(object):
                 netbox_ip.save()
         return netbox_ip
 
-    def create_netbox_network_cards(self):
-        logging.debug('Creating NIC...')
-        for nic in self.nics:
-            interface = self.get_netbox_network_card(nic)
-            # if network doesn't exist we create it
-            if not interface:
-                new_interface = self.create_netbox_nic(
-                    nic,
-                    mgmt=True if 'ipmi' in nic.keys() else False
-                )
-                if nic['ip']:
-                    # for each ip, we try to find it
-                    # assign the device's interface to it
-                    # or simply create it
-                    for ip in nic['ip']:
-                        self.create_or_update_netbox_ip_on_interface(ip, new_interface)
-        self._set_bonding_interfaces()
-        logging.debug('Finished creating NIC!')
-
-    def update_netbox_network_cards(self):
+    def create_or_update_netbox_network_cards(self):
         if config.update_all is None or config.update_network is None:
             return None
-        logging.debug('Updating NIC...')
+        logging.debug('Creating/Updating NIC...')
 
         # delete unknown interface
         nb_nics = self.get_netbox_network_cards()
@@ -454,6 +430,9 @@ class Network(object):
 class ServerNetwork(Network):
     def __init__(self, server, *args, **kwargs):
         super(ServerNetwork, self).__init__(server, args, kwargs)
+        self.ipmi = self.get_ipmi()
+        if self.ipmi:
+            self.nics.append(self.ipmi)
         self.server = server
         self.device = self.server.get_netbox_server()
         self.nb_net = nb.dcim
@@ -466,13 +445,6 @@ class ServerNetwork(Network):
     def get_ipmi(self):
         ipmi = IPMI().parse()
         return ipmi
-
-    def get_netbox_ipmi(self):
-        ipmi = self.get_ipmi()
-        mac = ipmi['MAC Address']
-        return self.nb_net.interfaces.get(
-            mac=mac
-        )
 
     def connect_interface_to_switch(self, switch_ip, switch_interface, nb_server_interface):
         logging.info('Interface {} is not connected to switch, trying to connect..'.format(

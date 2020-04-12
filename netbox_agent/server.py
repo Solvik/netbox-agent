@@ -244,7 +244,7 @@ class ServerBase():
                 self._netbox_create_server(datacenter, rack)
 
         self.network = ServerNetwork(server=self)
-        self.network.create_netbox_network_cards()
+        self.network.create_or_update_netbox_network_cards()
 
         self.power = PowerSupply(server=self)
         self.power.create_or_update_power_supply()
@@ -330,7 +330,7 @@ class ServerBase():
         # check network cards
         if config.update_all or config.update_network:
             self.network = ServerNetwork(server=self)
-            self.network.update_netbox_network_cards()
+            self.network.create_or_update_netbox_network_cards()
         # update inventory
         if config.update_all or config.update_inventory:
             self.inventory = Inventory(server=self)
