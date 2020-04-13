@@ -350,11 +350,12 @@ class Network(object):
         # delete unknown interface
         nb_nics = self.get_netbox_network_cards()
         local_nics = [x['name'] for x in self.nics]
-        for nic in nb_nics:
+        for nic in nb_nics[:]:
             if nic.name not in local_nics:
                 logging.info('Deleting netbox interface {name} because not present locally'.format(
                     name=nic.name
                 ))
+                nb_nics.remove(nic)
                 nic.delete()
 
         # delete IP on netbox that are not known on this server
