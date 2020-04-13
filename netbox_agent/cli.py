@@ -32,11 +32,9 @@ def run(config):
 
     if config.debug:
         server.print_debug()
-    if config.register:
-        server.netbox_create(config)
-    if config.update_all or config.update_network or config.update_location or \
+    if config.register or config.update_all or config.update_network or config.update_location or \
        config.update_inventory or config.update_psu:
-        server.netbox_update(config)
+        server.netbox_create_or_update(config)
     return True
 
 

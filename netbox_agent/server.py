@@ -136,7 +136,7 @@ class ServerBase():
     def get_power_consumption(self):
         raise NotImplementedError
 
-    def _netbox_create_blade_chassis(self, datacenter, rack):
+    def _netbox_create_chassis(self, datacenter, rack):
         device_type = get_device_type(self.get_chassis())
         device_role = get_device_role('Server Chassis')
         serial = self.get_chassis_service_tag()
@@ -172,27 +172,6 @@ class ServerBase():
         )
         return new_blade
 
-    def _netbox_set_blade_slot(self, chassis, server):
-        slot = self.get_blade_slot()
-        # Find the slot and update it with our blade
-        device_bays = nb.dcim.device_bays.filter(
-            device_id=chassis.id,
-            name=slot,
-        )
-        if len(device_bays) > 0:
-            logging.info(
-                'Setting device ({serial}) new slot on {slot} '
-                '(Chassis {chassis_serial})..'.format(
-                    serial=server.serial, slot=slot, chassis_serial=chassis.serial
-                ))
-            device_bay = device_bays[0]
-            device_bay.installed_device = server
-            device_bay.save()
-        else:
-            logging.error('Could not find slot {slot} for chassis'.format(
-                slot=slot
-            ))
-
     def _netbox_create_server(self, datacenter, rack):
         device_role = get_device_role('Server')
         device_type = get_device_type(self.get_product_name())
@@ -215,77 +194,40 @@ class ServerBase():
     def get_netbox_server(self):
         return nb.dcim.devices.get(serial=self.get_service_tag())
 
-    def netbox_create(self, config):
-        logging.debug('Creating Server..')
-        datacenter = self.get_netbox_datacenter()
-        rack = self.get_netbox_rack()
-        if self.is_blade():
-            # let's find the blade
-            serial = self.get_service_tag()
-            blade = nb.dcim.devices.get(serial=serial)
-            chassis = nb.dcim.devices.get(serial=self.get_chassis_service_tag())
-            # if it doesn't exist, create it
-            if not blade:
-                # check if the chassis exist before
-                # if it doesn't exist, create it
-                chassis = nb.dcim.devices.get(
-                    serial=self.get_chassis_service_tag()
-                )
-                if not chassis:
-                    chassis = self._netbox_create_blade_chassis(datacenter, rack)
+    def _netbox_set_or_update_blade_slot(self, server, chassis, datacenter):
+        # before everything check if right chassis
+        actual_device_bay = server.parent_device.device_bay if server.parent_device else None
+        actual_chassis = actual_device_bay.device if actual_device_bay else None
+        slot = self.get_blade_slot()
+        if actual_chassis and \
+           actual_chassis.serial == chassis.serial and \
+           actual_device_bay.name == slot:
+            return
 
-                blade = self._netbox_create_blade(chassis, datacenter, rack)
-
-            # Set slot for blade
-            self._netbox_set_blade_slot(chassis, blade)
+        real_device_bays = nb.dcim.device_bays.filter(
+            device_id=chassis.id,
+            name=slot,
+        )
+        if len(real_device_bays) > 0:
+            logging.info(
+                'Setting device ({serial}) new slot on {slot} '
+                '(Chassis {chassis_serial})..'.format(
+                    serial=server.serial, slot=slot, chassis_serial=chassis.serial
+                ))
+            # reset actual device bay if set
+            if actual_device_bay:
+                actual_device_bay.installed_device = None
+                actual_device_bay.save()
+            # setup new device bay
+            real_device_bay = real_device_bays[0]
+            real_device_bay.installed_device = server
+            real_device_bay.save()
         else:
-            server = nb.dcim.devices.get(serial=self.get_service_tag())
-            if not server:
-                self._netbox_create_server(datacenter, rack)
+            logging.error('Could not find slot {slot} for chassis'.format(
+                slot=slot
+            ))
 
-        self.network = ServerNetwork(server=self)
-        self.network.create_or_update_netbox_network_cards()
-
-        self.power = PowerSupply(server=self)
-        self.power.create_or_update_power_supply()
-
-        if config.inventory:
-            self.inventory = Inventory(server=self)
-            self.inventory.create()
-        logging.debug('Server created!')
-
-    def _netbox_update_chassis_for_blade(self, server, datacenter):
-        chassis = server.parent_device.device_bay.device
-        device_bay = nb.dcim.device_bays.get(
-            server.parent_device.device_bay.id
-        )
-
-        parent_chassis = nb.dcim.devices.get(
-            chassis.id
-        )
-
-        netbox_chassis_serial = parent_chassis.serial
-        move_device_bay = False
-
-        # check chassis serial with dmidecode
-        if netbox_chassis_serial != self.get_chassis_service_tag():
-            move_device_bay = True
-            # try to find the new netbox chassis
-            chassis = nb.dcim.devices.get(
-                serial=self.get_chassis_service_tag()
-            )
-            if not chassis:
-                chassis = self._netbox_create_blade_chassis(datacenter)
-        if move_device_bay or device_bay.name != self.get_blade_slot():
-            logging.info('Device ({serial}) seems to have moved, reseting old slot..'.format(
-                serial=server.serial))
-            device_bay.installed_device = None
-            device_bay.save()
-
-            # Set slot for blade
-            self._netbox_set_blade_slot(chassis, server)
-
-    def netbox_update(self, config):
+    def netbox_create_or_update(self, config):
         """
         Netbox method to update info about our server/blade
 
@@ -295,28 +237,44 @@ class ServerBase():
         * hostname update
         * new network infos
         """
-        logging.debug('Updating Server...')
+        datacenter = self.get_netbox_datacenter()
+        rack = self.get_netbox_rack()
 
-        server = nb.dcim.devices.get(serial=self.get_service_tag())
-        if not server:
-            raise Exception("The server (Serial: {}) isn't yet registered in Netbox, register"
-                            'it before updating it'.format(self.get_service_tag()))
-        update = 0
         if self.is_blade():
-            datacenter = self.get_netbox_datacenter()
-            # if it's already linked to a chassis
-            if server.parent_device:
-                self._netbox_update_chassis_for_blade(server, datacenter)
-            else:
-                logging.info('Blade is not in a chassis, fixing...')
-                chassis = nb.dcim.devices.get(
-                    serial=self.get_chassis_service_tag()
-                )
-                if not chassis:
-                    chassis = self._netbox_create_blade_chassis(datacenter)
-                # Set slot for blade
-                self._netbox_set_blade_slot(chassis, server)
+            chassis = nb.dcim.devices.get(
+                serial=self.get_chassis_service_tag()
+            )
+            # Chassis does not exist
+            if not chassis:
+                chassis = self._netbox_create_chassis(datacenter, rack)
 
+            server = nb.dcim.devices.get(serial=self.get_service_tag())
+            if not server:
+                server = self._netbox_create_blade(chassis, datacenter, rack)
+
+            # Set slot for blade
+            self._netbox_set_or_update_blade_slot(server, chassis, datacenter)
+        else:
+            server = nb.dcim.devices.get(serial=self.get_service_tag())
+            if not server:
+                self._netbox_create_server(datacenter, rack)
+
+        logging.debug('Updating Server...')
+        # check network cards
+        if config.register or config.update_all or config.update_network:
+            self.network = ServerNetwork(server=self)
+            self.network.create_or_update_netbox_network_cards()
+        # update inventory if feature is enabled
+        if config.inventory and (config.register or config.update_all or config.update_inventory):
+            self.inventory = Inventory(server=self)
+            self.inventory.create_or_update()
+        # update psu
+        if config.register or config.update_all or config.update_psu:
+            self.power = PowerSupply(server=self)
+            self.power.create_or_update_power_supply()
+            self.power.report_power_consumption()
+
+        update = 0
         # for every other specs
         # check hostname
         if server.name != self.get_hostname():
@@ -327,19 +285,6 @@ class ServerBase():
             ret, server = self.update_netbox_location(server)
             update += ret
 
-        # check network cards
-        if config.update_all or config.update_network:
-            self.network = ServerNetwork(server=self)
-            self.network.create_or_update_netbox_network_cards()
-        # update inventory
-        if config.update_all or config.update_inventory:
-            self.inventory = Inventory(server=self)
-            self.inventory.update()
-        # update psu
-        if config.update_all or config.update_psu:
-            self.power = PowerSupply(server=self)
-            self.power.create_or_update_power_supply()
-            self.power.report_power_consumption()
         if update:
             server.save()
         logging.debug('Finished updating Server!')

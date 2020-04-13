@@ -438,18 +438,7 @@ class Inventory():
             if memory.get('serial') not in [x.serial for x in nb_memories]:
                 self.create_netbox_memory(memory)
 
-    def create(self):
-        if config.inventory is None:
-            return False
-        self.do_netbox_cpus()
-        self.do_netbox_memories()
-        self.do_netbox_raid_cards()
-        self.do_netbox_disks()
-        self.do_netbox_interfaces()
-        self.do_netbox_motherboard()
-        return True
-
-    def update(self):
+    def create_or_update(self):
         if config.inventory is None or config.update_inventory is None:
             return False
         self.do_netbox_cpus()
