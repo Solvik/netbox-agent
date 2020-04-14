@@ -1,4 +1,3 @@
-import math
 import os
 
 import netbox_agent.dmidecode as dmidecode
