@@ -359,18 +359,19 @@ class Network(object):
                 nic.delete()
 
         # delete IP on netbox that are not known on this server
-        netbox_ips = nb.ipam.ip_addresses.filter(
-            interface_id=[x.id for x in nb_nics],
-        )
-        all_local_ips = list(chain.from_iterable([
-            x['ip'] for x in self.nics if x['ip'] is not None
-        ]))
-        for netbox_ip in netbox_ips:
-            if netbox_ip.address not in all_local_ips:
-                logging.info('Unassigning IP {ip} from {interface}'.format(
-                    ip=netbox_ip.address, interface=netbox_ip.interface))
-                netbox_ip.interface = None
-                netbox_ip.save()
+        if len(nb_nics):
+            netbox_ips = nb.ipam.ip_addresses.filter(
+                interface_id=[x.id for x in nb_nics],
+            )
+            all_local_ips = list(chain.from_iterable([
+                x['ip'] for x in self.nics if x['ip'] is not None
+            ]))
+            for netbox_ip in netbox_ips:
+                if netbox_ip.address not in all_local_ips:
+                    logging.info('Unassigning IP {ip} from {interface}'.format(
+                        ip=netbox_ip.address, interface=netbox_ip.interface))
+                    netbox_ip.interface = None
+                    netbox_ip.save()
 
         # update each nic
         for nic in self.nics:
