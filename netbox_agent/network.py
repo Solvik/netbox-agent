@@ -151,7 +151,7 @@ class Network(object):
         )
 
     def get_netbox_type_for_nic(self, nic):
-        if config.virtual.enabled:
+        if self.get_network_type() == 'virtual':
             return self.dcim_choices['interface:type']['Virtual']
 
         if nic.get('bonding'):

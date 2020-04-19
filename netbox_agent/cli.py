@@ -6,7 +6,7 @@ from netbox_agent.vendors.generic import GenericHost
 from netbox_agent.vendors.hp import HPHost
 from netbox_agent.vendors.qct import QCTHost
 from netbox_agent.vendors.supermicro import SupermicroHost
-from netbox_agent.virtualmachine import VirtualMachine
+from netbox_agent.virtualmachine import VirtualMachine, is_vm
 
 MANUFACTURERS = {
     'Dell Inc.': DellHost,
@@ -21,7 +21,9 @@ MANUFACTURERS = {
 def run(config):
     dmi = dmidecode.parse()
 
-    if config.virtual.enabled:
+    if config.virtual.enabled or is_vm(dmi):
+        if not config.virtual.cluster_name:
+            raise Exception('virtual.cluster_name parameter is mandatory because it\'s a VM')
         server = VirtualMachine(dmi=dmi)
     else:
         manufacturer = dmidecode.get_by_type(dmi, 'Chassis')[0].get('Manufacturer')
