@@ -7,15 +7,19 @@ from netbox_agent.logging import logging  # NOQA
 from netbox_agent.misc import get_hostname
 from netbox_agent.network import VirtualNetwork
 
+
 def is_vm(dmi):
     bios = dmidecode.get_by_type(dmi, 'BIOS')
     system = dmidecode.get_by_type(dmi, 'System')
+
     if 'Hyper-V' in bios[0]['Version'] or \
-      'Xen' in bios[0]['Version'] or \
-      'VirtualBox' in bios[0]['Version'] or \
-      'VMware' in system[0]['Manufacturer']:
+       'Xen' in bios[0]['Version'] or \
+       'Google Compute Engine' in system[0]['Product Name'] or \
+       'VirtualBox' in bios[0]['Version'] or \
+       'VMware' in system[0]['Manufacturer']:
         return True
     return False
+
 
 class VirtualMachine(object):
     def __init__(self, dmi=None):
