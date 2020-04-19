@@ -1,3 +1,5 @@
+import socket
+import subprocess
 from shutil import which
 
 
@@ -29,3 +31,9 @@ def get_vendor(name):
         if name.upper().startswith(key):
             return value
     return name
+
+
+def get_hostname(config):
+    if config.hostname_cmd is None:
+        return '{}'.format(socket.gethostname())
+    return subprocess.getoutput(config.hostname_cmd)

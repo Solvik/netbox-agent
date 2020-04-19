@@ -6,7 +6,7 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 
 # Features
 
-* Create servers, chassis and blade through standard tools (`dmidecode`)
+* Create virtual machines, servers, chassis and blade through standard tools (`dmidecode`)
 * Create physical, bonding and vlan network interfaces with IPs (IPv4 & IPv6)
 * Create IPMI interface if found
 * Create or get existing VLAN and associate it to interfaces
@@ -52,6 +52,12 @@ network:
   # enable auto-cabling
   lldp: true
 
+# virtual:
+#   # not mandatory, can be guessed
+#   enabled: True
+#   # see https://netbox.company.com/virtualization/clusters/
+#   cluster_name: my_vm_cluster
+
 datacenter_location:
  driver: "cmd:cat /etc/qualification | tr [a-z] [A-Z]"
  regex: "DATACENTER: (?P<datacenter>[A-Za-z0-9]+)"
@@ -93,6 +99,14 @@ In order to handle this case, user need to set Netbox IP's mode to `Anycast` so 
 # Hardware
 
 Tested on:
+
+## Virtual Machines
+
+* Hyper-V
+* VMWare
+* VirtualBox
+* AWS
+* GCP
 
 ## Dell Inc.
 
