@@ -13,7 +13,7 @@ setup(
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     use_scm_version=True,
     install_requires=[
-        'pynetbox==4.2.4',
+        'pynetbox==4.3.1',
         'netaddr==0.7.19',
         'netifaces==0.10.9',
         'pyyaml==5.3.1',
