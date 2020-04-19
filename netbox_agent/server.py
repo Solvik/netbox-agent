@@ -229,13 +229,15 @@ class ServerBase():
 
     def netbox_create_or_update(self, config):
         """
-        Netbox method to update info about our server/blade
+        Netbox method to create or update info about our server/blade
 
         Handle:
-        * new chasis for a blade
-        * new slot for a bblade
+        * new chassis for a blade
+        * new slot for a blade
         * hostname update
-        * new network infos
+        * Network infos
+        * Inventory management
+        * PSU management
         """
         datacenter = self.get_netbox_datacenter()
         rack = self.get_netbox_rack()
