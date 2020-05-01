@@ -51,7 +51,7 @@ class LocationBase():
 
 
 class Tenant(LocationBase):
-    def __init_(self):
+    def __init__(self):
         driver = config.tenant.driver.split(':')[0] if \
             config.tenant.driver else None
         driver_value = ':'.join(config.tenant.driver.split(':')[1:]) if \
