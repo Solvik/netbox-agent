@@ -1,6 +1,8 @@
 import logging
 import subprocess
 
+from netaddr import IPNetwork
+
 
 class IPMI():
     """
@@ -40,11 +42,27 @@ class IPMI():
             logging.error('Cannot get ipmi info: {}'.format(self.output))
 
     def parse(self):
-        ret = {}
+        _ipmi = {}
         if self.ret != 0:
-            return ret
+            return _ipmi
+
         for line in self.output.splitlines():
             key = line.split(':')[0].strip()
+            if key not in ['802.1q VLAN ID', 'IP Address', 'Subnet Mask', 'MAC Address']:
+                continue
             value = ':'.join(line.split(':')[1:]).strip()
-            ret[key] = value
+            _ipmi[key] = value
+
+        ret = {}
+        ret['name'] = 'IPMI'
+        ret['bonding'] = False
+        ret['mac'] = _ipmi['MAC Address']
+        ret['vlan'] = int(_ipmi['802.1q VLAN ID']) \
+            if _ipmi['802.1q VLAN ID'] != 'Disabled' else None
+        ip = _ipmi['IP Address']
+        netmask = _ipmi['Subnet Mask']
+        address = str(IPNetwork('{}/{}'.format(ip, netmask)))
+
+        ret['ip'] = [address]
+        ret['ipmi'] = True
         return ret

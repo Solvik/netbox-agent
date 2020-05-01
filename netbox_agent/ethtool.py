@@ -65,11 +65,11 @@ class Ethtool():
 
     def _parse_ethtool_module_output(self):
         status, output = subprocess.getstatusoutput('ethtool -m {}'.format(self.interface))
-        if status != 0:
-            return {}
-        r = re.search(r'Identifier.*\((\w+)\)', output)
-        if r and len(r.groups()) > 0:
-            return {'form_factor': r.groups()[0]}
+        if status == 0:
+            r = re.search(r'Identifier.*\((\w+)\)', output)
+            if r and len(r.groups()) > 0:
+                return {'form_factor': r.groups()[0]}
+        return {}
 
     def parse(self):
         if which('ethtool') is None:
