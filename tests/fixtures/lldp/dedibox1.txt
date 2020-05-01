@@ -1,0 +1,8 @@
+lldp.enp1s0f0.via=LLDP
+lldp.enp1s0f0.rid=1
+lldp.enp1s0f0.age=145 days, 00:00:39
+lldp.enp1s0f0.chassis.mac=00:07:cb:0b:6c:d7
+lldp.enp1s0f0.chassis.name=s120-f3-2.itx4
+lldp.enp1s0f0.chassis.mgmt-ip=10.48.16.15
+lldp.enp1s0f0.port.ifname=RJ-9
+lldp.enp1s0f0.port.ttl=120

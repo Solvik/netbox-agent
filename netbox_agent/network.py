@@ -1,55 +1,46 @@
-from itertools import chain
 import logging
 import os
 import re
+from itertools import chain
 
-from netaddr import IPAddress, IPNetwork
 import netifaces
+from netaddr import IPAddress
 
-from netbox_agent.config import netbox_instance as nb, config
+from netbox_agent.config import config
+from netbox_agent.config import netbox_instance as nb
 from netbox_agent.ethtool import Ethtool
 from netbox_agent.ipmi import IPMI
 from netbox_agent.lldp import LLDP
 
-IFACE_TYPE_100ME_FIXED = 800
-IFACE_TYPE_1GE_FIXED = 1000
-IFACE_TYPE_1GE_GBIC = 1050
-IFACE_TYPE_1GE_SFP = 1100
-IFACE_TYPE_2GE_FIXED = 1120
-IFACE_TYPE_5GE_FIXED = 1130
-IFACE_TYPE_10GE_FIXED = 1150
-IFACE_TYPE_10GE_CX4 = 1170
-IFACE_TYPE_10GE_SFP_PLUS = 1200
-IFACE_TYPE_10GE_XFP = 1300
-IFACE_TYPE_10GE_XENPAK = 1310
-IFACE_TYPE_10GE_X2 = 1320
-IFACE_TYPE_25GE_SFP28 = 1350
-IFACE_TYPE_40GE_QSFP_PLUS = 1400
-IFACE_TYPE_50GE_QSFP28 = 1420
-IFACE_TYPE_100GE_CFP = 1500
-IFACE_TYPE_100GE_CFP2 = 1510
-IFACE_TYPE_100GE_CFP4 = 1520
-IFACE_TYPE_100GE_CPAK = 1550
-IFACE_TYPE_100GE_QSFP28 = 1600
-IFACE_TYPE_200GE_CFP2 = 1650
-IFACE_TYPE_200GE_QSFP56 = 1700
-IFACE_TYPE_400GE_QSFP_DD = 1750
-IFACE_TYPE_OTHER = 32767
-IFACE_TYPE_LAG = 200
 
-IPADDRESS_ROLE_ANYCAST = 30
-
-
-class Network():
+class Network(object):
     def __init__(self, server, *args, **kwargs):
         self.nics = []
 
-        self.server = server
-        self.device = self.server.get_netbox_server()
         self.lldp = LLDP() if config.network.lldp else None
-        self.scan()
+        self.nics = self.scan()
+        self.ipmi = None
+        self.dcim_choices = {}
+        dcim_c = nb.dcim.choices()
+
+        for choice in dcim_c:
+            self.dcim_choices[choice] = {}
+            for c in dcim_c[choice]:
+                self.dcim_choices[choice][c['label']] = c['value']
+
+        self.ipam_choices = {}
+        ipam_c = nb.ipam.choices()
+
+        for choice in ipam_c:
+            self.ipam_choices[choice] = {}
+            for c in ipam_c[choice]:
+                self.ipam_choices[choice][c['label']] = c['value']
+
+    def get_network_type():
+        return NotImplementedError
 
     def scan(self):
+        nics = []
         for interface in os.listdir('/sys/class/net/'):
             # ignore if it's not a link (ie: bonding_masters etc)
             if not os.path.islink('/sys/class/net/{}'.format(interface)):
@@ -107,13 +98,14 @@ class Network():
                         x['addr'],
                         IPAddress(x['netmask']).netmask_bits()
                     ) for x in ip_addr
-                    ] if ip_addr else None,  # FIXME: handle IPv6 addresses
+                ] if ip_addr else None,  # FIXME: handle IPv6 addresses
                 'ethtool': Ethtool(interface).parse(),
                 'vlan': vlan,
                 'bonding': bonding,
                 'bonding_slaves': bonding_slaves,
             }
-            self.nics.append(nic)
+            nics.append(nic)
+        return nics
 
     def _set_bonding_interfaces(self):
         bonding_nics = (x for x in self.nics if x['bonding'])
@@ -141,49 +133,45 @@ class Network():
 
     def get_netbox_network_card(self, nic):
         if nic['mac'] is None:
-            interface = nb.dcim.interfaces.get(
-                device_id=self.device.id,
+            interface = self.nb_net.interfaces.get(
                 name=nic['name'],
+                **self.custom_arg_id,
             )
         else:
-            interface = nb.dcim.interfaces.get(
-                device_id=self.device.id,
+            interface = self.nb_net.interfaces.get(
                 mac_address=nic['mac'],
                 name=nic['name'],
+                **self.custom_arg_id,
             )
         return interface
 
     def get_netbox_network_cards(self):
-        return nb.dcim.interfaces.filter(
-            device_id=self.device.id,
-            mgmt_only=False,
+        return self.nb_net.interfaces.filter(
+            **self.custom_arg_id,
         )
 
     def get_netbox_type_for_nic(self, nic):
+        if self.get_network_type() == 'virtual':
+            return self.dcim_choices['interface:type']['Virtual']
+
         if nic.get('bonding'):
-            return IFACE_TYPE_LAG
+            return self.dcim_choices['interface:type']['Link Aggregation Group (LAG)']
+
+        if nic.get('bonding'):
+            return self.dcim_choices['interface:type']['Link Aggregation Group (LAG)']
         if nic.get('ethtool') is None:
-            return IFACE_TYPE_OTHER
+            return self.dcim_choices['interface:type']['Other']
+
         if nic['ethtool']['speed'] == '10000Mb/s':
             if nic['ethtool']['port'] == 'FIBRE':
-                return IFACE_TYPE_10GE_SFP_PLUS
-            return IFACE_TYPE_10GE_FIXED
+                return self.dcim_choices['interface:type']['SFP+ (10GE)']
+            return self.dcim_choices['interface:type']['10GBASE-T (10GE)']
+
         elif nic['ethtool']['speed'] == '1000Mb/s':
             if nic['ethtool']['port'] == 'FIBRE':
-                return IFACE_TYPE_1GE_SFP
-            return IFACE_TYPE_1GE_FIXED
-        return IFACE_TYPE_OTHER
-
-    def get_ipmi(self):
-        ipmi = IPMI().parse()
-        return ipmi
-
-    def get_netbox_ipmi(self):
-        ipmi = self.get_ipmi()
-        mac = ipmi['MAC Address']
-        return nb.dcim.interfaces.get(
-            mac=mac
-        )
+                return self.dcim_choices['interface:type']['SFP (1GE)']
+            return self.dcim_choices['interface:type']['1000BASE-T (1GE)']
+        return self.dcim_choices['interface:type']['Other']
 
     def get_or_create_vlan(self, vlan_id):
         # FIXME: we may need to specify the datacenter
@@ -214,14 +202,16 @@ class Network():
             interface.untagged_vlan = None
         # if it's a vlan interface
         elif vlan_id and (
-                interface.mode is None or interface.mode.value != 200 or
-                len(interface.tagged_vlans) != 1 or
-                interface.tagged_vlans[0].vid != vlan_id):
+                interface.mode is None or
+                type(interface.mode) is not int and (
+                    interface.mode.value == self.dcim_choices['interface:mode']['Access'] or
+                    len(interface.tagged_vlans) != 1 or
+                    interface.tagged_vlans[0].vid != vlan_id)):
             logging.info('Resetting tagged VLAN(s) on interface {interface}'.format(
                 interface=interface))
             update = True
             nb_vlan = self.get_or_create_vlan(vlan_id)
-            interface.mode = 200
+            interface.mode = self.dcim_choices['interface:mode']['Tagged']
             interface.tagged_vlans = [nb_vlan] if nb_vlan else []
             interface.untagged_vlan = None
         # if lldp reports a vlan-id with pvid
@@ -229,52 +219,16 @@ class Network():
             pvid_vlan = [key for (key, value) in lldp_vlan.items() if value['pvid']]
             if len(pvid_vlan) > 0 and (
                     interface.mode is None or
-                    interface.mode.value != 100 or
+                    interface.mode.value != self.dcim_choices['interface:mode']['Access'] or
                     interface.untagged_vlan is None or
                     interface.untagged_vlan.vid != int(pvid_vlan[0])):
                 logging.info('Resetting access VLAN on interface {interface}'.format(
                     interface=interface))
                 update = True
                 nb_vlan = self.get_or_create_vlan(pvid_vlan[0])
-                interface.mode = 100
+                interface.mode = self.dcim_choices['interface:mode']['Access']
                 interface.untagged_vlan = nb_vlan.id
         return update, interface
-
-    def create_or_update_ipmi(self):
-        ipmi = self.get_ipmi()
-        mac = ipmi['MAC Address']
-        ip = ipmi['IP Address']
-        netmask = ipmi['Subnet Mask']
-        vlan = int(ipmi['802.1q VLAN ID']) if ipmi['802.1q VLAN ID'] != 'Disabled' else None
-        address = str(IPNetwork('{}/{}'.format(ip, netmask)))
-
-        interface = nb.dcim.interfaces.get(
-            device_id=self.device.id,
-            mgmt_only=True,
-            )
-        nic = {
-            'name': 'IPMI',
-            'mac': mac,
-            'vlan': vlan,
-            'ip': [address],
-        }
-        if interface is None:
-            interface = self.create_netbox_nic(nic, mgmt=True)
-            self.create_or_update_netbox_ip_on_interface(address, interface)
-        else:
-            # let the user chose the name of mgmt ?
-            # guess it with manufacturer (IDRAC, ILO, ...) ?
-            update = False
-            self.create_or_update_netbox_ip_on_interface(address, interface)
-            update, interface = self.reset_vlan_on_interface(nic, interface)
-            if mac.upper() != interface.mac_address:
-                logging.info('IPMI mac changed from {old_mac} to {new_mac}'.format(
-                    old_mac=interface.mac_address, new_mac=mac.upper()))
-                interface.mac_address = mac
-                update = True
-            if update:
-                interface.save()
-        return interface
 
     def create_netbox_nic(self, nic, mgmt=False):
         # TODO: add Optic Vendor, PN and Serial
@@ -283,12 +237,12 @@ class Network():
             name=nic['name'], mac=nic['mac'], device=self.device.name))
 
         nb_vlan = None
-        interface = nb.dcim.interfaces.create(
-            device=self.device.id,
+        interface = self.nb_net.interfaces.create(
             name=nic['name'],
             mac_address=nic['mac'],
             type=type,
             mgmt_only=mgmt,
+            **self.custom_arg,
         )
 
         if nic['vlan']:
@@ -304,7 +258,7 @@ class Network():
             for vid, vlan_infos in vlans.items():
                 nb_vlan = self.get_or_create_vlan(vid)
                 if vlan_infos.get('vid'):
-                    interface.mode = 100
+                    interface.mode = self.dcim_choices['interface:mode']['Access']
                     interface.untagged_vlan = nb_vlan.id
             interface.save()
 
@@ -366,7 +320,7 @@ class Network():
                         address=ip,
                         interface=interface.id,
                         status=1,
-                        role=IPADDRESS_ROLE_ANYCAST,
+                        role=self.ipam_choices['ip-address:role']['Anycast'],
                     )
                 return netbox_ip
             else:
@@ -387,6 +341,112 @@ class Network():
                 netbox_ip.interface = interface
                 netbox_ip.save()
         return netbox_ip
+
+    def create_or_update_netbox_network_cards(self):
+        if config.update_all is None or config.update_network is None:
+            return None
+        logging.debug('Creating/Updating NIC...')
+
+        # delete unknown interface
+        nb_nics = self.get_netbox_network_cards()
+        local_nics = [x['name'] for x in self.nics]
+        for nic in nb_nics[:]:
+            if nic.name not in local_nics:
+                logging.info('Deleting netbox interface {name} because not present locally'.format(
+                    name=nic.name
+                ))
+                nb_nics.remove(nic)
+                nic.delete()
+
+        # delete IP on netbox that are not known on this server
+        if len(nb_nics):
+            netbox_ips = nb.ipam.ip_addresses.filter(
+                interface_id=[x.id for x in nb_nics],
+            )
+            all_local_ips = list(chain.from_iterable([
+                x['ip'] for x in self.nics if x['ip'] is not None
+            ]))
+            for netbox_ip in netbox_ips:
+                if netbox_ip.address not in all_local_ips:
+                    logging.info('Unassigning IP {ip} from {interface}'.format(
+                        ip=netbox_ip.address, interface=netbox_ip.interface))
+                    netbox_ip.interface = None
+                    netbox_ip.save()
+
+        # update each nic
+        for nic in self.nics:
+            interface = self.get_netbox_network_card(nic)
+            if not interface:
+                logging.info('Interface {mac_address} not found, creating..'.format(
+                    mac_address=nic['mac'])
+                )
+                interface = self.create_netbox_nic(nic)
+
+            nic_update = 0
+            if nic['name'] != interface.name:
+                logging.info('Updating interface {interface} name to: {name}'.format(
+                    interface=interface, name=nic['name']))
+                interface.name = nic['name']
+                nic_update += 1
+
+            ret, interface = self.reset_vlan_on_interface(nic, interface)
+            nic_update += ret
+
+            _type = self.get_netbox_type_for_nic(nic)
+            if not interface.type or \
+               _type != interface.type.value:
+                logging.info('Interface type is wrong, resetting')
+                interface.type = _type
+                nic_update += 1
+
+            if hasattr(interface, 'lag') and interface.lag is not None:
+                local_lag_int = next(
+                    item for item in self.nics if item['name'] == interface.lag.name
+                )
+                if nic['name'] not in local_lag_int['bonding_slaves']:
+                    logging.info('Interface has no LAG, resetting')
+                    nic_update += 1
+                    interface.lag = None
+
+            # cable the interface
+            if config.network.lldp:
+                switch_ip = self.lldp.get_switch_ip(interface.name)
+                switch_interface = self.lldp.get_switch_port(interface.name)
+                if switch_ip and switch_interface:
+                    ret, interface = self.create_or_update_cable(
+                        switch_ip, switch_interface, interface
+                    )
+                    nic_update += ret
+
+            if nic['ip']:
+                # sync local IPs
+                for ip in nic['ip']:
+                    self.create_or_update_netbox_ip_on_interface(ip, interface)
+            if nic_update > 0:
+                interface.save()
+
+        self._set_bonding_interfaces()
+        logging.debug('Finished updating NIC!')
+
+
+class ServerNetwork(Network):
+    def __init__(self, server, *args, **kwargs):
+        super(ServerNetwork, self).__init__(server, args, kwargs)
+        self.ipmi = self.get_ipmi()
+        if self.ipmi:
+            self.nics.append(self.ipmi)
+        self.server = server
+        self.device = self.server.get_netbox_server()
+        self.nb_net = nb.dcim
+        self.custom_arg = {'device': self.device.id}
+        self.custom_arg_id = {'device_id': self.device.id}
+
+    def get_network_type(self):
+        return 'server'
+
+    def get_ipmi(self):
+        ipmi = IPMI().parse()
+        return ipmi
 
     def connect_interface_to_switch(self, switch_ip, switch_interface, nb_server_interface):
         logging.info('Interface {} is not connected to switch, trying to connect..'.format(
@@ -491,105 +551,22 @@ class Network():
                 )
         return update, nb_server_interface
 
-    def create_netbox_network_cards(self):
-        logging.debug('Creating NIC...')
-        for nic in self.nics:
-            interface = self.get_netbox_network_card(nic)
-            # if network doesn't exist we create it
-            if not interface:
-                new_interface = self.create_netbox_nic(nic)
-                if nic['ip']:
-                    # for each ip, we try to find it
-                    # assign the device's interface to it
-                    # or simply create it
-                    for ip in nic['ip']:
-                        self.create_or_update_netbox_ip_on_interface(ip, new_interface)
-        self._set_bonding_interfaces()
-        self.create_or_update_ipmi()
-        logging.debug('Finished creating NIC!')
 
-    def update_netbox_network_cards(self):
-        if config.update_all is None or config.update_network is None:
-            return None
-        logging.debug('Updating NIC...')
+class VirtualNetwork(Network):
+    def __init__(self, server, *args, **kwargs):
+        super(VirtualNetwork, self).__init__(server, args, kwargs)
+        self.server = server
+        self.device = self.server.get_netbox_vm()
+        self.nb_net = nb.virtualization
+        self.custom_arg = {'virtual_machine': self.device.id}
+        self.custom_arg_id = {'virtual_machine_id': self.device.id}
 
-        # delete unknown interface
-        nb_nics = self.get_netbox_network_cards()
-        local_nics = [x['name'] for x in self.nics]
-        for nic in nb_nics:
-            if nic.name not in local_nics:
-                logging.info('Deleting netbox interface {name} because not present locally'.format(
-                    name=nic.name
-                ))
-                nic.delete()
+        dcim_c = nb.virtualization.choices()
 
-        # delete IP on netbox that are not known on this server
-        netbox_ips = nb.ipam.ip_addresses.filter(
-            device_id=self.device.id,
-            interface_id=[x.id for x in nb_nics],
-        )
-        all_local_ips = list(chain.from_iterable([
-            x['ip'] for x in self.nics if x['ip'] is not None
-        ]))
-        for netbox_ip in netbox_ips:
-            if netbox_ip.address not in all_local_ips:
-                logging.info('Unassigning IP {ip} from {interface}'.format(
-                    ip=netbox_ip.address, interface=netbox_ip.interface))
-                netbox_ip.interface = None
-                netbox_ip.save()
+        for choice in dcim_c:
+            self.dcim_choices[choice] = {}
+            for c in dcim_c[choice]:
+                self.dcim_choices[choice][c['label']] = c['value']
 
-        # update each nic
-        for nic in self.nics:
-            interface = self.get_netbox_network_card(nic)
-            if not interface:
-                logging.info('Interface {mac_address} not found, creating..'.format(
-                    mac_address=nic['mac'])
-                )
-                interface = self.create_netbox_nic(nic)
-
-            nic_update = 0
-            if nic['name'] != interface.name:
-                logging.info('Updating interface {interface} name to: {name}'.format(
-                    interface=interface, name=nic['name']))
-                interface.name = nic['name']
-                nic_update += 1
-
-            ret, interface = self.reset_vlan_on_interface(nic, interface)
-            nic_update += ret
-
-            type = self.get_netbox_type_for_nic(nic)
-            if not interface.type or \
-               type != interface.type.value:
-                logging.info('Interface type is wrong, resetting')
-                interface.type = type
-                nic_update += 1
-
-            if interface.lag is not None:
-                local_lag_int = next(
-                    item for item in self.nics if item['name'] == interface.lag.name
-                )
-                if nic['name'] not in local_lag_int['bonding_slaves']:
-                    logging.info('Interface has no LAG, resetting')
-                    nic_update += 1
-                    interface.lag = None
-
-            # cable the interface
-            if config.network.lldp:
-                switch_ip = self.lldp.get_switch_ip(interface.name)
-                switch_interface = self.lldp.get_switch_port(interface.name)
-                if switch_ip and switch_interface:
-                    ret, interface = self.create_or_update_cable(
-                        switch_ip, switch_interface, interface
-                    )
-                    nic_update += ret
-
-            if nic['ip']:
-                # sync local IPs
-                for ip in nic['ip']:
-                    self.create_or_update_netbox_ip_on_interface(ip, interface)
-            if nic_update > 0:
-                interface.save()
-
-        self._set_bonding_interfaces()
-        self.create_or_update_ipmi()
-        logging.debug('Finished updating NIC!')
+    def get_network_type(self):
+        return 'virtual'

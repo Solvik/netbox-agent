@@ -1,13 +1,15 @@
 import logging
-import pynetbox
 import re
 
-from netbox_agent.config import netbox_instance as nb, config
-from netbox_agent.misc import is_tool, get_vendor
+import pynetbox
+
+from netbox_agent.config import config
+from netbox_agent.config import netbox_instance as nb
+from netbox_agent.lshw import LSHW
+from netbox_agent.misc import get_vendor, is_tool
 from netbox_agent.raid.hp import HPRaid
 from netbox_agent.raid.omreport import OmreportRaid
 from netbox_agent.raid.storcli import StorcliRaid
-from netbox_agent.lshw import LSHW
 
 INVENTORY_TAG = {
     'cpu': {'name': 'hw:cpu', 'slug': 'hw-cpu'},
@@ -16,7 +18,7 @@ INVENTORY_TAG = {
     'memory': {'name': 'hw:memory', 'slug': 'hw-memory'},
     'motherboard': {'name': 'hw:motherboard', 'slug': 'hw-motherboard'},
     'raid_card': {'name': 'hw:raid_card', 'slug': 'hw-raid-card'},
-    }
+}
 
 
 class Inventory():
@@ -132,8 +134,8 @@ class Inventory():
 
         motherboards = self.get_hw_motherboards()
         nb_motherboards = self.get_netbox_inventory(
-                device_id=self.device_id,
-                tag=INVENTORY_TAG['motherboard']['slug'])
+            device_id=self.device_id,
+            tag=INVENTORY_TAG['motherboard']['slug'])
 
         for nb_motherboard in nb_motherboards:
             if nb_motherboard.serial not in [x['serial'] for x in motherboards]:
@@ -169,8 +171,8 @@ class Inventory():
 
     def do_netbox_interfaces(self):
         nb_interfaces = self.get_netbox_inventory(
-                device_id=self.device_id,
-                tag=INVENTORY_TAG['interface']['slug'])
+            device_id=self.device_id,
+            tag=INVENTORY_TAG['interface']['slug'])
         interfaces = self.lshw.interfaces
 
         # delete interfaces that are in netbox but not locally
@@ -269,9 +271,9 @@ class Inventory():
         """
 
         nb_raid_cards = self.get_netbox_inventory(
-                device_id=self.device_id,
-                tag=[INVENTORY_TAG['raid_card']['slug']]
-                )
+            device_id=self.device_id,
+            tag=[INVENTORY_TAG['raid_card']['slug']]
+        )
         raid_cards = self.get_raid_cards()
 
         # delete cards that are in netbox but not locally
@@ -296,7 +298,7 @@ class Inventory():
 
         non_raid_disks = [
             'MR9361-8i',
-            ]
+        ]
 
         if size is None and logicalname is None or \
            'virtual' in product.lower() or 'logical' in product.lower() or \
@@ -321,7 +323,7 @@ class Inventory():
 
             d = {}
             d["name"] = ""
-            d['Size'] = '{} GB'.format(int(size/1024/1024/1024))
+            d['Size'] = '{} GB'.format(int(size / 1024 / 1024 / 1024))
             d['logicalname'] = logicalname
             d['description'] = description
             d['SN'] = serial
@@ -378,8 +380,8 @@ class Inventory():
 
     def do_netbox_disks(self):
         nb_disks = self.get_netbox_inventory(
-                device_id=self.device_id,
-                tag=INVENTORY_TAG['disk']['slug'])
+            device_id=self.device_id,
+            tag=INVENTORY_TAG['disk']['slug'])
         disks = self.get_hw_disks()
 
         # delete disks that are in netbox but not locally
@@ -421,9 +423,9 @@ class Inventory():
     def do_netbox_memories(self):
         memories = self.lshw.memories
         nb_memories = self.get_netbox_inventory(
-                device_id=self.device_id,
-                tag=INVENTORY_TAG['memory']['slug']
-                )
+            device_id=self.device_id,
+            tag=INVENTORY_TAG['memory']['slug']
+        )
 
         for nb_memory in nb_memories:
             if nb_memory.serial not in [x['serial'] for x in memories]:
@@ -436,18 +438,7 @@ class Inventory():
             if memory.get('serial') not in [x.serial for x in nb_memories]:
                 self.create_netbox_memory(memory)
 
-    def create(self):
-        if config.inventory is None:
-            return False
-        self.do_netbox_cpus()
-        self.do_netbox_memories()
-        self.do_netbox_raid_cards()
-        self.do_netbox_disks()
-        self.do_netbox_interfaces()
-        self.do_netbox_motherboard()
-        return True
-
-    def update(self):
+    def create_or_update(self):
         if config.inventory is None or config.update_inventory is None:
             return False
         self.do_netbox_cpus()

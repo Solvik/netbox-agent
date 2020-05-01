@@ -1,7 +1,8 @@
 import logging
-import pynetbox
-import jsonargparse
 import sys
+
+import jsonargparse
+import pynetbox
 
 
 def get_config():
@@ -13,6 +14,8 @@ def get_config():
         ],
         prog='netbox_agent',
         description="Netbox agent to run on your infrastructure's servers",
+        env_prefix='NETBOX_AGENT_',
+        default_env=True
     )
     p.add_argument('-c', '--config', action=jsonargparse.ActionConfigFile)
 
@@ -27,6 +30,8 @@ def get_config():
     p.add_argument('--log_level', default='debug')
     p.add_argument('--netbox.url', help='Netbox URL')
     p.add_argument('--netbox.token', help='Netbox API Token')
+    p.add_argument('--virtual.enabled', action='store_true', help='Is a virtual machine or not')
+    p.add_argument('--virtual.cluster_name', help='Cluster name of VM')
     p.add_argument('--hostname_cmd', default=None,
                    help="Command to output hostname, used as Device's name in netbox")
     p.add_argument('--datacenter_location.driver',

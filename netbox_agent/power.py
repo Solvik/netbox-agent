@@ -1,5 +1,6 @@
 import logging
 
+import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import netbox_instance as nb
 
 PSU_DMI_TYPE = 39
@@ -16,7 +17,7 @@ class PowerSupply():
 
     def get_power_supply(self):
         power_supply = []
-        for psu in self.server.dmi.get_by_type(PSU_DMI_TYPE):
+        for psu in dmidecode.get_by_type(self.server.dmi, PSU_DMI_TYPE):
             if 'Present' not in psu['Status'] or psu['Status'] == 'Not Present':
                 continue
 
@@ -34,13 +35,13 @@ class PowerSupply():
                 'allocated_draw': None,
                 'maximum_draw': max_power,
                 'device': self.device_id,
-                })
+            })
         return power_supply
 
     def get_netbox_power_supply(self):
         return nb.dcim.power_ports.filter(
             device_id=self.device_id
-            )
+        )
 
     def create_or_update_power_supply(self):
         nb_psus = self.get_netbox_power_supply()
@@ -78,10 +79,10 @@ class PowerSupply():
             if psu['name'] not in [x.name for x in nb_psus]:
                 logging.info('Creating PSU {name} ({description}), {maximum_draw}W'.format(
                     **psu
-                    ))
+                ))
                 nb_psu = nb.dcim.power_ports.create(
                     **psu
-                    )
+                )
 
         return True
 

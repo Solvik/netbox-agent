@@ -1,6 +1,6 @@
 import re
-from shutil import which
 import subprocess
+from shutil import which
 
 #  Originally from https://github.com/opencoff/useful-scripts/blob/master/linktest.py
 
@@ -9,7 +9,7 @@ field_map = {
     'Supported ports': 'ports',
     'Supported link modes': 'sup_link_modes',
     'Supports auto-negotiation': 'sup_autoneg',
-    'Advertised link modes':  'adv_link_modes',
+    'Advertised link modes': 'adv_link_modes',
     'Advertised auto-negotiation': 'adv_autoneg',
     'Speed': 'speed',
     'Duplex': 'duplex',
@@ -31,6 +31,7 @@ class Ethtool():
     There is several bindings to have something proper, but it requires
     compilation and other requirements.
     """
+
     def __init__(self, interface, *args, **kwargs):
         self.interface = interface
 
@@ -54,7 +55,7 @@ class Ethtool():
                 if field not in field_map:
                     continue
                 field = field_map[field]
-                output = line[r+1:].strip()
+                output = line[r + 1:].strip()
                 fields[field] = output
             else:
                 if len(field) > 0 and \
@@ -63,14 +64,12 @@ class Ethtool():
         return fields
 
     def _parse_ethtool_module_output(self):
-        status, output = subprocess.getstatusoutput(
-                             'sudo /usr/sbin/ethtool -m {}'.format(self.interface)
-                         )
-        if status != 0:
-            return {}
-        r = re.search(r'Identifier.*\((\w+)\)', output)
-        if r and len(r.groups()) > 0:
-            return {'form_factor': r.groups()[0]}
+        status, output = subprocess.getstatusoutput('sudo ethtool -m {}'.format(self.interface))
+        if status == 0:
+            r = re.search(r'Identifier.*\((\w+)\)', output)
+            if r and len(r.groups()) > 0:
+                return {'form_factor': r.groups()[0]}
+        return {}
 
     def parse(self):
         if which('ethtool') is None:

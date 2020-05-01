@@ -1,3 +1,4 @@
+import netbox_agent.dmidecode as dmidecode
 from netbox_agent.server import ServerBase
 
 
@@ -19,7 +20,7 @@ class HPHost(ServerBase):
         """
         # FIXME: make a dmidecode function get_by_dminame() ?
         if self.is_blade():
-            locator = self.dmi.get_by_type(204)
+            locator = dmidecode.get_by_type(self.dmi, 204)
             if self.get_product_name() == 'ProLiant BL460c Gen10':
                 locator = locator[0]['Strings']
                 return {
@@ -27,14 +28,14 @@ class HPHost(ServerBase):
                     'Enclosure Name': locator[0].strip(),
                     'Server Bay': locator[3].strip(),
                     'Enclosure Serial': locator[4].strip(),
-                    }
+                }
             return locator[0]
 
     def get_blade_slot(self):
         if self.is_blade():
             return 'Bay {}'.format(
                 int(self.hp_rack_locator['Server Bay'].strip())
-                )
+            )
         return None
 
     def get_chassis(self):

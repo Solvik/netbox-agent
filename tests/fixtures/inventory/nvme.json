@@ -1,0 +1,16 @@
+{
+  "Devices" : [
+    {
+      "DevicePath" : "/dev/nvme0n1",
+      "Firmware" : "10604103",
+      "Index" : 0,
+      "ModelNumber" : "KXG60ZNV1T02 NVMe TOSHIBA 1024GB",
+      "ProductName" : "Non-Volatile memory controller: Toshiba America Info Systems Device 0x011a",
+      "SerialNumber" : "19FA109SK07N",
+      "UsedBytes" : 1024209543168,
+      "MaximumLBA" : 2000409264,
+      "PhysicalSize" : 1024209543168,
+      "SectorSize" : 512
+    }
+  ]
+}

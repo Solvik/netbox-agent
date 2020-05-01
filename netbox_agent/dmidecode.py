@@ -1,9 +1,9 @@
+import logging
 import re as _re
 import subprocess as _subprocess
 import sys
 
 from netbox_agent.misc import is_tool
-import logging
 
 _handle_re = _re.compile('^Handle\\s+(.+),\\s+DMI\\s+type\\s+(\\d+),\\s+(\\d+)\\s+bytes$')
 _in_block_re = _re.compile('^\\t\\t(.+)$')
@@ -11,7 +11,7 @@ _record_re = _re.compile('\\t(.+):\\s+(.+)$')
 _record2_re = _re.compile('\\t(.+):$')
 
 _type2str = {
-    0:   'BIOS',
+    0: 'BIOS',
     1: 'System',
     2: 'Baseboard',
     3: 'Chassis',
@@ -60,19 +60,22 @@ for type_id, type_str in _type2str.items():
     _str2type[type_str] = type_id
 
 
-def parse():
+def parse(output=None):
     """
     parse the full output of the dmidecode
     command and return a dic containing the parsed information
     """
-    buffer = _execute_cmd()
+    if output:
+        buffer = output
+    else:
+        buffer = _execute_cmd()
     if isinstance(buffer, bytes):
         buffer = buffer.decode('utf-8')
     _data = _parse(buffer)
     return _data
 
 
-def get_by_type(type_id):
+def get_by_type(data, type_id):
     """
     filter the output of dmidecode per type
     0   BIOS
@@ -124,7 +127,6 @@ def get_by_type(type_id):
         if type_id is None:
             return None
 
-    data = parse()
     result = []
     for entry in data.values():
         if entry['DMIType'] == type_id:

@@ -1,8 +1,8 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name='netbox_agent',
-    version='0.3.1',
+    version='0.5.0',
     description='NetBox agent for server',
     long_description=open('README.md', encoding="utf-8").read(),
     url='https://github.com/solvik/netbox_agent',
@@ -13,12 +13,12 @@ setup(
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     use_scm_version=True,
     install_requires=[
-        'pynetbox==4.0.8',
+        'pynetbox==4.3.1',
         'netaddr==0.7.19',
         'netifaces==0.10.9',
-        'pyyaml==5.2',
-        'jsonargparse==2.9.0',
-        ],
+        'pyyaml==5.3.1',
+        'jsonargparse==2.27.0',
+    ],
     zip_safe=False,
     keywords=['netbox'],
     classifiers=[
