@@ -8,26 +8,9 @@ from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.inventory import Inventory
 from netbox_agent.location import Datacenter, Rack, Tenant
+from netbox_agent.misc import create_netbox_tags, get_device_type, get_device_role
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
-
-
-def get_device_role(role):
-    device_role = nb.dcim.device_roles.get(
-        name=role
-    )
-    if device_role is None:
-        raise Exception('DeviceRole "{}" does not exist, please create it'.format(role))
-    return device_role
-
-
-def get_device_type(type):
-    device_type = nb.dcim.device_types.get(
-        model=type
-    )
-    if device_type is None:
-        raise Exception('DeviceType "{}" does not exist, please create it'.format(type))
-    return device_type
 
 
 class ServerBase():
@@ -44,17 +27,9 @@ class ServerBase():
 
         self.network = None
 
-    def create_netbox_tags(self, tags):
-        for tag in tags:
-            nb_tag = nb.extras.tags.get(
-                name=tag
-            )
-
-            if not nb_tag:
-                nb_tag = nb.extras.tags.create(
-                    name=tag,
-                    slug=tag,
-                )
+        self.tags = list(set(config.device.tags.split(','))) if config.device.tags else []
+        if self.tags and len(self.tags):
+            create_netbox_tags(self.tags)
 
     def get_tenant(self):
         tenant = Tenant()
@@ -172,14 +147,11 @@ class ServerBase():
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
-            tags=tags,
+            tags=self.tags,
         )
         return new_chassis
 
     def _netbox_create_blade(self, chassis, datacenter, tenant, rack):
-        tags = config.device.tags.split(',')
-        self.create_netbox_tags(tags)
-
         device_role = get_device_role(config.device.blade_role)
         device_type = get_device_type(self.get_product_name())
         serial = self.get_service_tag()
@@ -197,14 +169,11 @@ class ServerBase():
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
-            tags=tags,
+            tags=self.tags,
         )
         return new_blade
 
     def _netbox_create_server(self, datacenter, tenant, rack):
-        tags = config.device.tags.split(",")
-        self.create_netbox_tags(tags)
-
         device_role = get_device_role(config.device.server_role)
         device_type = get_device_type(self.get_product_name())
         if not device_type:
@@ -221,7 +190,7 @@ class ServerBase():
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
-            tags=tags,
+            tags=self.tags,
         )
         return new_server
 
@@ -317,6 +286,10 @@ class ServerBase():
         if server.name != self.get_hostname():
             update += 1
             server.name = self.get_hostname()
+
+        if sorted(set(server.tags)) != sorted(set(self.tags)):
+            server.tags = self.tags
+            update += 1
 
         if config.update_all or config.update_location:
             ret, server = self.update_netbox_location(server)
