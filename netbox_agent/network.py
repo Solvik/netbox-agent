@@ -18,8 +18,6 @@ class Network(object):
         self.nics = []
 
         self.server = server
-        self.device = self.server.get_netbox_server()
-        self.datacenter = self.server.get_datacenter()
         self.tenant = self.server.get_netbox_tenant()
 
         self.lldp = LLDP() if config.network.lldp else None
@@ -183,7 +181,6 @@ class Network(object):
         # since users may have same vlan id in multiple dc
         vlan = nb.ipam.vlans.get(
             vid=vlan_id,
-            site=self.datacenter
         )
         if vlan is None:
             vlan = nb.ipam.vlans.create(
