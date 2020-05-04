@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='netbox_agent',
-    version='0.5.0',
+    version='0.6.0',
     description='NetBox agent for server',
     long_description=open('README.md', encoding="utf-8").read(),
     url='https://github.com/solvik/netbox_agent',
