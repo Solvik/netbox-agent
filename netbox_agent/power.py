@@ -29,8 +29,15 @@ class PowerSupply():
                 psu.get('Manufacturer', 'No Manufacturer').strip(),
                 psu.get('Name', 'No name').strip(),
             )
+
+            sn = psu.get('Serial Number', '').strip()
+            # Let's assume that if no serial and no power reported we skip it
+            if sn == '' and max_power == None:
+                continue
+            if sn == '':
+                sn = 'N/A'
             power_supply.append({
-                'name': psu.get('Serial Number', 'No S/N').strip(),
+                'name': sn,
                 'description': desc,
                 'allocated_draw': None,
                 'maximum_draw': max_power,
