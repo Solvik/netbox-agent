@@ -21,20 +21,20 @@ class Network(object):
         self.nics = self.scan()
         self.ipmi = None
         self.dcim_choices = {}
-        dcim_c = nb.dcim.choices()
-
-        for choice in dcim_c:
-            self.dcim_choices[choice] = {}
-            for c in dcim_c[choice]:
-                self.dcim_choices[choice][c['label']] = c['value']
+        dcim_c = nb.dcim.interfaces.choices()
+        for _choice_type in dcim_c:
+            key = 'interface:{}'.format(_choice_type)
+            self.dcim_choices[key] = {}
+            for choice in dcim_c[_choice_type]:
+                self.dcim_choices[key][choice['display_name']] = choice['value']
 
         self.ipam_choices = {}
-        ipam_c = nb.ipam.choices()
-
-        for choice in ipam_c:
-            self.ipam_choices[choice] = {}
-            for c in ipam_c[choice]:
-                self.ipam_choices[choice][c['label']] = c['value']
+        ipam_c = nb.ipam.ip_addresses.choices()
+        for _choice_type in ipam_c:
+            key = 'ip-address:{}'.format(_choice_type)
+            self.ipam_choices[key] = {}
+            for choice in ipam_c[_choice_type]:
+                self.ipam_choices[key][choice['display_name']] = choice['value']
 
     def get_network_type():
         return NotImplementedError
@@ -561,12 +561,12 @@ class VirtualNetwork(Network):
         self.custom_arg = {'virtual_machine': self.device.id}
         self.custom_arg_id = {'virtual_machine_id': self.device.id}
 
-        dcim_c = nb.virtualization.choices()
-
-        for choice in dcim_c:
-            self.dcim_choices[choice] = {}
-            for c in dcim_c[choice]:
-                self.dcim_choices[choice][c['label']] = c['value']
+        dcim_c = nb.virtualization.interfaces.choices()
+        for _choice_type in dcim_c:
+            key = 'interface:{}'.format(_choice_type)
+            self.dcim_choices[key] = {}
+            for choice in dcim_c[_choice_type]:
+                self.dcim_choices[key][choice['display_name']] = choice['value']
 
     def get_network_type(self):
         return 'virtual'
