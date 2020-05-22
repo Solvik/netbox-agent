@@ -139,7 +139,7 @@ class Inventory():
 
         for nb_motherboard in nb_motherboards:
             if nb_motherboard.serial not in [x['serial'] for x in motherboards]:
-                logging.info('Deleting unknown motherboard {vendor} {motherboard}/{serial}'.format(
+                logging.info('Deleting unknown motherboard {motherboard}/{serial}'.format(
                     motherboard=self.lshw.motherboard,
                     serial=nb_motherboard.serial,
                 ))
