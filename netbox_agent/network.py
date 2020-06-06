@@ -438,8 +438,8 @@ class ServerNetwork(Network):
         self.server = server
         self.device = self.server.get_netbox_server()
         self.nb_net = nb.dcim
-        self.custom_arg = {'device': self.device.id}
-        self.custom_arg_id = {'device_id': self.device.id}
+        self.custom_arg = {'device': getattr(self.device, "id", None)}
+        self.custom_arg_id = {'device_id': getattr(self.device, "id", None)}
 
     def get_network_type(self):
         return 'server'
@@ -558,8 +558,8 @@ class VirtualNetwork(Network):
         self.server = server
         self.device = self.server.get_netbox_vm()
         self.nb_net = nb.virtualization
-        self.custom_arg = {'virtual_machine': self.device.id}
-        self.custom_arg_id = {'virtual_machine_id': self.device.id}
+        self.custom_arg = {'virtual_machine': getattr(self.device, "id", None)}
+        self.custom_arg_id = {'virtual_machine_id': getattr(self.device, "id", None)}
 
         dcim_c = nb.virtualization.interfaces.choices()
         for _choice_type in dcim_c:
