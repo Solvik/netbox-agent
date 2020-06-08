@@ -129,7 +129,7 @@ class LSHW():
             d["id"] = dimm.get("id")
             d["serial"] = dimm.get("serial", 'N/A')
             d["vendor"] = dimm.get("vendor", 'N/A')
-            d["product"] = dimm.get("product")
+            d["product"] = dimm.get("product", 'N/A')
             d["size"] = dimm.get("size", 0) / 2 ** 20 / 1024
 
             self.memories.append(d)
