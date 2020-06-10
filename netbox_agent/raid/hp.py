@@ -60,7 +60,7 @@ def _get_dict(lines, start_index, indentation):
         if current_line_indentation == 0 and not product_name:
             i = i + 1
             continue
- 
+
         if current_line_indentation == indentation:
             current_item = current_line.lstrip(' ')
 
