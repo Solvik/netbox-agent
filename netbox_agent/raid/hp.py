@@ -54,6 +54,13 @@ def _get_dict(lines, start_index, indentation):
             continue
 
         current_line_indentation = _get_indentation(current_line)
+        # This check ignore some useless information that make
+        # crash the parsing
+        product_name = REGEXP_CONTROLLER_HP.search(current_line)
+        if current_line_indentation == 0 and not product_name:
+            i = i + 1
+            continue
+
         if current_line_indentation == indentation:
             current_item = current_line.lstrip(' ')
 
