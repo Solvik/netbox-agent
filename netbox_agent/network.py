@@ -80,10 +80,6 @@ class Network(object):
                         ip_addr.pop(i)
 
             mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
-            # Loopback lo
-            if mac == '00:00:00:00:00:00':
-                mac = None
-
             vlan = None
             if len(interface.split('.')) > 1:
                 vlan = int(interface.split('.')[1])
@@ -102,7 +98,7 @@ class Network(object):
 
             nic = {
                 'name': interface,
-                'mac': mac,
+                'mac': mac if mac != '00:00:00:00:00:00' else None,
                 'ip': [
                     '{}/{}'.format(
                         x['addr'],
@@ -255,15 +251,13 @@ class Network(object):
 
         params = {
             'name': nic['name'],
-            'mac_address': nic['mac'],
             'type': type,
             'mgmt_only': mgmt,
             **self.custom_arg,
         }
 
-        # Remove mac for virtual interface
-        if nic.get('virtual', False):
-            del params['mac_address']
+        if not nic.get('virtual', False):
+            params['mac_address'] = nic['mac']
 
         interface = self.nb_net.interfaces.create(**params)
 
