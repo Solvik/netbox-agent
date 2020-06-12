@@ -80,6 +80,10 @@ class Network(object):
                         ip_addr.pop(i)
 
             mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
+            # Loopback lo
+            if mac == '00:00:00:00:00:00':
+                mac = None
+
             vlan = None
             if len(interface.split('.')) > 1:
                 vlan = int(interface.split('.')[1])
@@ -98,7 +102,7 @@ class Network(object):
 
             nic = {
                 'name': interface,
-                'mac': mac if mac != '00:00:00:00:00:00' else None,
+                'mac': mac,
                 'ip': [
                     '{}/{}'.format(
                         x['addr'],
@@ -167,7 +171,7 @@ class Network(object):
         if nic.get('bonding'):
             return self.dcim_choices['interface:type']['Link Aggregation Group (LAG)']
 
-        if nic.get('virtual') or nic.get('mac') is None:
+        if nic.get('virtual'):
             return self.dcim_choices['interface:type']['Virtual']
 
         if nic.get('ethtool') is None:
@@ -257,7 +261,7 @@ class Network(object):
             **self.custom_arg,
         }
 
-        # Remove mac for virtual
+        # Remove mac for virtual interface
         if nic.get('virtual', False):
             del params['mac_address']
 
