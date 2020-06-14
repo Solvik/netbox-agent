@@ -221,3 +221,11 @@ If you want to run the agent while adding features or just for debugging purpose
 # cd netbox-agent
 # python3 -m netbox_agent.cli --register
 ```
+
+On a personal note, I use the docker image from [netbox-community/netbox-docker](https://github.com/netbox-community/netbox-docker)
+```
+# git clone https://github.com/netbox-community/netbox-docker
+# cd netbox-docker
+# docker-compose pull
+# docker-compose up 
+```
