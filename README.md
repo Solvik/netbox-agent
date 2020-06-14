@@ -31,6 +31,8 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 - ipmitool
 - lldpd
 - lshw
+
+## Inventory requirement
 - hpassacli
 - storcli
 - omreport
