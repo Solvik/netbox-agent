@@ -44,6 +44,12 @@ Since it uses `ethtool` and parses `/sys/` directory, it's not compatible with *
 * Netbox `>=2.6.0,<=2.6.2` has a caching problem ; if the cache lifetime is too high, the script can get stale data after modification.
 We advise to set `CACHE_TIME` to `0`.
 
+# Installation
+
+```
+# pip3 install netbox-agent
+```
+
 # Usage
 
 The agent can be run from a shell and get its configuration from either the configuration file or environment variables.
