@@ -90,6 +90,12 @@ class Network(object):
                 bonding_slaves = open(
                     '/sys/class/net/{}/bonding/slaves'.format(interface)
                 ).read().split()
+
+            # Tun and TAP support
+            virtual = os.path.isfile(
+                '/sys/class/net/{}/tun_flags'.format(interface)
+            )
+
             nic = {
                 'name': interface,
                 'mac': mac if mac != '00:00:00:00:00:00' else None,
@@ -100,6 +106,7 @@ class Network(object):
                     ) for x in ip_addr
                 ] if ip_addr else None,  # FIXME: handle IPv6 addresses
                 'ethtool': Ethtool(interface).parse(),
+                'virtual': virtual,
                 'vlan': vlan,
                 'bonding': bonding,
                 'bonding_slaves': bonding_slaves,
@@ -159,6 +166,10 @@ class Network(object):
 
         if nic.get('bonding'):
             return self.dcim_choices['interface:type']['Link Aggregation Group (LAG)']
+
+        if nic.get('virtual'):
+            return self.dcim_choices['interface:type']['Virtual']
+
         if nic.get('ethtool') is None:
             return self.dcim_choices['interface:type']['Other']
 
@@ -237,13 +248,18 @@ class Network(object):
             name=nic['name'], mac=nic['mac'], device=self.device.name))
 
         nb_vlan = None
-        interface = self.nb_net.interfaces.create(
-            name=nic['name'],
-            mac_address=nic['mac'],
-            type=type,
-            mgmt_only=mgmt,
+
+        params = {
+            'name': nic['name'],
+            'type': type,
+            'mgmt_only': mgmt,
             **self.custom_arg,
-        )
+        }
+
+        if not nic.get('virtual', False):
+            params['mac_address'] = nic['mac']
+
+        interface = self.nb_net.interfaces.create(**params)
 
         if nic['vlan']:
             nb_vlan = self.get_or_create_vlan(nic['vlan'])
