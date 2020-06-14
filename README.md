@@ -39,6 +39,27 @@ Since it uses `ethtool` and parses `/sys/` directory, it's not compatible with *
 * Netbox `>=2.6.0,<=2.6.2` has a caching problem ; if the cache lifetime is too high, the script can get stale data after modification.
 We advise to set `CACHE_TIME` to `0`.
 
+# Usage
+
+```
+# netbox_agent -c /etc/netbox_agent.yml --register
+INFO:root:Creating chassis blade (serial: QTFCQ574502EF)
+INFO:root:Creating blade (serial: QTFCQ574502D2) myserver on chassis QTFCQ574502EF
+INFO:root:Setting device (QTFCQ574502D2) new slot on Slot 9 (Chassis QTFCQ574502EF)..
+INFO:root:Interface a8:1e:84:f2:9e:6a not found, creating..
+INFO:root:Creating NIC enp1s0f1 (a8:1e:84:f2:9e:6a) on myserver
+INFO:root:Interface 02:42:7a:89:cf:a4 not found, creating..
+INFO:root:Creating NIC br-07ea1e4a2f0e (02:42:7a:89:cf:a4) on myserver
+INFO:root:Create new IP 172.19.0.1/16 on br-07ea1e4a2f0e
+INFO:root:Interface a8:1e:84:f2:9e:69 not found, creating..
+INFO:root:Creating NIC enp1s0f0 (a8:1e:84:f2:9e:69) on myserver
+INFO:root:Create new IP 195.154.81.10/24 on enp1s0f0
+INFO:root:Create new IP fe80::aa1e:84ff:fef2:9e69/64 on enp1s0f0
+INFO:root:Interface a8:1e:84:cd:9d:d6 not found, creating..
+INFO:root:Creating NIC IPMI (a8:1e:84:cd:9d:d6) on myserver
+INFO:root:Create new IP 10.191.122.10/24 on IPMI
+```
+
 # Configuration
 
 ```
@@ -47,11 +68,14 @@ netbox:
  token: supersecrettoken
 
 network:
+  # Regex to ignore interfaces 
   ignore_interfaces: "(dummy.*|docker.*)"
+  # Regex to ignore IP addresses
   ignore_ips: (127\.0\.0\..*)
-  # enable auto-cabling
+  # enable auto-cabling by parsing LLDP answers
   lldp: true
 
+## Enable virtual machine support 
 # virtual:
 #   # not mandatory, can be guessed
 #   enabled: True
@@ -75,6 +99,7 @@ rack_location:
 # driver: "file:/tmp/datacenter"
 # regex: "(.*)"
 
+# Enable local inventory reporting 
 inventory: true
 ```
 
