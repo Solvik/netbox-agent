@@ -37,13 +37,6 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 - storcli
 - omreport
 
-# Known limitations
-
-* The project is only compatible with Linux.
-Since it uses `ethtool` and parses `/sys/` directory, it's not compatible with *BSD distributions.
-* Netbox `>=2.6.0,<=2.6.2` has a caching problem ; if the cache lifetime is too high, the script can get stale data after modification.
-We advise to set `CACHE_TIME` to `0`.
-
 # Installation
 
 ```
@@ -53,6 +46,7 @@ We advise to set `CACHE_TIME` to `0`.
 # Usage
 
 The agent can be run from a shell and get its configuration from either the configuration file or environment variables.
+
 Configuration values are overridden based on the following precedence: command line arguments (might include config file) > environment variables > default config file > defaults.
 
 ```
@@ -74,7 +68,7 @@ INFO:root:Creating NIC IPMI (a8:1e:84:cd:9d:d6) on myserver
 INFO:root:Create new IP 10.191.122.10/24 on IPMI
 ```
 
-If you need, you can update only specifics infos like:
+If you need, you can update only specific informations like:
 * Network
 * Inventory
 * Location
@@ -217,6 +211,13 @@ Feel free to send me a dmidecode output for Supermicro's blade!
 ### Pizzas
 
 * Nothing ATM, feel free to send me a dmidecode or make a PR!
+
+# Known limitations
+
+* The project is only compatible with Linux.
+Since it uses `ethtool` and parses `/sys/` directory, it's not compatible with *BSD distributions.
+* Netbox `>=2.6.0,<=2.6.2` has a caching problem ; if the cache lifetime is too high, the script can get stale data after modification.
+We advise to set `CACHE_TIME` to `0`.
 
 # Developing
 
