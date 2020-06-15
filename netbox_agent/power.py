@@ -32,7 +32,7 @@ class PowerSupply():
 
             sn = psu.get('Serial Number', '').strip()
             # Let's assume that if no serial and no power reported we skip it
-            if sn == '' and max_power == None:
+            if sn == '' and max_power is None:
                 continue
             if sn == '':
                 sn = 'N/A'
