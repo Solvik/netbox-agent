@@ -91,18 +91,16 @@ class LSHW():
                     encoding='utf8')
             )
 
-            d = {}
-            d["vendor"] = obj["vendor"]
-            d["version"] = obj["version"]
-            d["product"] = obj["product"]
+            for device in nvme["Devices"]:
+                d = {}
+                d['logicalname'] = device["DevicePath"]
+                d['product'] = device["ModelNumber"]
+                d['serial'] = device["SerialNumber"]
+                d["version"] = device["Firmware"]
+                d['size'] = device["UsedSize"]
+                d['description'] = "NVME Disk"
 
-            d['description'] = "NVME Disk"
-            d['product'] = nvme["Devices"][0]["ModelNumber"]
-            d['size'] = nvme["Devices"][0]["PhysicalSize"]
-            d['serial'] = nvme["Devices"][0]["SerialNumber"]
-            d['logicalname'] = nvme["Devices"][0]["DevicePath"]
-
-            self.disks.append(d)
+                self.disks.append(d)
 
     def find_cpus(self, obj):
         if "product" in obj:
