@@ -15,7 +15,7 @@ setup(
     use_scm_version=True,
     install_requires=[
         'pynetbox==4.3.1',
-        'netaddr==0.7.19',
+        'netaddr==0.7.20',
         'netifaces==0.10.9',
         'pyyaml==5.3.1',
         'jsonargparse==2.31.0',
