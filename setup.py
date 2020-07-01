@@ -2,9 +2,10 @@ from setuptools import find_packages, setup
 
 setup(
     name='netbox_agent',
-    version='0.5.0',
+    version='0.6.1',
     description='NetBox agent for server',
     long_description=open('README.md', encoding="utf-8").read(),
+    long_description_content_type='text/markdown',
     url='https://github.com/solvik/netbox_agent',
     author='Solvik Blum',
     author_email='solvik@solvik.fr',
@@ -14,10 +15,10 @@ setup(
     use_scm_version=True,
     install_requires=[
         'pynetbox==4.3.1',
-        'netaddr==0.7.19',
+        'netaddr==0.7.20',
         'netifaces==0.10.9',
         'pyyaml==5.3.1',
-        'jsonargparse==2.25.3',
+        'jsonargparse==2.31.0',
     ],
     zip_safe=False,
     keywords=['netbox'],

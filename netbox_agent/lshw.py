@@ -86,21 +86,21 @@ class LSHW():
 
         elif "nvme" in obj["configuration"]["driver"]:
             nvme = json.loads(
-                            subprocess.check_output(["nvme", '-list', '-o', 'json'],
-                            encoding='utf8'))  # noqa: E128
+                subprocess.check_output(
+                    ["nvme", '-list', '-o', 'json'],
+                    encoding='utf8')
+            )
 
-            d = {}
-            d["vendor"] = obj["vendor"]
-            d["version"] = obj["version"]
-            d["product"] = obj["product"]
+            for device in nvme["Devices"]:
+                d = {}
+                d['logicalname'] = device["DevicePath"]
+                d['product'] = device["ModelNumber"]
+                d['serial'] = device["SerialNumber"]
+                d["version"] = device["Firmware"]
+                d['size'] = device["UsedSize"]
+                d['description'] = "NVME Disk"
 
-            d['description'] = "NVME Disk"
-            d['product'] = nvme["Devices"][0]["ModelNumber"]
-            d['size'] = nvme["Devices"][0]["PhysicalSize"]
-            d['serial'] = nvme["Devices"][0]["SerialNumber"]
-            d['logicalname'] = nvme["Devices"][0]["DevicePath"]
-
-            self.disks.append(d)
+                self.disks.append(d)
 
     def find_cpus(self, obj):
         if "product" in obj:
@@ -127,7 +127,7 @@ class LSHW():
             d["id"] = dimm.get("id")
             d["serial"] = dimm.get("serial", 'N/A')
             d["vendor"] = dimm.get("vendor", 'N/A')
-            d["product"] = dimm.get("product")
+            d["product"] = dimm.get("product", 'N/A')
             d["size"] = dimm.get("size", 0) / 2 ** 20 / 1024
 
             self.memories.append(d)

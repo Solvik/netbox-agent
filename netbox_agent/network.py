@@ -24,20 +24,20 @@ class Network(object):
         self.nics = self.scan()
         self.ipmi = None
         self.dcim_choices = {}
-        dcim_c = nb.dcim.choices()
-
-        for choice in dcim_c:
-            self.dcim_choices[choice] = {}
-            for c in dcim_c[choice]:
-                self.dcim_choices[choice][c['label']] = c['value']
+        dcim_c = nb.dcim.interfaces.choices()
+        for _choice_type in dcim_c:
+            key = 'interface:{}'.format(_choice_type)
+            self.dcim_choices[key] = {}
+            for choice in dcim_c[_choice_type]:
+                self.dcim_choices[key][choice['display_name']] = choice['value']
 
         self.ipam_choices = {}
-        ipam_c = nb.ipam.choices()
-
-        for choice in ipam_c:
-            self.ipam_choices[choice] = {}
-            for c in ipam_c[choice]:
-                self.ipam_choices[choice][c['label']] = c['value']
+        ipam_c = nb.ipam.ip_addresses.choices()
+        for _choice_type in ipam_c:
+            key = 'ip-address:{}'.format(_choice_type)
+            self.ipam_choices[key] = {}
+            for choice in ipam_c[_choice_type]:
+                self.ipam_choices[key][choice['display_name']] = choice['value']
 
     def get_network_type():
         return NotImplementedError
@@ -93,6 +93,12 @@ class Network(object):
                 bonding_slaves = open(
                     '/sys/class/net/{}/bonding/slaves'.format(interface)
                 ).read().split()
+
+            # Tun and TAP support
+            virtual = os.path.isfile(
+                '/sys/class/net/{}/tun_flags'.format(interface)
+            )
+
             nic = {
                 'name': interface,
                 'mac': mac if mac != '00:00:00:00:00:00' else None,
@@ -103,6 +109,7 @@ class Network(object):
                     ) for x in ip_addr
                 ] if ip_addr else None,  # FIXME: handle IPv6 addresses
                 'ethtool': Ethtool(interface).parse(),
+                'virtual': virtual,
                 'vlan': vlan,
                 'bonding': bonding,
                 'bonding_slaves': bonding_slaves,
@@ -162,6 +169,10 @@ class Network(object):
 
         if nic.get('bonding'):
             return self.dcim_choices['interface:type']['Link Aggregation Group (LAG)']
+
+        if nic.get('virtual'):
+            return self.dcim_choices['interface:type']['Virtual']
+
         if nic.get('ethtool') is None:
             return self.dcim_choices['interface:type']['Other']
 
@@ -240,13 +251,18 @@ class Network(object):
             name=nic['name'], mac=nic['mac'], device=self.device.name))
 
         nb_vlan = None
-        interface = self.nb_net.interfaces.create(
-            name=nic['name'],
-            mac_address=nic['mac'],
-            type=type,
-            mgmt_only=mgmt,
+
+        params = {
+            'name': nic['name'],
+            'type': type,
+            'mgmt_only': mgmt,
             **self.custom_arg,
-        )
+        }
+
+        if not nic.get('virtual', False):
+            params['mac_address'] = nic['mac']
+
+        interface = self.nb_net.interfaces.create(**params)
 
         if nic['vlan']:
             nb_vlan = self.get_or_create_vlan(nic['vlan'])
@@ -442,8 +458,8 @@ class ServerNetwork(Network):
         self.server = server
         self.device = self.server.get_netbox_server()
         self.nb_net = nb.dcim
-        self.custom_arg = {'device': self.device.id}
-        self.custom_arg_id = {'device_id': self.device.id}
+        self.custom_arg = {'device': getattr(self.device, "id", None)}
+        self.custom_arg_id = {'device_id': getattr(self.device, "id", None)}
 
     def get_network_type(self):
         return 'server'
@@ -562,15 +578,15 @@ class VirtualNetwork(Network):
         self.server = server
         self.device = self.server.get_netbox_vm()
         self.nb_net = nb.virtualization
-        self.custom_arg = {'virtual_machine': self.device.id}
-        self.custom_arg_id = {'virtual_machine_id': self.device.id}
+        self.custom_arg = {'virtual_machine': getattr(self.device, "id", None)}
+        self.custom_arg_id = {'virtual_machine_id': getattr(self.device, "id", None)}
 
-        dcim_c = nb.virtualization.choices()
-
-        for choice in dcim_c:
-            self.dcim_choices[choice] = {}
-            for c in dcim_c[choice]:
-                self.dcim_choices[choice][c['label']] = c['value']
+        dcim_c = nb.virtualization.interfaces.choices()
+        for _choice_type in dcim_c:
+            key = 'interface:{}'.format(_choice_type)
+            self.dcim_choices[key] = {}
+            for choice in dcim_c[_choice_type]:
+                self.dcim_choices[key][choice['display_name']] = choice['value']
 
     def get_network_type(self):
         return 'virtual'
