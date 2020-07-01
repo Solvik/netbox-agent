@@ -1,6 +1,7 @@
 import logging
 import socket
 import subprocess
+import sys
 from pprint import pprint
 
 import netbox_agent.dmidecode as dmidecode
@@ -50,11 +51,18 @@ class ServerBase():
 
     def get_netbox_datacenter(self):
         dc = self.get_datacenter()
-        if dc:
-            return nb.dcim.sites.get(
-                slug=dc,
-            )
-        return None
+        if dc is None:
+            logging.error("Specificing a datacenter (Site) is mandatory in Netbox")
+            sys.exit(1)
+
+        nb_dc = nb.dcim.sites.get(
+            slug=dc,
+        )
+        if nb_dc is None:
+            logging.error("Site (slug: {}) has not been found".format(dc))
+            sys.exit(1)
+
+        return nb_dc
 
     def update_netbox_location(self, server):
         dc = self.get_datacenter()
@@ -93,8 +101,8 @@ class ServerBase():
         if not rack:
             return None
         if rack and not datacenter:
-            logging.warning("Can't get rack if no datacenter is configured or found")
-            return None
+            logging.error("Can't get rack if no datacenter is configured or found")
+            sys.exit(1)
 
         return nb.dcim.racks.get(
             name=rack,
