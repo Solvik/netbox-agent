@@ -49,10 +49,12 @@ class ServerBase():
         return dc.get()
 
     def get_netbox_datacenter(self):
-        datacenter = nb.dcim.sites.get(
-            slug=self.get_datacenter()
-        )
-        return datacenter
+        dc = self.get_datacenter()
+        if dc:
+            return nb.dcim.sites.get(
+                slug=dc,
+            )
+        return None
 
     def update_netbox_location(self, server):
         dc = self.get_datacenter()
@@ -86,11 +88,18 @@ class ServerBase():
         return rack.get()
 
     def get_netbox_rack(self):
-        rack = nb.dcim.racks.get(
-            name=self.get_rack(),
-            site_id=self.get_netbox_datacenter().id,
+        rack = self.get_rack()
+        datacenter = self.get_netbox_datacenter()
+        if not rack:
+            return None
+        if rack and not datacenter:
+            logging.warning("Can't get rack if no datacenter is configured or found")
+            return None
+
+        return nb.dcim.racks.get(
+            name=rack,
+            site_id=datacenter.id,
         )
-        return rack
 
     def get_product_name(self):
         """
