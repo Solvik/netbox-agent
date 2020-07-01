@@ -17,6 +17,9 @@ class Network(object):
     def __init__(self, server, *args, **kwargs):
         self.nics = []
 
+        self.server = server
+        self.tenant = self.server.get_netbox_tenant()
+
         self.lldp = LLDP() if config.network.lldp else None
         self.nics = self.scan()
         self.ipmi = None
@@ -337,6 +340,7 @@ class Network(object):
                         interface=interface.id,
                         status=1,
                         role=self.ipam_choices['ip-address:role']['Anycast'],
+                        tenant=self.tenant.id if self.tenant else None,
                     )
                 return netbox_ip
             else:

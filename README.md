@@ -99,6 +99,23 @@ network:
   # enable auto-cabling by parsing LLDP answers
   lldp: true
 
+#
+# You can use these to change the Netbox roles.
+# These are the defaults.
+#
+#device:
+# chassis_role: "Server Chassis"
+# blade_role: "Blade"
+# server_role: "Server"
+# tags: server, blade, ,just a comma,delimited,list
+#￼
+#
+# Can use this to set the tenant
+#
+#tenant:
+# driver: "file:/tmp/tenant"
+# regex: "(.*)"
+￼
 ## Enable virtual machine support 
 # virtual:
 #   # not mandatory, can be guessed

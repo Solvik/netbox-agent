@@ -34,6 +34,20 @@ def get_config():
     p.add_argument('--virtual.cluster_name', help='Cluster name of VM')
     p.add_argument('--hostname_cmd', default=None,
                    help="Command to output hostname, used as Device's name in netbox")
+    p.add_argument('--device.tags', default=r'',
+                   help='tags to use for a host')
+    p.add_argument('--device.blade_role', default=r'Blade',
+                   help='role to use for a blade server')
+    p.add_argument('--device.chassis_role', default=r'Server Chassis',
+                   help='role to use for a chassis')
+    p.add_argument('--device.server_role', default=r'Server',
+                   help='role to use for a server')
+    p.add_argument('--tenant.driver',
+                   help='tenant driver, ie cmd, file')
+    p.add_argument('--tenant.driver_file',
+                   help='tenant driver custom driver file path')
+    p.add_argument('--tenant.regex',
+                   help='tenant regex to extract Netbox tenant slug')
     p.add_argument('--datacenter_location.driver',
                    help='Datacenter location driver, ie: cmd, file')
     p.add_argument('--datacenter_location.driver_file',

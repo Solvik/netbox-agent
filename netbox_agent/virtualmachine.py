@@ -3,8 +3,9 @@ import os
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
+from netbox_agent.location import Tenant
 from netbox_agent.logging import logging  # NOQA
-from netbox_agent.misc import get_hostname
+from netbox_agent.misc import create_netbox_tags, get_hostname
 from netbox_agent.network import VirtualNetwork
 
 
@@ -29,6 +30,10 @@ class VirtualMachine(object):
             self.dmi = dmidecode.parse()
         self.network = None
 
+        self.tags = list(set(config.device.tags.split(','))) if config.device.tags else []
+        if self.tags and len(self.tags):
+            create_netbox_tags(self.tags)
+
     def get_memory(self):
         mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')  # e.g. 4015976448
         mem_gib = mem_bytes / (1024.**2)  # e.g. 3.74
@@ -50,6 +55,22 @@ class VirtualMachine(object):
         )
         return cluster
 
+    def get_netbox_datacenter(self, name):
+        cluster = self.get_netbox_cluster()
+        if cluster.datacenter:
+            return cluster.datacenter
+        return None
+
+    def get_tenant(self):
+        tenant = Tenant()
+        return tenant.get()
+
+    def get_netbox_tenant(self):
+        tenant = nb.tenancy.tenants.get(
+            slug=self.get_tenant()
+        )
+        return tenant
+
     def netbox_create_or_update(self, config):
         logging.debug('It\'s a virtual machine')
         created = False
@@ -60,6 +81,7 @@ class VirtualMachine(object):
 
         vcpus = self.get_vcpus()
         memory = self.get_memory()
+        tenant = self.get_netbox_tenant()
         if not vm:
             logging.debug('Creating Virtual machine..')
             cluster = self.get_netbox_cluster(config.virtual.cluster_name)
@@ -69,18 +91,24 @@ class VirtualMachine(object):
                 cluster=cluster.id,
                 vcpus=vcpus,
                 memory=memory,
+                tenant=tenant.id if tenant else None,
+                tags=self.tags,
             )
             created = True
 
         self.network = VirtualNetwork(server=self)
         self.network.create_or_update_netbox_network_cards()
 
-        if not created and vm.vcpus != vcpus:
-            vm.vcpus = vcpus
-            updated += 1
-        elif not created and vm.memory != memory:
-            vm.memory = memory
-            updated += 1
+        if not created:
+            if vm.vcpus != vcpus:
+                vm.vcpus = vcpus
+                updated += 1
+            if vm.memory != memory:
+                vm.memory = memory
+                updated += 1
+            if sorted(set(vm.tags)) != sorted(set(self.tags)):
+                vm.tags = self.tags
+                updated += 1
 
         if updated:
             vm.save()
