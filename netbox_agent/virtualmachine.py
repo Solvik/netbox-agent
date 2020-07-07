@@ -16,6 +16,7 @@ def is_vm(dmi):
     if 'Hyper-V' in bios[0]['Version'] or \
        'Xen' in bios[0]['Version'] or \
        'Google Compute Engine' in system[0]['Product Name'] or \
+       'RHEV Hypervisor' in system[0]['Product Name'] or \
        'VirtualBox' in bios[0]['Version'] or \
        'VMware' in system[0]['Manufacturer']:
         return True
