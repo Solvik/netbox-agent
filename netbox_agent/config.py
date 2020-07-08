@@ -1,5 +1,7 @@
 import logging
 import sys
+import requests
+import urllib3
 
 import jsonargparse
 import pynetbox
@@ -67,6 +69,8 @@ def get_config():
     p.add_argument('--network.lldp', help='Enable auto-cabling feature through LLDP infos')
     p.add_argument('--inventory', action='store_true',
                    help='Enable HW inventory (CPU, Memory, RAID Cards, Disks) feature')
+    p.add_argument('--no_ssl_verify', default=False, action='store_true',
+                   help='Disable SSL verification')
 
     options = p.parse_args()
     return options
@@ -77,11 +81,18 @@ def get_netbox_instance():
     if config.netbox.url is None or config.netbox.token is None:
         logging.error('Netbox URL and token are mandatory')
         sys.exit(1)
-    return pynetbox.api(
+    
+    nb = pynetbox.api(
         url=get_config().netbox.url,
         token=get_config().netbox.token,
     )
+    if get_config().no_ssl_verify:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        session = requests.Session()
+        session.verify = False
+        nb.http_session = session
 
+    return nb
 
 config = get_config()
 netbox_instance = get_netbox_instance()
