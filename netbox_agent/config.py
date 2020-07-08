@@ -1,6 +1,7 @@
 import logging
-import requests
 import sys
+
+import requests
 import urllib3
 
 import jsonargparse
