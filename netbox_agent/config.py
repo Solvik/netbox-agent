@@ -81,7 +81,7 @@ def get_netbox_instance():
     if config.netbox.url is None or config.netbox.token is None:
         logging.error('Netbox URL and token are mandatory')
         sys.exit(1)
-    
+
     nb = pynetbox.api(
         url=get_config().netbox.url,
         token=get_config().netbox.token,
@@ -93,6 +93,7 @@ def get_netbox_instance():
         nb.http_session = session
 
     return nb
+
 
 config = get_config()
 netbox_instance = get_netbox_instance()
