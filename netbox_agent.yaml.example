@@ -1,6 +1,8 @@
 netbox:
  url: 'http://netbox.internal.company.com'
  token: supersecrettoken
+ # uncomment to disable ssl verification
+ # ssl_verify: false
 
 network:
   ignore_interfaces: "(dummy.*|docker.*)"

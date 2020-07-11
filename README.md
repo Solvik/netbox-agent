@@ -89,6 +89,8 @@ INFO:root:Creating Disk Samsung SSD 850 S2RBNX0K101698D
 netbox:
  url: 'http://netbox.internal.company.com'
  token: supersecrettoken
+ # uncomment to disable ssl verification
+ # ssl_verify: false
 
 # Network configuration
 network:

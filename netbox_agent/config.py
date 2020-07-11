@@ -32,6 +32,8 @@ def get_config():
     p.add_argument('--log_level', default='debug')
     p.add_argument('--netbox.url', help='Netbox URL')
     p.add_argument('--netbox.token', help='Netbox API Token')
+    p.add_argument('--netbox.ssl_verify', default=True, action='store_true',
+                   help='Disable SSL verification')
     p.add_argument('--virtual.enabled', action='store_true', help='Is a virtual machine or not')
     p.add_argument('--virtual.cluster_name', help='Cluster name of VM')
     p.add_argument('--hostname_cmd', default=None,
@@ -69,8 +71,6 @@ def get_config():
     p.add_argument('--network.lldp', help='Enable auto-cabling feature through LLDP infos')
     p.add_argument('--inventory', action='store_true',
                    help='Enable HW inventory (CPU, Memory, RAID Cards, Disks) feature')
-    p.add_argument('--no_ssl_verify', default=False, action='store_true',
-                   help='Disable SSL verification')
 
     options = p.parse_args()
     return options
@@ -86,7 +86,7 @@ def get_netbox_instance():
         url=get_config().netbox.url,
         token=get_config().netbox.token,
     )
-    if get_config().no_ssl_verify:
+    if get_config().netbox.ssl_verify is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         session = requests.Session()
         session.verify = False
