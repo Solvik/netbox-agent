@@ -37,10 +37,13 @@ class ServerBase():
         return tenant.get()
 
     def get_netbox_tenant(self):
-        tenant = nb.tenancy.tenants.get(
+        tenant = self.get_tenant()
+        if tenant is None:
+            return None
+        nb_tenant = nb.tenancy.tenants.get(
             slug=self.get_tenant()
         )
-        return tenant
+        return nb_tenant
 
     def get_datacenter(self):
         dc = Datacenter()
