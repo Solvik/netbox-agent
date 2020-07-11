@@ -1,11 +1,10 @@
 import logging
 import sys
 
-import requests
-import urllib3
-
 import jsonargparse
 import pynetbox
+import requests
+import urllib3
 
 
 def get_config():
