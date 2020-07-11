@@ -67,10 +67,13 @@ class VirtualMachine(object):
         return tenant.get()
 
     def get_netbox_tenant(self):
-        tenant = nb.tenancy.tenants.get(
+        tenant = self.get_tenant()
+        if tenant is None:
+            return None
+        nb_tenant = nb.tenancy.tenants.get(
             slug=self.get_tenant()
         )
-        return tenant
+        return nb_tenant
 
     def netbox_create_or_update(self, config):
         logging.debug('It\'s a virtual machine')
