@@ -178,7 +178,7 @@ Tested on:
 * AWS
 * GCP
 
-## Dell Inc.
+## [Dell Inc.](https://github.com/Solvik/netbox-agent/blob/master/netbox_agent/vendors/dell.py)
 
 ### Blades
 
@@ -194,7 +194,7 @@ Tested on:
 
 * DSS7500
 
-## HP / HPE
+## [HP / HPE](https://github.com/Solvik/netbox-agent/blob/master/netbox_agent/vendors/hp.py)
 
 ### Blades
 
@@ -210,18 +210,18 @@ Tested on:
 * ProLiant SL4540 Gen9
 * ProLiant XL450 Gen10
 
-## Supermicro
+## [Supermicro](https://github.com/Solvik/netbox-agent/blob/master/netbox_agent/vendors/supermicro.py)
 
 ### Blades
 
-Feel free to send me a dmidecode output for Supermicro's blade!
+* SBI-* and SBA-* should be supported, but I need dmidecode output example to support automatic blade location
 
 ### Pizzas
 
 * SSG-6028R
 * SYS-6018R
 
-## QCT
+## [QCT](https://github.com/Solvik/netbox-agent/blob/master/netbox_agent/vendors/qct.py)
 
 ### Blades
 
