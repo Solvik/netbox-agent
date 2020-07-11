@@ -23,8 +23,17 @@ class SupermicroHost(ServerBase):
         self.manufacturer = 'Supermicro'
 
     def is_blade(self):
-        blade = self.system[0]['Product Name'].startswith('SBI')
-        blade |= self.system[0]['Product Name'].startswith('SYS')
+        product_name = self.get_product_name()
+        # Blades
+        blade = product_name.startswith('SBI')
+        blade |= product_name.startswith('SBA')
+        # Twin
+        blade |= 'TR-' in product_name
+        # BigTwin
+        blade |= 'BT-' in product_name
+        # Microcloud
+        blade |= product_name.startswith('SYS-5039')
+        blade |= product_name.startswith('SYS-5038')
         return blade
 
     def get_blade_slot(self):
