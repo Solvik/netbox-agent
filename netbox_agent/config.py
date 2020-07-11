@@ -3,6 +3,8 @@ import sys
 
 import jsonargparse
 import pynetbox
+import requests
+import urllib3
 
 
 def get_config():
@@ -30,6 +32,8 @@ def get_config():
     p.add_argument('--log_level', default='debug')
     p.add_argument('--netbox.url', help='Netbox URL')
     p.add_argument('--netbox.token', help='Netbox API Token')
+    p.add_argument('--netbox.ssl_verify', default=True, action='store_true',
+                   help='Disable SSL verification')
     p.add_argument('--virtual.enabled', action='store_true', help='Is a virtual machine or not')
     p.add_argument('--virtual.cluster_name', help='Cluster name of VM')
     p.add_argument('--hostname_cmd', default=None,
@@ -77,10 +81,18 @@ def get_netbox_instance():
     if config.netbox.url is None or config.netbox.token is None:
         logging.error('Netbox URL and token are mandatory')
         sys.exit(1)
-    return pynetbox.api(
+
+    nb = pynetbox.api(
         url=get_config().netbox.url,
         token=get_config().netbox.token,
     )
+    if get_config().netbox.ssl_verify is False:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        session = requests.Session()
+        session.verify = False
+        nb.http_session = session
+
+    return nb
 
 
 config = get_config()
