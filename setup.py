@@ -18,7 +18,7 @@ setup(
         'netaddr==0.7.20',
         'netifaces==0.10.9',
         'pyyaml==5.3.1',
-        'jsonargparse==2.31.2',
+        'jsonargparse==2.32.2',
     ],
     zip_safe=False,
     keywords=['netbox'],
