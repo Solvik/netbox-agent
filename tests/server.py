@@ -49,6 +49,15 @@ def test_supermicro_pizza(fixture):
 
 @parametrize_with_fixtures(
     'dmidecode/', only_filenames=[
+        'QCT_X10E-9N'
+    ])
+def test_qct_x10(fixture):
+    dmi = parse(fixture)
+    server = QCTHost(dmi)
+    assert server.get_service_tag() == 'QTFCQ57140285'
+
+@parametrize_with_fixtures(
+    'dmidecode/', only_filenames=[
         'unknown.txt'
     ])
 def test_generic_host_service_tag(fixture):
