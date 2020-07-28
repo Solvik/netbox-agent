@@ -283,7 +283,7 @@ class ServerBase():
         else:
             server = nb.dcim.devices.get(serial=self.get_service_tag())
             if not server:
-                self._netbox_create_server(datacenter, tenant, rack)
+                server = self._netbox_create_server(datacenter, tenant, rack)
 
         logging.debug('Updating Server...')
         # check network cards
