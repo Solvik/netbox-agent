@@ -27,8 +27,8 @@ network:
 # regex: "(.*)"
 ￼
 datacenter_location:
- driver: "cmd:cat /etc/qualification | tr [a-z] [A-Z]"
- regex: "DATACENTER: (?P<datacenter>[A-Za-z0-9]+)"
+ driver: "cmd:cat /etc/qualification | tr [A-Z] [a-z]"
+ regex: "datacenter: (?P<datacenter>[A-Za-z0-9]+)"
 # driver: 'cmd:lldpctl'
 # regex: 'SysName: .*\.([A-Za-z0-9]+)'
 #
