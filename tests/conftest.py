@@ -15,7 +15,7 @@ def get_fixture_paths(path):
 
 
 def parametrize_with_fixtures(path, base_path='tests/fixtures',
-                              argname='fixture', only_filenames=None):
+                              argname='dmi_fixture', only_filenames=None):
     path = os.path.join(base_path, path)
     fixture_paths = get_fixture_paths(path)
     argvalues = []
