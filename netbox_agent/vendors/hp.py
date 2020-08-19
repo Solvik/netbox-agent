@@ -5,13 +5,18 @@ from netbox_agent.server import ServerBase
 class HPHost(ServerBase):
     def __init__(self, *args, **kwargs):
         super(HPHost, self).__init__(*args, **kwargs)
+        self.manufacturer = "HP"
+        self.product = self.get_product_name()
         if self.is_blade():
             self.hp_rack_locator = self._find_rack_locator()
-        self.manufacturer = "HP"
 
     def is_blade(self):
-        products = ("ProLiant BL", "ProLiant m710x")
-        return self.get_product_name().startswith(products)
+        if self.product.startswith("ProLiant BL"):
+            return True
+        elif self.product.startswith("ProLiant m") and self.product.endswith("Server Cartridge"):
+            return True
+        else:
+            return False
 
     def _find_rack_locator(self):
         """
@@ -22,7 +27,7 @@ class HPHost(ServerBase):
         # FIXME: make a dmidecode function get_by_dminame() ?
         if self.is_blade():
             locator = dmidecode.get_by_type(self.dmi, 204)
-            if self.get_product_name() == "ProLiant BL460c Gen10":
+            if self.product == "ProLiant BL460c Gen10":
                 locator = locator[0]["Strings"]
                 return {
                     "Enclosure Model": locator[2].strip(),
@@ -31,7 +36,8 @@ class HPHost(ServerBase):
                     "Enclosure Serial": locator[4].strip(),
                 }
 
-            if self.get_product_name() == "ProLiant m710x Server Cartridge":
+            # HP ProLiant m750, m710x, m510 Server Cartridge
+            if self.product.startswith("ProLiant m") and self.product.endswith("Server Cartridge"):
                 locator = dmidecode.get_by_type(self.dmi, 2)
                 chassis = dmidecode.get_by_type(self.dmi, 3)
                 return {
