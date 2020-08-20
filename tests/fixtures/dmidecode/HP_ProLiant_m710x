@@ -1,0 +1,921 @@
+# dmidecode 3.1
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+93 structures occupying 4311 bytes.
+Table at 0x766AD000.
+
+Handle 0x0000, DMI type 7, 19 bytes
+Cache Information
+	Socket Designation: L1-Cache
+	Configuration: Enabled, Not Socketed, Level 1
+	Operational Mode: Write Back
+	Location: Internal
+	Installed Size: 256 kB
+	Maximum Size: 256 kB
+	Supported SRAM Types:
+		Synchronous
+	Installed SRAM Type: Synchronous
+	Speed: Unknown
+	Error Correction Type: Single-bit ECC
+	System Type: Unified
+	Associativity: 8-way Set-associative
+
+Handle 0x0001, DMI type 7, 19 bytes
+Cache Information
+	Socket Designation: L2-Cache
+	Configuration: Enabled, Not Socketed, Level 2
+	Operational Mode: Varies With Memory Address
+	Location: Internal
+	Installed Size: 1024 kB
+	Maximum Size: 1024 kB
+	Supported SRAM Types:
+		Synchronous
+	Installed SRAM Type: Synchronous
+	Speed: Unknown
+	Error Correction Type: Single-bit ECC
+	System Type: Unified
+	Associativity: 4-way Set-associative
+
+Handle 0x0002, DMI type 7, 19 bytes
+Cache Information
+	Socket Designation: L3-Cache
+	Configuration: Enabled, Not Socketed, Level 3
+	Operational Mode: Varies With Memory Address
+	Location: Internal
+	Installed Size: 8192 kB
+	Maximum Size: 8192 kB
+	Supported SRAM Types:
+		Synchronous
+	Installed SRAM Type: Synchronous
+	Speed: Unknown
+	Error Correction Type: Single-bit ECC
+	System Type: Unified
+	Associativity: 16-way Set-associative
+
+Handle 0x0003, DMI type 4, 48 bytes
+Processor Information
+	Socket Designation: Proc 1
+	Type: Central Processor
+	Family: Xeon
+	Manufacturer: Intel(R) Corporation
+	ID: E3 06 05 00 FF FB EB BF
+	Signature: Type 0, Family 6, Model 94, Stepping 3
+	Flags:
+		FPU (Floating-point unit on-chip)
+		VME (Virtual mode extension)
+		DE (Debugging extension)
+		PSE (Page size extension)
+		TSC (Time stamp counter)
+		MSR (Model specific registers)
+		PAE (Physical address extension)
+		MCE (Machine check exception)
+		CX8 (CMPXCHG8 instruction supported)
+		APIC (On-chip APIC hardware supported)
+		SEP (Fast system call)
+		MTRR (Memory type range registers)
+		PGE (Page global enable)
+		MCA (Machine check architecture)
+		CMOV (Conditional move instruction supported)
+		PAT (Page attribute table)
+		PSE-36 (36-bit page size extension)
+		CLFSH (CLFLUSH instruction supported)
+		DS (Debug store)
+		ACPI (ACPI supported)
+		MMX (MMX technology supported)
+		FXSR (FXSAVE and FXSTOR instructions supported)
+		SSE (Streaming SIMD extensions)
+		SSE2 (Streaming SIMD extensions 2)
+		SS (Self-snoop)
+		HTT (Multi-threading)
+		TM (Thermal monitor supported)
+		PBE (Pending break enabled)
+	Version: Intel(R) Xeon(R) CPU E3-1585L v5 @ 3.00GHz
+	Voltage: 1.0 V
+	External Clock: 100 MHz
+	Max Speed: 3700 MHz
+	Current Speed: 3000 MHz
+	Status: Populated, Enabled
+	Upgrade: Other
+	L1 Cache Handle: 0x0000
+	L2 Cache Handle: 0x0001
+	L3 Cache Handle: 0x0002
+	Serial Number: To Be Filled By O.E.M.
+	Asset Tag: To Be Filled By O.E.M.
+	Part Number: To Be Filled By O.E.M.
+	Core Count: 4
+	Core Enabled: 4
+	Thread Count: 8
+	Characteristics:
+		64-bit capable
+		Multi-Core
+		Hardware Thread
+		Execute Protection
+		Enhanced Virtualization
+		Power/Performance Control
+
+Handle 0x0004, DMI type 0, 24 bytes
+BIOS Information
+	Vendor: HP
+	Version: H07
+	Release Date: 05/23/2016
+	Address: 0xF0000
+	Runtime Size: 64 kB
+	ROM Size: 16 MB
+	Characteristics:
+		PCI is supported
+		PNP is supported
+		BIOS is upgradeable
+		BIOS shadowing is allowed
+		ESCD support is available
+		Boot from CD is supported
+		Selectable boot is supported
+		EDD is supported
+		5.25"/360 kB floppy services are supported (int 13h)
+		5.25"/1.2 MB floppy services are supported (int 13h)
+		3.5"/720 kB floppy services are supported (int 13h)
+		Print screen service is supported (int 5h)
+		8042 keyboard services are supported (int 9h)
+		Serial services are supported (int 14h)
+		Printer services are supported (int 17h)
+		CGA/mono video services are supported (int 10h)
+		ACPI is supported
+		USB legacy is supported
+		BIOS boot specification is supported
+		Function key-initiated network boot is supported
+		Targeted content distribution is supported
+		UEFI is supported
+	BIOS Revision: 1.0
+	Firmware Revision: 2.40
+
+Handle 0x0005, DMI type 1, 27 bytes
+System Information
+	Manufacturer: HP
+	Product Name: ProLiant m710x Server Cartridge
+	Version: Not Specified
+	Serial Number: CN66480BLA
+	UUID: CF6D6DE0-A5AB-512C-BCD4-5CF40EC490C1
+	Wake-up Type: Power Switch
+	SKU Number: 833105-B21
+	Family: ProLiant
+
+Handle 0x0006, DMI type 16, 23 bytes
+Physical Memory Array
+	Location: System Board Or Motherboard
+	Use: System Memory
+	Error Correction Type: Multi-bit ECC
+	Maximum Capacity: 64 GB
+	Error Information Handle: Not Provided
+	Number Of Devices: 4
+
+Handle 0x0007, DMI type 17, 40 bytes
+Memory Device
+	Array Handle: 0x0006
+	Error Information Handle: Not Provided
+	Total Width: 72 bits
+	Data Width: 64 bits
+	Size: 16384 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: PROC 1 DIMM 1
+	Bank Locator: Not Specified
+	Type: DDR4
+	Type Detail: Synchronous
+	Speed: 2400 MT/s
+	Manufacturer: HP
+	Serial Number: Not Specified
+	Asset Tag: Not Specified
+	Part Number: 853289-091
+	Rank: 2
+	Configured Clock Speed: 2133 MT/s
+	Minimum Voltage: 1.2 V
+	Maximum Voltage: 1.2 V
+	Configured Voltage: 1.2 V
+
+Handle 0x0008, DMI type 17, 40 bytes
+Memory Device
+	Array Handle: 0x0006
+	Error Information Handle: Not Provided
+	Total Width: 72 bits
+	Data Width: 64 bits
+	Size: 16384 MB
+	Form Factor: DIMM
+	Set: 1
+	Locator: PROC 1 DIMM 2
+	Bank Locator: Not Specified
+	Type: DDR4
+	Type Detail: Synchronous
+	Speed: 2400 MT/s
+	Manufacturer: HP
+	Serial Number: Not Specified
+	Asset Tag: Not Specified
+	Part Number: 853289-091
+	Rank: 2
+	Configured Clock Speed: 2133 MT/s
+	Minimum Voltage: 1.2 V
+	Maximum Voltage: 1.2 V
+	Configured Voltage: 1.2 V
+
+Handle 0x0009, DMI type 17, 40 bytes
+Memory Device
+	Array Handle: 0x0006
+	Error Information Handle: Not Provided
+	Total Width: 72 bits
+	Data Width: 64 bits
+	Size: 16384 MB
+	Form Factor: DIMM
+	Set: 2
+	Locator: PROC 1 DIMM 3
+	Bank Locator: Not Specified
+	Type: DDR4
+	Type Detail: Synchronous
+	Speed: 2400 MT/s
+	Manufacturer: HP
+	Serial Number: Not Specified
+	Asset Tag: Not Specified
+	Part Number: 853289-091
+	Rank: 2
+	Configured Clock Speed: 2133 MT/s
+	Minimum Voltage: 1.2 V
+	Maximum Voltage: 1.2 V
+	Configured Voltage: 1.2 V
+
+Handle 0x000A, DMI type 17, 40 bytes
+Memory Device
+	Array Handle: 0x0006
+	Error Information Handle: Not Provided
+	Total Width: 72 bits
+	Data Width: 64 bits
+	Size: 16384 MB
+	Form Factor: DIMM
+	Set: 3
+	Locator: PROC 1 DIMM 4
+	Bank Locator: Not Specified
+	Type: DDR4
+	Type Detail: Synchronous
+	Speed: 2400 MT/s
+	Manufacturer: HP
+	Serial Number: Not Specified
+	Asset Tag: Not Specified
+	Part Number: 853289-091
+	Rank: 2
+	Configured Clock Speed: 2133 MT/s
+	Minimum Voltage: 1.2 V
+	Maximum Voltage: 1.2 V
+	Configured Voltage: 1.2 V
+
+Handle 0x000B, DMI type 19, 31 bytes
+Memory Array Mapped Address
+	Starting Address: 0x00000000000
+	Ending Address: 0x0007E7FFFFF
+	Range Size: 2024 MB
+	Physical Array Handle: 0x0006
+	Partition Width: 1
+
+Handle 0x000C, DMI type 19, 31 bytes
+Memory Array Mapped Address
+	Starting Address: 0x0000000100000000k
+	Ending Address: 0x00000010817FFFFFk
+	Range Size: 63512 MB
+	Physical Array Handle: 0x0006
+	Partition Width: 1
+
+Handle 0x000D, DMI type 211, 7 bytes
+OEM-specific Type
+	Header and Data:
+		D3 07 0D 00 03 00 00
+
+Handle 0x000E, DMI type 2, 17 bytes
+Base Board Information
+	Manufacturer: HP
+	Product Name: ProLiant m710x Server Cartridge
+	Version: Not Specified
+	Serial Number: CN66480ANY
+	Asset Tag:
+	Features:
+		Board is a hosting board
+		Board is removable
+		Board is replaceable
+	Location In Chassis: c2n1
+	Chassis Handle: 0x0000
+	Type: Motherboard
+	Contained Object Handles: 0
+
+Handle 0x000F, DMI type 3, 21 bytes
+Chassis Information
+	Manufacturer: HP
+	Type: Multi-system
+	Lock: Not Present
+	Version: Not Specified
+	Serial Number: CZ3702MD5K
+	Asset Tag:
+	Boot-up State: Safe
+	Power Supply State: Safe
+	Thermal State: Safe
+	Security Status: Unknown
+	OEM Information: 0x00000000
+	Height: 5 U
+	Number Of Power Cords: Unspecified
+	Contained Elements: 0
+
+Handle 0x0010, DMI type 11, 5 bytes
+OEM Strings
+	String 1: PSF:
+	String 2: Product ID: 833105-B21
+	String 3: CPN: HP Moonshot 1500 Chassis
+	String 4: OEM String:
+
+Handle 0x0011, DMI type 38, 18 bytes
+IPMI Device Information
+	Interface Type: KCS (Keyboard Control Style)
+	Specification Version: 2.0
+	I2C Slave Address: 0x10
+	NV Storage Device: Not Present
+	Base Address: 0x0000000000000CA2 (I/O)
+	Register Spacing: Successive Byte Boundaries
+
+Handle 0x0012, DMI type 193, 9 bytes
+OEM-specific Type
+	Header and Data:
+		C1 09 12 00 00 01 00 02 03
+	Strings:
+		0/0000
+
+
+
+Handle 0x0013, DMI type 194, 5 bytes
+OEM-specific Type
+	Header and Data:
+		C2 05 13 00 10
+
+Handle 0x0014, DMI type 195, 7 bytes
+OEM-specific Type
+	Header and Data:
+		C3 07 14 00 01 12 01
+	Strings:
+		$0E110855
+
+Handle 0x0015, DMI type 197, 16 bytes
+OEM-specific Type
+	Header and Data:
+		C5 10 15 00 03 00 00 01 FF 01 2D 00 00 00 00 00
+
+Handle 0x0016, DMI type 198, 14 bytes
+OEM-specific Type
+	Header and Data:
+		C6 0E 16 00 17 00 00 00 00 00 01 0A FF FF
+
+Handle 0x0017, DMI type 199, 28 bytes
+OEM-specific Type
+	Header and Data:
+		C7 1C 17 00 2C 00 00 00 15 20 01 07 E2 06 05 00
+		88 00 00 00 16 20 16 03 E3 06 05 00
+
+Handle 0x0018, DMI type 201, 16 bytes
+OEM-specific Type
+	Header and Data:
+		C9 10 18 00 10 02 00 00 40 0D 01 00 0E 00 00 80
+
+Handle 0x0019, DMI type 215, 6 bytes
+OEM-specific Type
+	Header and Data:
+		D7 06 19 00 00 05
+
+Handle 0x001A, DMI type 216, 23 bytes
+OEM-specific Type
+	Header and Data:
+		D8 17 1A 00 01 00 01 02 07 01 00 05 17 E0 07 00
+		00 00 00 00 00 00 00
+	Strings:
+		System ROM
+		v1.00 (05/23/2016)
+
+Handle 0x001B, DMI type 216, 23 bytes
+OEM-specific Type
+	Header and Data:
+		D8 17 1B 00 04 00 01 02 04 00 00 00 00 00 00 00
+		00 00 00 00 00 00 00
+	Strings:
+		Power Management Controller Firmware
+		0.0
+
+Handle 0x001C, DMI type 216, 23 bytes
+OEM-specific Type
+	Header and Data:
+		D8 17 1C 00 05 00 01 02 02 60 00 00 00 00 00 00
+		00 00 00 00 00 00 00
+	Strings:
+		Power Management Controller FW Bootloader
+		6.0
+
+Handle 0x001D, DMI type 216, 23 bytes
+OEM-specific Type
+	Header and Data:
+		D8 17 1D 00 08 00 01 00 01 09 09 00 00 00 00 00
+		00 00 00 00 00 00 00
+	Strings:
+		System Programmable Logic Device
+
+Handle 0x001E, DMI type 216, 23 bytes
+OEM-specific Type
+	Header and Data:
+		D8 17 1E 00 09 00 01 00 03 04 00 00 00 03 00 96
+		00 0A 00 00 00 01 00
+	Strings:
+		Server Platform Services (SPS) Firmware
+
+Handle 0x001F, DMI type 219, 32 bytes
+HP ProLiant Information
+	Power Features: 0x000000df
+	Omega Features: 0x00000000
+	Misc. Features: 0x00009001
+		iCRU: Yes
+		UEFI: No
+
+Handle 0x0020, DMI type 223, 11 bytes
+OEM-specific Type
+	Header and Data:
+		DF 0B 20 00 66 46 70 00 00 00 00
+
+Handle 0x0021, DMI type 224, 10 bytes
+OEM-specific Type
+	Header and Data:
+		E0 0A 21 00 00 00 02 03 FE FF
+
+Handle 0x0022, DMI type 226, 21 bytes
+OEM-specific Type
+	Header and Data:
+		E2 15 22 00 38 33 33 31 30 35 43 4E 36 36 34 38
+		30 41 4E 59 01
+	Strings:
+		CN66480ANY
+
+Handle 0x0023, DMI type 227, 22 bytes
+OEM-specific Type
+	Header and Data:
+		E3 16 23 00 03 00 07 00 00 A0 01 00 FF FF FF FF
+		00 00 00 00 00 00
+
+Handle 0x0024, DMI type 227, 22 bytes
+OEM-specific Type
+	Header and Data:
+		E3 16 24 00 03 00 08 00 00 A2 01 00 FF FF FF FF
+		00 00 00 00 00 00
+
+Handle 0x0025, DMI type 227, 22 bytes
+OEM-specific Type
+	Header and Data:
+		E3 16 25 00 03 00 09 00 00 A4 01 00 FF FF FF FF
+		01 00 00 00 00 00
+
+Handle 0x0026, DMI type 227, 22 bytes
+OEM-specific Type
+	Header and Data:
+		E3 16 26 00 03 00 0A 00 00 A6 01 00 FF FF FF FF
+		01 00 00 00 00 00
+
+Handle 0x0027, DMI type 228, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E4 0E 27 00 00 00 00 00 00 00 00 FF 00 00
+
+Handle 0x0028, DMI type 228, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E4 0E 28 00 01 00 00 00 00 00 00 FF 00 00
+
+Handle 0x0029, DMI type 228, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E4 0E 29 00 02 00 00 00 00 00 00 FF 00 00
+
+Handle 0x002A, DMI type 228, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E4 0E 2A 00 03 00 00 00 00 00 00 FF 00 00
+
+Handle 0x002B, DMI type 228, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E4 0E 2B 00 04 00 00 00 00 00 00 FF 00 00
+
+Handle 0x002C, DMI type 228, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E4 0E 2C 00 05 00 00 00 00 00 00 FF 00 00
+
+Handle 0x002D, DMI type 228, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E4 0E 2D 00 06 00 00 00 00 00 00 FF 00 00
+
+Handle 0x002E, DMI type 228, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E4 0E 2E 00 07 00 00 00 00 00 00 FF 00 00
+
+Handle 0x002F, DMI type 228, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E4 0E 2F 00 08 06 00 00 00 00 00 FF 01 00
+
+Handle 0x0030, DMI type 229, 100 bytes
+OEM-specific Type
+	Header and Data:
+		E5 64 30 00 24 4F 43 53 00 B0 F1 77 00 00 00 00
+		00 40 00 00 24 4F 43 42 00 50 F0 77 00 00 00 00
+		00 60 01 00 24 48 44 44 00 30 F0 77 00 00 00 00
+		00 20 00 00 24 57 48 45 00 20 EF 77 00 00 00 00
+		00 10 00 00 24 53 4D 56 98 2E F2 77 00 00 00 00
+		08 00 00 00 24 5A 58 54 00 10 EF 77 00 00 00 00
+		3B 00 00 00
+
+Handle 0x0031, DMI type 232, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E8 0E 31 00 07 00 11 00 00 00 B0 04 B0 04
+
+Handle 0x0032, DMI type 232, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E8 0E 32 00 08 00 11 00 00 00 B0 04 B0 04
+
+Handle 0x0033, DMI type 232, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E8 0E 33 00 09 00 11 00 00 00 B0 04 B0 04
+
+Handle 0x0034, DMI type 232, 14 bytes
+OEM-specific Type
+	Header and Data:
+		E8 0E 34 00 0A 00 11 00 00 00 B0 04 B0 04
+
+Handle 0x0035, DMI type 237, 9 bytes
+OEM-specific Type
+	Header and Data:
+		ED 09 35 00 07 00 01 02 03
+	Strings:
+		Hynix
+		HMA82GS7AFR8N-UH
+		31F9E4B8
+
+Handle 0x0036, DMI type 237, 9 bytes
+OEM-specific Type
+	Header and Data:
+		ED 09 36 00 08 00 01 02 03
+	Strings:
+		Hynix
+		HMA82GS7AFR8N-UH
+		31F9E4B6
+
+Handle 0x0037, DMI type 237, 9 bytes
+OEM-specific Type
+	Header and Data:
+		ED 09 37 00 09 00 01 02 03
+	Strings:
+		Hynix
+		HMA82GS7AFR8N-UH
+		31F9E96B
+
+Handle 0x0038, DMI type 237, 9 bytes
+OEM-specific Type
+	Header and Data:
+		ED 09 38 00 0A 00 01 02 03
+	Strings:
+		Hynix
+		HMA82GS7AFR8N-UH
+		31F9E4B9
+
+Handle 0x0039, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI-E Slot 2
+	Type: x4 PCI Express 2
+	Current Usage: Available
+	Length: Other
+	ID: 2
+	Characteristics:
+		3.3 V is provided
+		PME signal is supported
+	Bus Address: 0000:02:00.0
+
+Handle 0x003A, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI-E Slot 1
+	Type: x1 PCI Express 2
+	Current Usage: Available
+	Length: Other
+	ID: 1
+	Characteristics:
+		3.3 V is provided
+		PME signal is supported
+	Bus Address: 0000:05:00.0
+
+Handle 0x003B, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI-E Slot 5
+	Type: x2 PCI Express 2
+	Current Usage: Available
+	Length: Other
+	ID: 5
+	Characteristics:
+		3.3 V is provided
+		PME signal is supported
+	Bus Address: 0000:08:00.0
+
+Handle 0x003C, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI-E Slot 0
+	Type: x1 PCI Express 3 x4
+	Current Usage: Available
+	Length: Unknown
+	ID: 0
+	Characteristics:
+		3.3 V is provided
+		PME signal is supported
+	Bus Address: 0000:fe:00.0
+
+Handle 0x003D, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI-E Slot 0
+	Type: x1 PCI Express 3 x4
+	Current Usage: Available
+	Length: Unknown
+	ID: 0
+	Characteristics:
+		3.3 V is provided
+		PME signal is supported
+	Bus Address: 0000:fe:00.0
+
+Handle 0x003E, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI-E Slot 4
+	Type: x4 PCI Express 2
+	Current Usage: Available
+	Length: Unknown
+	ID: 4
+	Characteristics:
+		3.3 V is provided
+		PME signal is supported
+	Bus Address: 0000:0b:00.0
+
+Handle 0x003F, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI-E Slot 3
+	Type: x4 PCI Express 2
+	Current Usage: In Use
+	Length: Other
+	ID: 3
+	Characteristics:
+		3.3 V is provided
+		PME signal is supported
+	Bus Address: 0000:0e:00.0
+
+Handle 0x0040, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI-E Slot 1
+	Type: x4 PCI Express 3 x4
+	Current Usage: Available
+	Length: Unknown
+	ID: 1
+	Characteristics:
+		3.3 V is provided
+		PME signal is supported
+	Bus Address: 0000:fe:00.0
+
+Handle 0x0041, DMI type 9, 17 bytes
+System Slot Information
+	Designation: PCI-E Slot 1
+	Type: x4 PCI Express 3 x4
+	Current Usage: Available
+	Length: Unknown
+	ID: 1
+	Characteristics:
+		3.3 V is provided
+		PME signal is supported
+	Bus Address: 0000:fe:00.0
+
+Handle 0x0042, DMI type 233, 41 bytes
+HP BIOS PXE NIC PCI and MAC Information
+	NIC 1: PCI device 11:00.0, MAC address 00:FD:45:50:6C:01
+
+Handle 0x0043, DMI type 233, 41 bytes
+HP BIOS PXE NIC PCI and MAC Information
+	NIC 2: PCI device 11:00.0, MAC address 00:FD:45:50:6C:02
+
+Handle 0x0044, DMI type 32, 11 bytes
+System Boot Information
+	Status: No errors detected
+
+Handle 0x0045, DMI type 196, 15 bytes
+OEM-specific Type
+	Header and Data:
+		C4 0F 45 00 00 00 00 00 00 00 02 01 00 01 02
+
+Handle 0x0046, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Embedded LOM 1 Port 1
+	Type: Ethernet
+	Status: Enabled
+	Type Instance: 1
+	Bus Address: 0000:11:00.0
+
+Handle 0x0047, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Embedded LOM 1 Port 2
+	Type: Ethernet
+	Status: Enabled
+	Type Instance: 2
+	Bus Address: 0000:11:00.0
+
+Handle 0x0048, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Embedded SATA Controller #1
+	Type: SATA Controller
+	Status: Enabled
+	Type Instance: 1
+	Bus Address: 0000:00:17.0
+
+Handle 0x0049, DMI type 202, 13 bytes
+OEM-specific Type
+	Header and Data:
+		CA 0D 49 00 07 00 FF 01 01 01 00 00 00
+
+Handle 0x004A, DMI type 202, 13 bytes
+OEM-specific Type
+	Header and Data:
+		CA 0D 4A 00 08 00 FF 02 01 02 00 00 00
+
+Handle 0x004B, DMI type 202, 13 bytes
+OEM-specific Type
+	Header and Data:
+		CA 0D 4B 00 09 00 FF 03 01 03 00 00 00
+
+Handle 0x004C, DMI type 202, 13 bytes
+OEM-specific Type
+	Header and Data:
+		CA 0D 4C 00 0A 00 FF 04 01 04 00 00 00
+
+Handle 0x004D, DMI type 203, 34 bytes
+OEM-specific Type
+	Header and Data:
+		CB 22 4D 00 39 00 FE FF FF FF FF FF FF FF FF FF
+		FF FF FE FF 00 00 09 0A 02 01 FF FF 01 02 03 04
+		FE FF
+	Strings:
+		PciRoot(0x0)/Pci(0x1D,0x0)/Pci(0x0,0x0)
+		PCI.Slot.2.1
+		Empty slot 2
+		Slot 2
+
+Handle 0x004E, DMI type 203, 34 bytes
+OEM-specific Type
+	Header and Data:
+		CB 22 4E 00 3A 00 FE FF FF FF FF FF FF FF FF FF
+		FF FF FE FF 00 00 09 0A 01 01 FF FF 01 02 03 04
+		FE FF
+	Strings:
+		PciRoot(0x0)/Pci(0x1D,0x5)/Pci(0x0,0x0)
+		PCI.Slot.1.1
+		Empty slot 1
+		Slot 1
+
+Handle 0x004F, DMI type 203, 34 bytes
+OEM-specific Type
+	Header and Data:
+		CB 22 4F 00 3B 00 FE FF FF FF FF FF FF FF FF FF
+		FF FF FE FF 00 00 09 0A 05 01 FF FF 01 02 03 04
+		FE FF
+	Strings:
+		PciRoot(0x0)/Pci(0x1C,0x0)/Pci(0x0,0x0)
+		PCI.Slot.5.1
+		Empty slot 5
+		Slot 5
+
+Handle 0x0050, DMI type 203, 34 bytes
+OEM-specific Type
+	Header and Data:
+		CB 22 50 00 3C 00 FE FF FF FF FF FF FF FF FF FF
+		FF FF FE FF 00 00 09 0A 01 01 FF FF 01 02 03 04
+		FE FF
+	Strings:
+		PciRoot(0x0)/Pci(0x1C,0x2)/Pci(0x0,0x0)
+		PCI.Slot.1.1
+		Unknown
+		Slot 0
+
+Handle 0x0051, DMI type 203, 34 bytes
+OEM-specific Type
+	Header and Data:
+		CB 22 51 00 3D 00 FE FF FF FF FF FF FF FF FF FF
+		FF FF FE FF 00 00 09 0A 01 01 FF FF 01 02 03 04
+		FE FF
+	Strings:
+		PciRoot(0x0)/Pci(0x1C,0x2)/Pci(0x0,0x0)
+		PCI.Slot.1.1
+		Unknown
+		Slot 0
+
+Handle 0x0052, DMI type 203, 34 bytes
+OEM-specific Type
+	Header and Data:
+		CB 22 52 00 3E 00 FE FF FF FF FF FF FF FF FF FF
+		FF FF FE FF 00 00 09 0A 04 01 FF FF 01 02 03 04
+		FE FF
+	Strings:
+		PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)
+		PCI.Slot.4.1
+		Empty slot 4
+		Slot 4
+
+Handle 0x0053, DMI type 203, 34 bytes
+OEM-specific Type
+	Header and Data:
+		CB 22 53 00 3F 00 FE FF 79 11 0F 01 79 11 01 00
+		01 08 FE FF 00 00 10 0A 03 01 FF FF 01 02 03 04
+		FE FF
+	Strings:
+		PciRoot(0x0)/Pci(0x1B,0x0)/Pci(0x0,0x0)
+		NVMe.Slot.3.1
+		NVM Express Controller
+		Slot 3
+
+Handle 0x0054, DMI type 203, 34 bytes
+OEM-specific Type
+	Header and Data:
+		CB 22 54 00 40 00 FE FF FF FF FF FF FF FF FF FF
+		FF FF FE FF 00 00 09 0A 01 01 FF FF 01 02 03 04
+		FE FF
+	Strings:
+		PciRoot(0x0)/Pci(0x1C,0x2)/Pci(0x0,0x0)
+		PCI.Slot.1.1
+		Empty slot 1
+		Slot 0
+
+Handle 0x0055, DMI type 203, 34 bytes
+OEM-specific Type
+	Header and Data:
+		CB 22 55 00 41 00 FE FF FF FF FF FF FF FF FF FF
+		FF FF FE FF 00 00 09 0A 01 01 FF FF 01 02 03 04
+		FE FF
+	Strings:
+		PciRoot(0x0)/Pci(0x1C,0x2)/Pci(0x0,0x0)
+		PCI.Slot.1.1
+		Empty slot 1
+		Slot 0
+
+Handle 0x0056, DMI type 203, 34 bytes
+OEM-specific Type
+	Header and Data:
+		CB 22 56 00 46 00 FE FF B3 15 07 10 90 15 04 22
+		02 00 FE FF 00 00 04 01 01 01 FF FF 01 02 03 04
+		FE FF
+	Strings:
+		PciRoot(0x0)/Pci(0x1,0x0)/Pci(0x0,0x0)/Ctrl(0x1)
+		NIC.LOM.1.1
+		Port 1 - Mellanox Network Adapter
+		Embedded LOM 1
+
+Handle 0x0057, DMI type 203, 34 bytes
+OEM-specific Type
+	Header and Data:
+		CB 22 57 00 47 00 FE FF B3 15 07 10 90 15 04 22
+		02 00 FE FF 00 00 04 01 01 02 FF FF 01 02 03 04
+		FE FF
+	Strings:
+		PciRoot(0x0)/Pci(0x1,0x0)/Pci(0x0,0x0)/Ctrl(0x2)
+		NIC.LOM.1.2
+		Port 2 - Mellanox Network Adapter
+		Embedded LOM 1
+
+Handle 0x0058, DMI type 203, 34 bytes
+OEM-specific Type
+	Header and Data:
+		CB 22 58 00 48 00 FE FF 86 80 02 A1 3C 10 65 81
+		01 06 FE FF 00 00 06 08 01 01 FF FF 01 02 03 04
+		FE FF
+	Strings:
+		PciRoot(0x0)/Pci(0x17,0x0)
+		SATA.Emb.1.1
+		Embedded SATA Controller #1
+		Embedded SATA Controller #1
+
+Handle 0x0059, DMI type 234, 16 bytes
+OEM-specific Type
+	Header and Data:
+		EA 10 59 00 FE FF C0 00 01 A0 00 00 00 00 00 00
+
+Handle 0x005A, DMI type 234, 12 bytes
+OEM-specific Type
+	Header and Data:
+		EA 0C 5A 00 27 00 60 03 01 01 00 00
+
+Handle 0x005B, DMI type 240, 39 bytes
+OEM-specific Type
+	Header and Data:
+		F0 27 5B 00 56 00 18 1E 24 00 01 08 48 0D 00 00
+		00 00 00 0F 00 00 00 00 00 00 00 0B 00 00 00 00
+		00 00 00 02 00 00 00
+	Strings:
+		02.36.70.00
+
+Handle 0xFEFF, DMI type 127, 4 bytes
+End Of Table

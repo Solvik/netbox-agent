@@ -28,6 +28,18 @@ def test_hp_service_tag(fixture):
 
 @parametrize_with_fixtures(
     'dmidecode/', only_filenames=[
+        'HP_ProLiant_m710x'
+    ])
+def test_moonshot_blade(fixture):
+    dmi = parse(fixture)
+    server = HPHost(dmi)
+    assert server.get_service_tag() == 'CN66480BLA'
+    assert server.get_chassis_service_tag() == 'CZ3702MD5K'
+    assert server.is_blade() is True
+
+
+@parametrize_with_fixtures(
+    'dmidecode/', only_filenames=[
         'SYS-5039MS-H12TRF-OS012.txt'
     ])
 def test_supermicro_blade(fixture):
