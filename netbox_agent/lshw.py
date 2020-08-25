@@ -22,6 +22,7 @@ class LSHW():
         self.cpus = []
         self.power = []
         self.disks = []
+        self.gpus = []
         self.vendor = self.hw_info["vendor"]
         self.product = self.hw_info["product"]
         self.chassis_serial = self.hw_info["serial"]
@@ -53,6 +54,8 @@ class LSHW():
     def get_hw_linux(self, hwclass):
         if hwclass == "cpu":
             return self.cpus
+        if hwclass == "gpu":
+            return self.gpus
         if hwclass == "network":
             return self.interfaces
         if hwclass == 'storage':
@@ -132,6 +135,15 @@ class LSHW():
 
             self.memories.append(d)
 
+    def find_gpus(self, obj):
+        if "product" in obj:
+            c = {}
+            c["product"] = obj["product"]
+            c["vendor"] = obj["vendor"]
+            c["description"] = obj["description"]
+
+            self.gpus.append(c)
+
     def walk_bridge(self, obj):
         if "children" not in obj:
             return
@@ -139,6 +151,8 @@ class LSHW():
         for bus in obj["children"]:
             if bus["class"] == "storage":
                 self.find_storage(bus)
+            if bus["class"] == "display":
+                self.find_gpus(bus)
 
             if "children" in bus:
                 for b in bus["children"]:
@@ -146,6 +160,8 @@ class LSHW():
                         self.find_storage(b)
                     if b["class"] == "network":
                         self.find_network(b)
+                    if b["class"] == "display":
+                        self.find_gpus(b)
 
 
 if __name__ == "__main__":

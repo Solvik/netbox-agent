@@ -13,6 +13,7 @@ from netbox_agent.raid.storcli import StorcliRaid
 
 INVENTORY_TAG = {
     'cpu': {'name': 'hw:cpu', 'slug': 'hw-cpu'},
+    'gpu': {'name': 'hw:gpu', 'slug': 'hw-gpu'},
     'disk': {'name': 'hw:disk', 'slug': 'hw-disk'},
     'interface': {'name': 'hw:interface', 'slug': 'hw-interface'},
     'memory': {'name': 'hw:memory', 'slug': 'hw-memory'},
@@ -32,6 +33,7 @@ class Inventory():
     * cpu
     * raid cards
     * disks
+    * gpus
 
     methods that:
     * get local item
@@ -438,6 +440,34 @@ class Inventory():
             if memory.get('serial') not in [x.serial for x in nb_memories]:
                 self.create_netbox_memory(memory)
 
+    def create_netbox_gpus(self):
+        for gpu in self.lshw.get_hw_linux('gpu'):
+            manufacturer = self.find_or_create_manufacturer(gpu["vendor"])
+            _ = nb.dcim.inventory_items.create(
+                device=self.device_id,
+                manufacturer=manufacturer.id,
+                discovered=True,
+                tags=[INVENTORY_TAG['gpu']['name']],
+                name=gpu['product'],
+                description='GPU {}'.format(gpu['product']),
+            )
+
+            logging.info('Creating GPU model {}'.format(gpu['product']))
+
+    def do_netbox_gpus(self):
+        gpus = self.lshw.get_hw_linux('gpu')
+        nb_gpus = self.get_netbox_inventory(
+            device_id=self.device_id,
+            tag=INVENTORY_TAG['gpu']['slug'],
+        )
+
+        if not len(nb_gpus) or \
+           len(nb_gpus) and len(gpus) != len(nb_gpus):
+            for x in nb_gpus:
+                x.delete()
+
+            self.create_netbox_gpus()
+
     def create_or_update(self):
         if config.inventory is None or config.update_inventory is None:
             return False
@@ -447,4 +477,5 @@ class Inventory():
         self.do_netbox_disks()
         self.do_netbox_interfaces()
         self.do_netbox_motherboard()
+        self.do_netbox_gpus()
         return True
