@@ -27,7 +27,7 @@ class HPHost(ServerBase):
         # FIXME: make a dmidecode function get_by_dminame() ?
         if self.is_blade():
             locator = dmidecode.get_by_type(self.dmi, 204)
-            if self.product == "ProLiant BL460c Gen10":
+            if self.product.startswith("ProLiant BL460c Gen10"):
                 locator = locator[0]["Strings"]
                 return {
                     "Enclosure Model": locator[2].strip(),
