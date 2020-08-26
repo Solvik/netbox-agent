@@ -46,4 +46,4 @@ class GenericHost(ServerBase):
         Say if the device can host an extension card based
         on the product name
         """
-        raise NotImplementedError
+        pass
