@@ -202,7 +202,7 @@ Tested on:
 * HP ProLiant BL460c Gen8
 * HP ProLiant BL460c Gen9
 * HP ProLiant BL460c Gen10
-* HP ProLiant BL460c Gen10 Graphics Exp
+* HP ProLiant BL460c Gen10 Graphics Exp its expansion HP ProLiant BL460c Graphics Expansion Blade
 * HP Moonshot 1500 Enclosure (your `DeviceType` should have slots batch create with `Bay c[1-45n1]`) with HP ProLiant m750, m710x, m510 Server Cartridge
 
 ### Pizzas
