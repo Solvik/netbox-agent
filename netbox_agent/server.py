@@ -204,7 +204,7 @@ class ServerBase():
         return new_blade
 
     def _netbox_create_blade_expansion(self, chassis, datacenter, tenant, rack):
-        device_role = get_device_role(config.device.bkade_role)
+        device_role = get_device_role(config.device.blade_role)
         device_type = get_device_type(self.get_expansion_product())
         serial = self.get_expansion_service_tag()
         hostname = self.get_hostname() + " expansion"
