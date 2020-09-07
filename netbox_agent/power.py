@@ -117,6 +117,9 @@ class PowerSupply():
 
         for i, nb_psu in enumerate(nb_psus):
             nb_psu.allocated_draw = float(psu_cons[i]) * voltage
+            if nb_psu.allocated_draw < 1:
+                logging.info('PSU is not connected or in standby mode')
+                continue
             nb_psu.save()
             logging.info('Updated power consumption for PSU {}: {}W'.format(
                 nb_psu.name,
