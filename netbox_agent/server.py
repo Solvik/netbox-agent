@@ -121,6 +121,13 @@ class ServerBase():
         """
         return self.system[0]['Serial Number'].strip()
 
+    def get_expansion_service_tag(self):
+        """
+        Return the virtual Service Tag from dmidecode info host
+        with 'expansion'
+        """
+        return self.system[0]['Serial Number'].strip() + " expansion"
+
     def get_hostname(self):
         if config.hostname_cmd is None:
             return '{}'.format(socket.gethostname())
@@ -153,6 +160,9 @@ class ServerBase():
     def get_power_consumption(self):
         raise NotImplementedError
 
+    def get_expansion_product(self):
+        raise NotImplementedError
+
     def _netbox_create_chassis(self, datacenter, tenant, rack):
         device_type = get_device_type(self.get_chassis())
         device_role = get_device_role(config.device.chassis_role)
@@ -178,6 +188,28 @@ class ServerBase():
         hostname = self.get_hostname()
         logging.info(
             'Creating blade (serial: {serial}) {hostname} on chassis {chassis_serial}'.format(
+                serial=serial, hostname=hostname, chassis_serial=chassis.serial
+            ))
+        new_blade = nb.dcim.devices.create(
+            name=hostname,
+            serial=serial,
+            device_role=device_role.id,
+            device_type=device_type.id,
+            parent_device=chassis.id,
+            site=datacenter.id if datacenter else None,
+            tenant=tenant.id if tenant else None,
+            rack=rack.id if rack else None,
+            tags=self.tags,
+        )
+        return new_blade
+
+    def _netbox_create_blade_expansion(self, chassis, datacenter, tenant, rack):
+        device_role = get_device_role(config.device.blade_role)
+        device_type = get_device_type(self.get_expansion_product())
+        serial = self.get_expansion_service_tag()
+        hostname = self.get_hostname() + " expansion"
+        logging.info(
+            'Creating expansion (serial: {serial}) {hostname} on chassis {chassis_serial}'.format(
                 serial=serial, hostname=hostname, chassis_serial=chassis.serial
             ))
         new_blade = nb.dcim.devices.create(
@@ -250,6 +282,41 @@ class ServerBase():
                 slot=slot
             ))
 
+    def _netbox_set_or_update_blade_expansion_slot(self, server, chassis, datacenter):
+        # before everything check if right chassis
+        actual_device_bay = server.parent_device.device_bay if server.parent_device else None
+        actual_chassis = actual_device_bay.device if actual_device_bay else None
+        slot = self.get_blade_expansion_slot()
+        if actual_chassis and \
+           actual_chassis.serial == chassis.serial and \
+           actual_device_bay.name == slot:
+            return
+
+        server.name += " expansion"
+
+        real_device_bays = nb.dcim.device_bays.filter(
+            device_id=chassis.id,
+            name=slot,
+        )
+        if len(real_device_bays) > 0:
+            logging.info(
+                'Setting device expansion ({serial}) new slot on {slot} '
+                '(Chassis {chassis_serial})..'.format(
+                    serial=server.serial, slot=slot, chassis_serial=chassis.serial
+                ))
+            # reset actual device bay if set
+            if actual_device_bay:
+                actual_device_bay.installed_device = None
+                actual_device_bay.save()
+            # setup new device bay
+            real_device_bay = real_device_bays[0]
+            real_device_bay.installed_device = server
+            real_device_bay.save()
+        else:
+            logging.error('Could not find slot {slot} expansion for chassis'.format(
+                slot=slot
+            ))
+
     def netbox_create_or_update(self, config):
         """
         Netbox method to create or update info about our server/blade
@@ -300,6 +367,15 @@ class ServerBase():
             self.power.create_or_update_power_supply()
             self.power.report_power_consumption()
 
+        if self.own_expansion_slot():
+            logging.debug('Update Server expansion...')
+            expansion = nb.dcim.devices.get(serial=self.get_expansion_service_tag())
+            if not expansion:
+                expansion = self._netbox_create_blade_expansion(chassis, datacenter, tenant, rack)
+
+            # set slot for blade expansion
+            self._netbox_set_or_update_blade_expansion_slot(expansion, chassis, datacenter)
+
         update = 0
         # for every other specs
         # check hostname
@@ -326,6 +402,7 @@ class ServerBase():
         print('Rack:', self.get_rack())
         print('Netbox Rack:', self.get_netbox_rack())
         print('Is blade:', self.is_blade())
+        print('Got expansion:', self.own_expansion_slot())
         print('Product Name:', self.get_product_name())
         print('Chassis:', self.get_chassis())
         print('Chassis service tag:', self.get_chassis_service_tag())

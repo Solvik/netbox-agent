@@ -19,6 +19,7 @@ def test_init(fixture):
         'HP_BL460c_Gen9',
         'HP_DL380p_Gen8',
         'HP_SL4540_Gen8'
+        'HP_ProLiant_BL460c_Gen10_Graphics_Exp'
     ])
 def test_hp_service_tag(fixture):
     dmi = parse(fixture)
@@ -36,6 +37,7 @@ def test_moonshot_blade(fixture):
     assert server.get_service_tag() == 'CN66480BLA'
     assert server.get_chassis_service_tag() == 'CZ3702MD5K'
     assert server.is_blade() is True
+    assert server.own_expansion_slot() is False
 
 
 @parametrize_with_fixtures(
@@ -89,3 +91,17 @@ def test_generic_host_product_name(fixture):
     dmi = parse(fixture)
     server = ServerBase(dmi)
     assert server.get_product_name() == 'SR'
+
+
+@parametrize_with_fixtures(
+    'dmidecode/', only_filenames=[
+        'HP_ProLiant_BL460c_Gen10_Graphics_Exp'
+    ])
+def test_hp_blade_with_gpu_expansion(fixture):
+    dmi = parse(fixture)
+    server = HPHost(dmi)
+    assert server.get_service_tag() == '4242'
+    assert server.get_chassis_service_tag() == '4343'
+    assert server.is_blade() is True
+    assert server.own_expansion_slot() is True
+    assert server.get_expansion_service_tag() == '4242 expansion'

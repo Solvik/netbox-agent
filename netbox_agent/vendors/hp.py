@@ -11,12 +11,9 @@ class HPHost(ServerBase):
             self.hp_rack_locator = self._find_rack_locator()
 
     def is_blade(self):
-        if self.product.startswith("ProLiant BL"):
-            return True
-        elif self.product.startswith("ProLiant m") and self.product.endswith("Server Cartridge"):
-            return True
-        else:
-            return False
+        blade = self.product.startswith("ProLiant BL")
+        blade |= self.product.startswith("ProLiant m") and self.product.endswith("Server Cartridge")
+        return blade
 
     def _find_rack_locator(self):
         """
@@ -27,7 +24,7 @@ class HPHost(ServerBase):
         # FIXME: make a dmidecode function get_by_dminame() ?
         if self.is_blade():
             locator = dmidecode.get_by_type(self.dmi, 204)
-            if self.product == "ProLiant BL460c Gen10":
+            if self.product.startswith("ProLiant BL460c Gen10"):
                 locator = locator[0]["Strings"]
                 return {
                     "Enclosure Model": locator[2].strip(),
@@ -68,3 +65,36 @@ class HPHost(ServerBase):
         if self.is_blade():
             return self.hp_rack_locator["Enclosure Serial"].strip()
         return self.get_service_tag()
+
+    def get_expansion_product(self):
+        """
+        Get the extension slot that is on a pair slot number
+        next to the compute slot that is on an odd slot number
+        I only know on model of slot GPU extension card that.
+        """
+        if self.own_expansion_slot():
+            return "ProLiant BL460c Graphics Expansion Blade"
+        return None
+
+    def is_expansion_slot(self, server):
+        """
+        Return True if its an extension slot, based on the name
+        """
+        return server.name.endswith(" expansion")
+
+    def get_blade_expansion_slot(self):
+        """
+        Expansion slot are always the compute bay number + 1
+        """
+        if self.is_blade() and self.own_expansion_slot():
+            return 'Bay {}'.format(
+                str(int(self.hp_rack_locator['Server Bay'].strip()) + 1)
+            )
+        return None
+
+    def own_expansion_slot(self):
+        """
+        Say if the device can host an extension card based
+        on the product name
+        """
+        return self.get_product_name().endswith('Graphics Exp')
