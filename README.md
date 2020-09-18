@@ -13,8 +13,9 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 * Generic ability to guess datacenters and rack location through drivers (`cmd` and `file` and custom ones)
 * Update existing `Device` and `Interface`
 * Handle blade moving (new slot, new chassis)
+* Handle blade GPU expansions
 * Automatic cabling (server's interface to switch's interface) using lldp
-* Local inventory using `Inventory Item` for CPU, RAM, RAID cards, physical disks (behind raid cards)
+* Local inventory using `Inventory Item` for CPU, GPU, RAM, RAID cards, physical disks (behind raid cards)
 * PSUs creation and power consumption reporting (based on vendor's tools)
 
 # Requirements
