@@ -88,25 +88,28 @@ class LSHW():
                 self.disks.append(d)
 
         elif "nvme" in obj["configuration"]["driver"]:
-            try:
-                nvme = json.loads(
-                    subprocess.check_output(
-                        ["nvme", '-list', '-o', 'json'],
-                        encoding='utf8')
-                )
+            if not is_tool('nvme'):
+                logging.error('nvme-cli >= 1.0 does not seem to be installed')
+            else:
+                try:
+                    nvme = json.loads(
+                        subprocess.check_output(
+                            ["nvme", '-list', '-o', 'json'],
+                            encoding='utf8')
+                    )
 
-                for device in nvme["Devices"]:
-                    d = {}
-                    d['logicalname'] = device["DevicePath"]
-                    d['product'] = device["ModelNumber"]
-                    d['serial'] = device["SerialNumber"]
-                    d["version"] = device["Firmware"]
-                    d['size'] = device["UsedSize"]
-                    d['description'] = "NVME Disk"
+                    for device in nvme["Devices"]:
+                        d = {}
+                        d['logicalname'] = device["DevicePath"]
+                        d['product'] = device["ModelNumber"]
+                        d['serial'] = device["SerialNumber"]
+                        d["version"] = device["Firmware"]
+                        d['size'] = device["UsedSize"]
+                        d['description'] = "NVME Disk"
 
-                    self.disks.append(d)
-            except Exception:
-                pass
+                        self.disks.append(d)
+                except Exception:
+                    pass
 
     def find_cpus(self, obj):
         if "product" in obj:
