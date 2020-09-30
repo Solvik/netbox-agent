@@ -88,22 +88,25 @@ class LSHW():
                 self.disks.append(d)
 
         elif "nvme" in obj["configuration"]["driver"]:
-            nvme = json.loads(
-                subprocess.check_output(
-                    ["nvme", '-list', '-o', 'json'],
-                    encoding='utf8')
-            )
+            try:
+                nvme = json.loads(
+                    subprocess.check_output(
+                        ["nvme", '-list', '-o', 'json'],
+                        encoding='utf8')
+                )
 
-            for device in nvme["Devices"]:
-                d = {}
-                d['logicalname'] = device["DevicePath"]
-                d['product'] = device["ModelNumber"]
-                d['serial'] = device["SerialNumber"]
-                d["version"] = device["Firmware"]
-                d['size'] = device["UsedSize"]
-                d['description'] = "NVME Disk"
+                for device in nvme["Devices"]:
+                    d = {}
+                    d['logicalname'] = device["DevicePath"]
+                    d['product'] = device["ModelNumber"]
+                    d['serial'] = device["SerialNumber"]
+                    d["version"] = device["Firmware"]
+                    d['size'] = device["UsedSize"]
+                    d['description'] = "NVME Disk"
 
-                self.disks.append(d)
+                    self.disks.append(d)
+            except Exception:
+                pass
 
     def find_cpus(self, obj):
         if "product" in obj:
