@@ -1,8 +1,12 @@
 import subprocess
+import logging
+from netbox_agent.misc import is_tool
 
 
 class LLDP():
     def __init__(self, output=None):
+        if not is_tool('lldpctl'):
+            logging.debug('lldpd package seems to be missing or daemon not running.')
         if output:
             self.output = output
         else:
@@ -40,6 +44,8 @@ class LLDP():
                 current_dict[final] = value
         for interface, vlan in vlans.items():
             output_dict['lldp'][interface]['vlan'] = vlan
+        if not output_dict:
+            logging.debug('No LLDP output, please check your network config.')
         return output_dict
 
     def get_switch_ip(self, interface):
