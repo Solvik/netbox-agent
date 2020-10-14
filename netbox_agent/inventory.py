@@ -442,6 +442,8 @@ class Inventory():
 
     def create_netbox_gpus(self):
         for gpu in self.lshw.get_hw_linux('gpu'):
+            if 'product' in gpu and len(gpu['product']) > 50:
+                gpu['product'] = (gpu['product'][:48] + '..')
             manufacturer = self.find_or_create_manufacturer(gpu["vendor"])
             _ = nb.dcim.inventory_items.create(
                 device=self.device_id,
