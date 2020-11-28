@@ -15,6 +15,7 @@ from netbox_agent.lldp import LLDP
 
 class Network(object):
     def __init__(self, server, *args, **kwargs):
+        self.netbox_version = float(nb.version)
         self.nics = []
 
         self.server = server
@@ -318,10 +319,15 @@ class Network(object):
         if not len(netbox_ips):
             logging.info('Create new IP {ip} on {interface}'.format(
                 ip=ip, interface=interface))
+            query_params = {
+                'address': ip,
+                'status': "active",
+            }
+            if self.netbox_version > 2.8:
+                query_params.update({self.intf_type: "assigned_object_id"})
+
             netbox_ip = nb.ipam.ip_addresses.create(
-                address=ip,
-                interface=interface.id,
-                status=1,
+                **query_params
             )
         else:
             netbox_ip = netbox_ips[0]
@@ -340,30 +346,49 @@ class Network(object):
                 # or if everything is assigned to other servers
                 elif not len(assigned_anycast_ip):
                     logging.info('Creating Anycast IP {} and assigning it to interface'.format(ip))
-                    netbox_ip = nb.ipam.ip_addresses.create(
-                        address=ip,
-                        interface=interface.id,
-                        status=1,
-                        role=self.ipam_choices['ip-address:role']['Anycast'],
-                        tenant=self.tenant.id if self.tenant else None,
-                    )
+                    query_params = {
+                        "address": ip,
+                        "status": "active",
+                        "role": self.ipam_choices['ip-address:role']['Anycast'],
+                        "tenant": self.tenant.id if self.tenant else None,
+                    }
+                    if self.netbox_version > 2.8:
+                        query_params.update({
+                            'assigned_object_type': self.assigned_object_type,
+                            'assigned_object_id': interface.id
+                        })
+                    else:
+                        query_params.update({'interface': interface.id})
+                    netbox_ip = nb.ipam.ip_addresses.create(**query_params)
                 return netbox_ip
             else:
-                if netbox_ip.interface is None:
+                if hasattr(netbox_ip, 'interface') and netbox_ip.interface is None or \
+                   hasattr(netbox_ip, 'assigned_object') and netbox_ip.assigned_object is None:
                     logging.info('Assigning existing IP {ip} to {interface}'.format(
                         ip=ip, interface=interface))
-                elif netbox_ip.interface.id != interface.id:
+                elif hasattr(netbox_ip, 'interface') and netbox_ip.interface.id != interface.id or \
+                     hasattr(netbox_ip, 'assigned_object') and netbox_ip.assigned_object_id != interface.id:
+                    if self.netbox_version > 2.8:
+                        old_interface = netbox_ip.assigned_object
+                    else:
+                        old_interface = netbox_ip.interface
+
                     logging.info(
                         'Detected interface change for ip {ip}: old interface is '
                         '{old_interface} (id: {old_id}), new interface is {new_interface} '
                         ' (id: {new_id})'
                         .format(
-                            old_interface=netbox_ip.interface, new_interface=interface,
+                            old_interface=old_interface, new_interface=interface,
                             old_id=netbox_ip.id, new_id=interface.id, ip=netbox_ip.address
                         ))
                 else:
                     return netbox_ip
-                netbox_ip.interface = interface
+
+                if self.netbox_version > 2.8:
+                    netbox_ip.assigned_object_type = self.assigned_object_type
+                    netbox_ip.assigned_object_id = interface.id
+                else:
+                    netbox_ip.interface = interface
                 netbox_ip.save()
         return netbox_ip
 
@@ -385,17 +410,29 @@ class Network(object):
 
         # delete IP on netbox that are not known on this server
         if len(nb_nics):
-            netbox_ips = nb.ipam.ip_addresses.filter(
-                interface_id=[x.id for x in nb_nics],
-            )
+            if self.netbox_version > 2.8:
+                netbox_ips = nb.ipam.ip_addresses.filter(
+                    assigned_object=[x.id for x in nb_nics],
+                )
+            else:
+                netbox_ips = nb.ipam.ip_addresses.filter(
+                    interface_id=[x.id for x in nb_nics],
+                )
+
             all_local_ips = list(chain.from_iterable([
                 x['ip'] for x in self.nics if x['ip'] is not None
             ]))
             for netbox_ip in netbox_ips:
                 if netbox_ip.address not in all_local_ips:
-                    logging.info('Unassigning IP {ip} from {interface}'.format(
-                        ip=netbox_ip.address, interface=netbox_ip.interface))
-                    netbox_ip.interface = None
+                    if self.netbox_version < 2.9:
+                        logging.info('Unassigning IP {ip} from {interface}'.format(
+                            ip=netbox_ip.address, interface=netbox_ip.interface))
+                        netbox_ip.interface = None
+                    else:
+                        logging.info('Unassigning IP {ip} from {interface}'.format(
+                            ip=netbox_ip.address, interface=netbox_ip.assigned_object))
+                        netbox_ip.assigned_object_type = None
+                        netbox_ip.assigned_object_id = None
                     netbox_ip.save()
 
         # update each nic
@@ -417,12 +454,13 @@ class Network(object):
             ret, interface = self.reset_vlan_on_interface(nic, interface)
             nic_update += ret
 
-            _type = self.get_netbox_type_for_nic(nic)
-            if not interface.type or \
-               _type != interface.type.value:
-                logging.info('Interface type is wrong, resetting')
-                interface.type = _type
-                nic_update += 1
+            if hasattr(interface, 'type'):
+                _type = self.get_netbox_type_for_nic(nic)
+                if not interface.type or \
+                   _type != interface.type.value:
+                    logging.info('Interface type is wrong, resetting')
+                    interface.type = _type
+                    nic_update += 1
 
             if hasattr(interface, 'lag') and interface.lag is not None:
                 local_lag_int = next(
@@ -465,6 +503,9 @@ class ServerNetwork(Network):
         self.nb_net = nb.dcim
         self.custom_arg = {'device': getattr(self.device, "id", None)}
         self.custom_arg_id = {'device_id': getattr(self.device, "id", None)}
+        self.intf_type = "interface_id"
+        self.assigned_object_type = "dcim.interface"
+
 
     def get_network_type(self):
         return 'server'
@@ -585,6 +626,8 @@ class VirtualNetwork(Network):
         self.nb_net = nb.virtualization
         self.custom_arg = {'virtual_machine': getattr(self.device, "id", None)}
         self.custom_arg_id = {'virtual_machine_id': getattr(self.device, "id", None)}
+        self.intf_type = "vminterface_id"
+        self.assigned_object_type = "virtualization.vminterface"
 
         dcim_c = nb.virtualization.interfaces.choices()
         for _choice_type in dcim_c:
