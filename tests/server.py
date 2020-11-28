@@ -49,6 +49,7 @@ def test_supermicro_blade(fixture):
     server = SupermicroHost(dmi)
     assert server.get_service_tag() == 'E235735X6B01665'
     assert server.get_chassis_service_tag() == 'C9390AF40A20098'
+    assert server.get_chassis() == 'SYS-5039MS-H12TRF-OS012'
     assert server.is_blade() is True
 
 
@@ -60,6 +61,7 @@ def test_supermicro_pizza(fixture):
     dmi = parse(fixture)
     server = SupermicroHost(dmi)
     assert server.get_service_tag() == 'A177950X7709591'
+    assert server.get_chassis() == 'SYS-6018R-TDTPR'
     assert server.is_blade() is False
 
 
