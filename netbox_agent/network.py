@@ -324,7 +324,12 @@ class Network(object):
                 'status': "active",
             }
             if self.netbox_version > 2.8:
-                query_params.update({self.intf_type: "assigned_object_id"})
+                query_params.update({
+                    'assigned_object_type': self.assigned_object_type,
+                    'assigned_object_id': interface.id
+                })
+            else:
+                query_params.update({'interface_id': interface.id})
 
             netbox_ip = nb.ipam.ip_addresses.create(
                 **query_params
@@ -412,7 +417,7 @@ class Network(object):
         if len(nb_nics):
             if self.netbox_version > 2.8:
                 netbox_ips = nb.ipam.ip_addresses.filter(
-                    assigned_object=[x.id for x in nb_nics],
+                    **{self.intf_type: [x.id for x in nb_nics]}
                 )
             else:
                 netbox_ips = nb.ipam.ip_addresses.filter(
