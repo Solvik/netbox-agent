@@ -21,7 +21,7 @@ class SupermicroHost(ServerBase):
         self.manufacturer = 'Supermicro'
 
     def is_blade(self):
-        product_name = self.get_product_name()
+        product_name = self.system[0]['Product Name'].strip()
         # Blades
         blade = product_name.startswith('SBI')
         blade |= product_name.startswith('SBA')
@@ -44,19 +44,23 @@ class SupermicroHost(ServerBase):
         return None
 
     def get_service_tag(self):
+        if self.is_blade():
+            return self.baseboard[0]['Serial Number'].strip()
         return self.system[0]['Serial Number'].strip()
 
     def get_product_name(self):
+        if self.is_blade():
+            return self.baseboard[0]['Product Name'].strip()
         return self.system[0]['Product Name'].strip()
 
     def get_chassis(self):
         if self.is_blade():
-            return self.chassis[0]['Product Name'].strip()
+            return self.system[0]['Product Name'].strip()
         return self.get_product_name()
 
     def get_chassis_service_tag(self):
         if self.is_blade():
-            return self.chassis[0]['Serial Number'].strip()
+            return self.system[0]['Serial Number'].strip()
         return self.get_service_tag()
 
     def get_chassis_name(self):
