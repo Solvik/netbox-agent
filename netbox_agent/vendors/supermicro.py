@@ -27,6 +27,8 @@ class SupermicroHost(ServerBase):
         blade |= product_name.startswith('SBA')
         # Twin
         blade |= 'TR-' in product_name
+        # TwinPro
+        blade |= 'TP-' in product_name
         # BigTwin
         blade |= 'BT-' in product_name
         # Microcloud
