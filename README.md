@@ -118,7 +118,7 @@ network:
 #tenant:
 # driver: "file:/tmp/tenant"
 # regex: "(.*)"
-￼
+
 ## Enable virtual machine support 
 # virtual:
 #   # not mandatory, can be guessed
