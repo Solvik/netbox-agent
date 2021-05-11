@@ -58,6 +58,7 @@ class Inventory():
         self.lshw = LSHW()
 
     def create_netbox_tags(self):
+        ret = []
         for key, tag in INVENTORY_TAG.items():
             nb_tag = nb.extras.tags.get(
                 name=tag['name']
@@ -68,6 +69,8 @@ class Inventory():
                     slug=tag['slug'],
                     comments=tag['name'],
                 )
+            ret.append(nb_tag)
+        return ret
 
     def find_or_create_manufacturer(self, name):
         if name is None:
@@ -97,7 +100,7 @@ class Inventory():
             logging.info('Tag {tag} is missing, returning empty array.'.format(tag=tag))
             items = []
 
-        return items
+        return list(items)
 
     def create_netbox_inventory_item(self, device_id, tags, vendor, name, serial, description):
         manufacturer = self.find_or_create_manufacturer(vendor)
@@ -152,7 +155,7 @@ class Inventory():
             if motherboard.get('serial') not in [x.serial for x in nb_motherboards]:
                 self.create_netbox_inventory_item(
                     device_id=self.device_id,
-                    tags=[INVENTORY_TAG['motherboard']['name']],
+                    tags=[{'name': INVENTORY_TAG['motherboard']['name']}],
                     vendor='{}'.format(motherboard.get('vendor', 'N/A')),
                     serial='{}'.format(motherboard.get('serial', 'No SN')),
                     name='{}'.format(motherboard.get('name')),
@@ -165,7 +168,7 @@ class Inventory():
             device=self.device_id,
             manufacturer=manufacturer.id,
             discovered=True,
-            tags=[INVENTORY_TAG['interface']['name']],
+            tags=[{'name': INVENTORY_TAG['interface']['name']}],
             name="{}".format(iface['product']),
             serial='{}'.format(iface['serial']),
             description='{} {}'.format(iface['description'], iface['name'])
@@ -198,7 +201,7 @@ class Inventory():
                 device=self.device_id,
                 manufacturer=manufacturer.id,
                 discovered=True,
-                tags=[INVENTORY_TAG['cpu']['name']],
+                tags=[{'name': INVENTORY_TAG['cpu']['name']}],
                 name=cpu['product'],
                 description='CPU {}'.format(cpu['location']),
                 # asset_tag=cpu['location']
@@ -250,7 +253,7 @@ class Inventory():
             device=self.device_id,
             discovered=True,
             manufacturer=manufacturer.id if manufacturer else None,
-            tags=[INVENTORY_TAG['raid_card']['name']],
+            tags=[{'name': INVENTORY_TAG['raid_card']['name']}],
             name='{}'.format(name),
             serial='{}'.format(serial),
             description='RAID Card',
@@ -367,7 +370,7 @@ class Inventory():
         _ = nb.dcim.inventory_items.create(
             device=self.device_id,
             discovered=True,
-            tags=[INVENTORY_TAG['disk']['name']],
+            tags=[{'name': INVENTORY_TAG['disk']['name']}],
             name=name,
             serial=disk['SN'],
             part_id=disk['Model'],
@@ -407,7 +410,7 @@ class Inventory():
             device=self.device_id,
             discovered=True,
             manufacturer=manufacturer.id,
-            tags=[INVENTORY_TAG['memory']['name']],
+            tags=[{'name': INVENTORY_TAG['memory']['name']}],
             name=name,
             part_id=memory['product'],
             serial=memory['serial'],
@@ -449,7 +452,7 @@ class Inventory():
                 device=self.device_id,
                 manufacturer=manufacturer.id,
                 discovered=True,
-                tags=[INVENTORY_TAG['gpu']['name']],
+                tags=[{'name': INVENTORY_TAG['gpu']['name']}],
                 name=gpu['product'],
                 description='GPU {}'.format(gpu['product']),
             )
