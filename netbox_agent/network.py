@@ -59,6 +59,14 @@ class Network(object):
             ip_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET, [])
             ip6_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET6, [])
 
+            if config.network.ignore_ips and ip_addr:
+                for i, ip in enumerate(ip_addr):
+                    if re.match(config.network.ignore_ips, ip['addr']):
+                        ip_addr.pop(i)
+                for i, ip in enumerate(ip6_addr):
+                    if re.match(config.network.ignore_ips, ip['addr']):
+                        ip6_addr.pop(i)
+
             # netifaces returns a ipv6 netmask that netaddr does not understand.
             # this strips the netmask down to the correct format for netaddr,
             # and remove the interface.
@@ -79,10 +87,6 @@ class Network(object):
                 addr["netmask"] = addr["netmask"].split('/')[0]
                 ip_addr.append(addr)
 
-            if config.network.ignore_ips and ip_addr:
-                for i, ip in enumerate(ip_addr):
-                    if re.match(config.network.ignore_ips, ip['addr']):
-                        ip_addr.pop(i)
 
             mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
             vlan = None
@@ -425,6 +429,7 @@ class Network(object):
                     interface_id=[x.id for x in nb_nics],
                 )
 
+            netbox_ips = list(netbox_ips)
             all_local_ips = list(chain.from_iterable([
                 x['ip'] for x in self.nics if x['ip'] is not None
             ]))
