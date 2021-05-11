@@ -19,6 +19,8 @@ setup(
         'netifaces==0.10.9',
         'pyyaml==5.4.1',
         'jsonargparse==2.32.2',
+        'python-slugify==5.0.2',
+        'packaging==20.9',
     ],
     zip_safe=False,
     keywords=['netbox'],
