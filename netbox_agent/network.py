@@ -12,10 +12,11 @@ from netbox_agent.ethtool import Ethtool
 from netbox_agent.ipmi import IPMI
 from netbox_agent.lldp import LLDP
 
+from packaging import version
 
 class Network(object):
     def __init__(self, server, *args, **kwargs):
-        self.netbox_version = float(nb.version)
+        self.netbox_version = nb.version
         self.nics = []
 
         self.server = server
@@ -323,7 +324,7 @@ class Network(object):
                 'address': ip,
                 'status': "active",
             }
-            if self.netbox_version > 2.8:
+            if version.parse(self.netbox_version) > version.parse('2.8'):
                 query_params.update({
                     'assigned_object_type': self.assigned_object_type,
                     'assigned_object_id': interface.id
@@ -335,7 +336,7 @@ class Network(object):
                 **query_params
             )
         else:
-            netbox_ip = netbox_ips[0]
+            netbox_ip = list(netbox_ips)[0]
             # If IP exists in anycast
             if netbox_ip.role and netbox_ip.role.label == 'Anycast':
                 logging.debug('IP {} is Anycast..'.format(ip))
@@ -357,7 +358,7 @@ class Network(object):
                         "role": self.ipam_choices['ip-address:role']['Anycast'],
                         "tenant": self.tenant.id if self.tenant else None,
                     }
-                    if self.netbox_version > 2.8:
+                    if version.parse(self.netbox_version) > version.parse('2.8'):
                         query_params.update({
                             'assigned_object_type': self.assigned_object_type,
                             'assigned_object_id': interface.id
@@ -373,7 +374,7 @@ class Network(object):
                         ip=ip, interface=interface))
                 elif hasattr(netbox_ip, 'interface') and netbox_ip.interface.id != interface.id or \
                      hasattr(netbox_ip, 'assigned_object') and netbox_ip.assigned_object_id != interface.id:
-                    if self.netbox_version > 2.8:
+                    if version.parse(self.netbox_version) > version.parse('2.8'):
                         old_interface = netbox_ip.assigned_object
                     else:
                         old_interface = netbox_ip.interface
@@ -389,7 +390,7 @@ class Network(object):
                 else:
                     return netbox_ip
 
-                if self.netbox_version > 2.8:
+                if version.parse(self.netbox_version) > version.parse('2.8'):
                     netbox_ip.assigned_object_type = self.assigned_object_type
                     netbox_ip.assigned_object_id = interface.id
                 else:
@@ -403,9 +404,9 @@ class Network(object):
         logging.debug('Creating/Updating NIC...')
 
         # delete unknown interface
-        nb_nics = self.get_netbox_network_cards()
+        nb_nics = list(self.get_netbox_network_cards())
         local_nics = [x['name'] for x in self.nics]
-        for nic in nb_nics[:]:
+        for nic in nb_nics:
             if nic.name not in local_nics:
                 logging.info('Deleting netbox interface {name} because not present locally'.format(
                     name=nic.name
@@ -415,7 +416,7 @@ class Network(object):
 
         # delete IP on netbox that are not known on this server
         if len(nb_nics):
-            if self.netbox_version > 2.8:
+            if version.parse(self.netbox_version) > version.parse('2.8'):
                 netbox_ips = nb.ipam.ip_addresses.filter(
                     **{self.intf_type: [x.id for x in nb_nics]}
                 )
@@ -429,7 +430,7 @@ class Network(object):
             ]))
             for netbox_ip in netbox_ips:
                 if netbox_ip.address not in all_local_ips:
-                    if self.netbox_version < 2.9:
+                    if version.parse(self.netbox_version) < version.parse('2.9'):
                         logging.info('Unassigning IP {ip} from {interface}'.format(
                             ip=netbox_ip.address, interface=netbox_ip.interface))
                         netbox_ip.interface = None
@@ -531,7 +532,10 @@ class ServerNetwork(Network):
             return nb_server_interface
 
         try:
-            nb_switch = nb_mgmt_ip.interface.device
+            if version.parse(self.netbox_version) > version.parse('2.8'):
+                nb_switch = nb_mgmt_ip.assigned_object.device
+            else:
+                nb_switch = nb_mgmt_ip.interface.device
             logging.info('Found a switch in Netbox based on LLDP infos: {} (id: {})'.format(
                 switch_ip,
                 nb_switch.id

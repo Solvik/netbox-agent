@@ -61,6 +61,7 @@ def get_hostname(config):
 
 
 def create_netbox_tags(tags):
+    ret = []
     for tag in tags:
         nb_tag = nb.extras.tags.get(
             name=tag
@@ -70,3 +71,5 @@ def create_netbox_tags(tags):
                 name=tag,
                 slug=slugify(tag),
             )
+        ret.append(nb_tag)
+    return ret

@@ -51,7 +51,7 @@ class PowerSupply():
         )
 
     def create_or_update_power_supply(self):
-        nb_psus = self.get_netbox_power_supply()
+        nb_psus = list(self.get_netbox_power_supply())
         psus = self.get_power_supply()
 
         # Delete unknown PSU

@@ -13,6 +13,8 @@ from netbox_agent.misc import create_netbox_tags, get_device_role, get_device_ty
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
 
+from packaging import version
+
 
 class ServerBase():
     def __init__(self, dmi=None):
@@ -29,8 +31,8 @@ class ServerBase():
         self.network = None
 
         self.tags = list(set([x.strip() for x in config.device.tags.split(',') if x.strip()])) if config.device.tags else []
-        if self.tags and len(self.tags):
-            create_netbox_tags(self.tags)
+        self.nb_tags = list(create_netbox_tags(self.tags))
+        self.netbox_version = nb.version
 
     def get_tenant(self):
         tenant = Tenant()
@@ -383,11 +385,12 @@ class ServerBase():
             update += 1
             server.name = self.get_hostname()
 
-        if float(nb.version) < 2.8 and sorted(set(server.tags)) != sorted(set(self.tags)):
-            server.tags = self.tags
+        if sorted(set([x.name for x in server.tags])) != sorted(set(self.tags)):
             update += 1
-        else:
-            logging.warning("netbox-agent doesn't support tag updates for Netbox version >=2.8")
+            if version.parse(self.netbox_version) > version.parse('2.8'):
+                server.tags = [x.id for x in self.nb_tags]
+            else:
+                server.tags = self.tags
 
         if config.update_all or config.update_location:
             ret, server = self.update_netbox_location(server)
