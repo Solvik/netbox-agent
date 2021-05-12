@@ -177,14 +177,19 @@ class Network(object):
             return self.dcim_choices['interface:type']['Other']
 
         if nic['ethtool']['speed'] == '10000Mb/s':
-            if nic['ethtool']['port'] == 'FIBRE':
+            if nic['ethtool']['port'] in ('FIBRE', 'Direct Attach Copper'):
                 return self.dcim_choices['interface:type']['SFP+ (10GE)']
             return self.dcim_choices['interface:type']['10GBASE-T (10GE)']
 
+        elif nic['ethtool']['speed'] == '25000Mb/s':
+            if nic['ethtool']['port'] in ('FIBRE', 'Direct Attach Copper'):
+                return self.dcim_choices['interface:type']['SFP28 (25GE)']
+
         elif nic['ethtool']['speed'] == '1000Mb/s':
-            if nic['ethtool']['port'] == 'FIBRE':
+            if nic['ethtool']['port'] in ('FIBRE', 'Direct Attach Copper'):
                 return self.dcim_choices['interface:type']['SFP (1GE)']
             return self.dcim_choices['interface:type']['1000BASE-T (1GE)']
+
         return self.dcim_choices['interface:type']['Other']
 
     def get_or_create_vlan(self, vlan_id):
