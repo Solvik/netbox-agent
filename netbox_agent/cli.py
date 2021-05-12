@@ -1,5 +1,5 @@
 import netbox_agent.dmidecode as dmidecode
-from netbox_agent.config import config
+from netbox_agent.config import config, netbox_instance as nb
 from netbox_agent.logging import logging  # NOQA
 from netbox_agent.vendors.dell import DellHost
 from netbox_agent.vendors.generic import GenericHost
@@ -7,6 +7,8 @@ from netbox_agent.vendors.hp import HPHost
 from netbox_agent.vendors.qct import QCTHost
 from netbox_agent.vendors.supermicro import SupermicroHost
 from netbox_agent.virtualmachine import VirtualMachine, is_vm
+
+from packaging import version
 
 MANUFACTURERS = {
     'Dell Inc.': DellHost,
@@ -31,6 +33,10 @@ def run(config):
             server = MANUFACTURERS[manufacturer](dmi=dmi)
         except KeyError:
             server = GenericHost(dmi=dmi)
+
+    if version.parse(nb.version) < version.parse('2.9'):
+        print('netbox-agent is not compatible with Netbox prior to verison 2.9')
+        return False
 
     if config.debug:
         server.print_debug()
