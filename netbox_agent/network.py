@@ -55,8 +55,7 @@ class Network(object):
 
             ip_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET, [])
             ip6_addr = netifaces.ifaddresses(interface).get(netifaces.AF_INET6, [])
-
-            if config.network.ignore_ips and ip_addr:
+            if config.network.ignore_ips:
                 for i, ip in enumerate(ip_addr):
                     if re.match(config.network.ignore_ips, ip['addr']):
                         ip_addr.pop(i)
@@ -88,7 +87,7 @@ class Network(object):
             mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
             vlan = None
             if len(interface.split('.')) > 1:
-                vlan = interface.split('.')[1]
+                vlan = int(interface.split('.')[1])
 
             bonding = False
             bonding_slaves = []
