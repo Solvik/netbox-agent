@@ -212,8 +212,12 @@ class Network(object):
         update = False
         vlan_id = nic['vlan']
         lldp_vlan = self.lldp.get_switch_vlan(nic['name']) if config.network.lldp else None
+        # For strange reason, we need to get the object from scratch
+        # The object returned by pynetbox's save isn't always working (since pynetbox 6)
+        interface = nb.dcim.interfaces.get(id=interface.id)
 
-        # if local interface isn't a interface vlan or lldp doesn't report a vlan-id
+        # Handle the case were the local interface isn't an interface vlan as reported by Netbox
+        # and that LLDP doesn't report a vlan-id
         if vlan_id is None and lldp_vlan is None and \
            (interface.mode is not None or len(interface.tagged_vlans) > 0):
             logging.info('Interface {interface} is not tagged, reseting mode'.format(
@@ -222,11 +226,13 @@ class Network(object):
             interface.mode = None
             interface.tagged_vlans = []
             interface.untagged_vlan = None
-        # if it's a vlan interface
+        # if the local interface is configured with a vlan, it's supposed to be taggued
+        # if mode is either not set or not correctly configured or vlan are not correctly configured
+        # we reset the vlan
         elif vlan_id and (
                 interface.mode is None or
                 type(interface.mode) is not int and (
-                    interface.mode.value == self.dcim_choices['interface:mode']['Access'] or
+                    hasattr(interface.mode, 'value') and interface.mode.value == self.dcim_choices['interface:mode']['Access'] or
                     len(interface.tagged_vlans) != 1 or
                     int(interface.tagged_vlans[0].vid) != int(vlan_id))):
             logging.info('Resetting tagged VLAN(s) on interface {interface}'.format(
@@ -236,7 +242,7 @@ class Network(object):
             interface.mode = self.dcim_choices['interface:mode']['Tagged']
             interface.tagged_vlans = [nb_vlan] if nb_vlan else []
             interface.untagged_vlan = None
-        # if lldp reports a vlan-id with pvid
+        # Finally if LLDP reports a vlan-id with the pvid attribute
         elif lldp_vlan:
             pvid_vlan = [key for (key, value) in lldp_vlan.items() if value['pvid']]
             if len(pvid_vlan) > 0 and (
@@ -274,7 +280,7 @@ class Network(object):
 
         if nic['vlan']:
             nb_vlan = self.get_or_create_vlan(nic['vlan'])
-            interface.mode = 200
+            interface.mode = self.dcim_choices['interface:mode']['Tagged']
             interface.tagged_vlans = [nb_vlan.id]
             interface.save()
         elif config.network.lldp and self.lldp.get_switch_vlan(nic['name']) is not None:
