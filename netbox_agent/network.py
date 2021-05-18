@@ -12,6 +12,7 @@ from netbox_agent.ethtool import Ethtool
 from netbox_agent.ipmi import IPMI
 from netbox_agent.lldp import LLDP
 
+
 class Network(object):
     def __init__(self, server, *args, **kwargs):
         self.nics = []
@@ -82,7 +83,6 @@ class Network(object):
                 addr["addr"] = addr["addr"].replace('%{}'.format(interface), '')
                 addr["netmask"] = addr["netmask"].split('/')[0]
                 ip_addr.append(addr)
-
 
             mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
             vlan = None
@@ -227,12 +227,13 @@ class Network(object):
             interface.tagged_vlans = []
             interface.untagged_vlan = None
         # if the local interface is configured with a vlan, it's supposed to be taggued
-        # if mode is either not set or not correctly configured or vlan are not correctly configured
-        # we reset the vlan
+        # if mode is either not set or not correctly configured or vlan are not
+        # correctly configured, we reset the vlan
         elif vlan_id and (
                 interface.mode is None or
                 type(interface.mode) is not int and (
-                    hasattr(interface.mode, 'value') and interface.mode.value == self.dcim_choices['interface:mode']['Access'] or
+                    hasattr(interface.mode, 'value') and
+                    interface.mode.value == self.dcim_choices['interface:mode']['Access'] or
                     len(interface.tagged_vlans) != 1 or
                     int(interface.tagged_vlans[0].vid) != int(vlan_id))):
             logging.info('Resetting tagged VLAN(s) on interface {interface}'.format(
@@ -369,8 +370,11 @@ class Network(object):
                    hasattr(netbox_ip, 'assigned_object') and netbox_ip.assigned_object is None:
                     logging.info('Assigning existing IP {ip} to {interface}'.format(
                         ip=ip, interface=interface))
-                elif hasattr(netbox_ip, 'interface') and netbox_ip.interface.id != interface.id or \
-                     hasattr(netbox_ip, 'assigned_object') and netbox_ip.assigned_object_id != interface.id:
+                elif hasattr(netbox_ip, 'interface') and \
+                    netbox_ip.interface.id != interface.id or \
+                    hasattr(netbox_ip, 'assigned_object') and \
+                    netbox_ip.assigned_object_id != interface.id:
+
                     old_interface = netbox_ip.assigned_object
                     logging.info(
                         'Detected interface change for ip {ip}: old interface is '
@@ -492,7 +496,6 @@ class ServerNetwork(Network):
         self.custom_arg_id = {'device_id': getattr(self.device, "id", None)}
         self.intf_type = "interface_id"
         self.assigned_object_type = "dcim.interface"
-
 
     def get_network_type(self):
         return 'server'

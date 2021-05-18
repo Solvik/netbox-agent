@@ -3,6 +3,7 @@ import subprocess
 from shutil import which
 
 from slugify import slugify
+
 from netbox_agent.config import netbox_instance as nb
 
 

@@ -13,6 +13,7 @@ from netbox_agent.misc import create_netbox_tags, get_device_role, get_device_ty
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
 
+
 class ServerBase():
     def __init__(self, dmi=None):
         if dmi:
@@ -27,7 +28,9 @@ class ServerBase():
 
         self.network = None
 
-        self.tags = list(set([x.strip() for x in config.device.tags.split(',') if x.strip()])) if config.device.tags else []
+        self.tags = list(set([
+            x.strip() for x in config.device.tags.split(',') if x.strip()
+        ])) if config.device.tags else []
         self.nb_tags = list(create_netbox_tags(self.tags))
 
     def get_tenant(self):
