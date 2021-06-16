@@ -79,7 +79,11 @@ class ServerBase():
             update = True
             server.site = nb_dc.id
 
-        if rack and all(map(lambda x: x is not None and "id" in x, (nb_rack, server.rack))) and server.rack.id != nb_rack.id:
+        if (
+            rack
+            and all(map(lambda x: x is not None and "id" in x, (nb_rack, server.rack)))
+            and server.rack.id != nb_rack.id
+        ):
             logging.info('Rack location has changed from {} to {}, updating'.format(
                 server.rack,
                 nb_rack,
