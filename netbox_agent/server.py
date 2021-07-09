@@ -81,7 +81,8 @@ class ServerBase():
 
         if (
             rack
-            and all(map(lambda x: x is not None and "id" in x, (nb_rack, server.rack)))
+            and server.rack
+            and nb_rack
             and server.rack.id != nb_rack.id
         ):
             logging.info('Rack location has changed from {} to {}, updating'.format(
