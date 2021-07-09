@@ -1,5 +1,6 @@
-import subprocess
 import logging
+import subprocess
+
 from netbox_agent.misc import is_tool
 
 

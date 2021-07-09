@@ -12,7 +12,8 @@ class HPHost(ServerBase):
 
     def is_blade(self):
         blade = self.product.startswith("ProLiant BL")
-        blade |= self.product.startswith("ProLiant m") and self.product.endswith("Server Cartridge")
+        blade |= (self.product.startswith("ProLiant m")
+                  and self.product.endswith("Server Cartridge"))
         return blade
 
     def _find_rack_locator(self):
