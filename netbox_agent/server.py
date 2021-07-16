@@ -66,7 +66,6 @@ class ServerBase():
 
     def update_netbox_location(self, server):
         dc = self.get_datacenter()
-        rack = self.get_rack()
         nb_rack = self.get_netbox_rack()
         nb_dc = self.get_netbox_datacenter()
 
@@ -80,8 +79,7 @@ class ServerBase():
             server.site = nb_dc.id
 
         if (
-            rack
-            and server.rack
+            server.rack
             and nb_rack
             and server.rack.id != nb_rack.id
         ):
