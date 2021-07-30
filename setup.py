@@ -14,7 +14,7 @@ setup(
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     use_scm_version=True,
     install_requires=[
-        'pynetbox==5.0.5',
+        'pynetbox==5.3.1',
         'netaddr==0.8.0',
         'netifaces==0.10.9',
         'pyyaml==5.4.1',
