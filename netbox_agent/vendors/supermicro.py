@@ -48,6 +48,8 @@ class SupermicroHost(ServerBase):
     def get_service_tag(self):
         if self.is_blade():
             return self.baseboard[0]['Serial Number'].strip()
+        if self.system[0]['Serial Number'].strip() == "0123456789":
+            return self.baseboard[0]['Serial Number'].strip()
         return self.system[0]['Serial Number'].strip()
 
     def get_product_name(self):

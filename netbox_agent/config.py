@@ -1,6 +1,5 @@
 import logging
 import sys
-
 import jsonargparse
 import pynetbox
 import requests
