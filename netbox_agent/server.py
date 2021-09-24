@@ -66,6 +66,7 @@ class ServerBase():
 
     def update_netbox_location(self, server):
         dc = self.get_datacenter()
+        rack = self.get_rack()
         nb_rack = self.get_netbox_rack()
         nb_dc = self.get_netbox_datacenter()
 
