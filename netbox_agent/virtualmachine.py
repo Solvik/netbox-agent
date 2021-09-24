@@ -18,7 +18,8 @@ def is_vm(dmi):
        'Google Compute Engine' in system[0]['Product Name'] or \
        'RHEV Hypervisor' in system[0]['Product Name'] or \
        'VirtualBox' in bios[0]['Version'] or \
-       'VMware' in system[0]['Manufacturer']:
+       'VMware' in system[0]['Manufacturer']or \
+       'QEMU' in system[0]['Manufacturer']:
         return True
     return False
 
