@@ -104,7 +104,10 @@ class LSHW():
                         d['product'] = device["ModelNumber"]
                         d['serial'] = device["SerialNumber"]
                         d["version"] = device["Firmware"]
-                        d['size'] = device["UsedSize"]
+                        if "UsedSize" in device:
+                            d['size'] = device["UsedSize"]
+                        if "UsedBytes" in device:
+                            d['size'] = device["UsedBytes"]
                         d['description'] = "NVME Disk"
 
                         self.disks.append(d)
