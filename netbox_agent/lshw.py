@@ -16,6 +16,8 @@ class LSHW():
             'lshw -quiet -json'
         )
         self.hw_info = json.loads(data)
+        if isinstance(self.hw_info, list):
+          self.hw_info = self.hw_info[0]
         self.info = {}
         self.memories = []
         self.interfaces = []
