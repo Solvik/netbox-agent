@@ -15,6 +15,9 @@ class RaidController():
     def get_physical_disks(self):
         raise NotImplementedError
 
+    def is_external(self):
+        return False
+
 
 class Raid():
     def get_controllers(self):

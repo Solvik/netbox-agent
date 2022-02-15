@@ -46,10 +46,11 @@ class Inventory():
     - no scan of NVMe devices
     """
 
-    def __init__(self, server):
+    def __init__(self, server, update_expansion=False):
         self.create_netbox_tags()
         self.server = server
-        netbox_server = self.server.get_netbox_server()
+        self.update_expansion = update_expansion
+        netbox_server = self.server.get_netbox_server(update_expansion)
 
         self.device_id = netbox_server.id if netbox_server else None
         self.raid = None
@@ -220,7 +221,7 @@ class Inventory():
 
             self.create_netbox_cpus()
 
-    def get_raid_cards(self):
+    def get_raid_cards(self, filter_cards=False):
         raid_class = None
         if self.server.manufacturer == 'Dell':
             if is_tool('omreport'):
@@ -235,9 +236,15 @@ class Inventory():
             return []
 
         self.raid = raid_class()
-        controllers = self.raid.get_controllers()
-        if len(self.raid.get_controllers()):
-            return controllers
+
+        if filter_cards and config.expansion_as_device \
+                and self.server.own_expansion_slot():
+            return [
+                c for c in self.raid.get_controllers()
+                if c.is_external() is self.update_expansion
+            ]
+        else:
+            return self.raid.get_controllers()
 
     def create_netbox_raid_card(self, raid_card):
         manufacturer = self.find_or_create_manufacturer(
@@ -276,7 +283,7 @@ class Inventory():
             device_id=self.device_id,
             tag=[INVENTORY_TAG['raid_card']['slug']]
         )
-        raid_cards = self.get_raid_cards()
+        raid_cards = self.get_raid_cards(filter_cards=True)
 
         # delete cards that are in netbox but not locally
         # use the serial_number has the comparison element
@@ -336,7 +343,7 @@ class Inventory():
                 d['Vendor'] = get_vendor(disk['product'])
             disks.append(d)
 
-        for raid_card in self.get_raid_cards():
+        for raid_card in self.get_raid_cards(filter_cards=True):
             disks += raid_card.get_physical_disks()
 
         # remove duplicate serials
@@ -463,21 +470,24 @@ class Inventory():
             tag=INVENTORY_TAG['gpu']['slug'],
         )
 
-        if not len(nb_gpus) or \
+        if config.expansion_as_device and len(nb_gpus):
+            for x in nb_gpus:
+                x.delete()
+        elif not len(nb_gpus) or \
            len(nb_gpus) and len(gpus) != len(nb_gpus):
             for x in nb_gpus:
                 x.delete()
-
             self.create_netbox_gpus()
 
     def create_or_update(self):
         if config.inventory is None or config.update_inventory is None:
             return False
-        self.do_netbox_cpus()
-        self.do_netbox_memories()
-        self.do_netbox_raid_cards()
-        self.do_netbox_disks()
-        self.do_netbox_interfaces()
-        self.do_netbox_motherboard()
+        if self.update_expansion is False:
+            self.do_netbox_cpus()
+            self.do_netbox_memories()
+            self.do_netbox_interfaces()
+            self.do_netbox_motherboard()
         self.do_netbox_gpus()
+        self.do_netbox_disks()
+        self.do_netbox_raid_cards()
         return True
