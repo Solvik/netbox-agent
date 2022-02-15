@@ -30,6 +30,8 @@ def get_config():
     p.add_argument('--update-psu', action='store_true', help='Update PSU')
     p.add_argument('--purge-old-devices', action='store_true',
                    help='Purge existing (old ?) devices having same name but different serial')
+    p.add_argument('--expansion-as-device', action='store_true',
+                   help='Manage blade expansions as external devices')
 
     p.add_argument('--log_level', default='debug')
     p.add_argument('--netbox.url', help='Netbox URL')
