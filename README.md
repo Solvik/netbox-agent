@@ -111,7 +111,7 @@ network:
 # blade_role: "Blade"
 # server_role: "Server"
 # tags: server, blade, ,just a comma,delimited,list
-#￼
+# custom_fields: field1=value1,field2=value2#
 #
 # Can use this to set the tenant
 #
