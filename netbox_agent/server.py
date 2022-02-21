@@ -25,6 +25,7 @@ class ServerBase():
         self.bios = dmidecode.get_by_type(self.dmi, 'BIOS')
         self.chassis = dmidecode.get_by_type(self.dmi, 'Chassis')
         self.system = dmidecode.get_by_type(self.dmi, 'System')
+        self.inventory = Inventory(server=self)
 
         self.network = None
 
@@ -67,7 +68,6 @@ class ServerBase():
 
     def update_netbox_location(self, server):
         dc = self.get_datacenter()
-        rack = self.get_rack()
         nb_rack = self.get_netbox_rack()
         nb_dc = self.get_netbox_datacenter()
 
@@ -80,7 +80,11 @@ class ServerBase():
             update = True
             server.site = nb_dc.id
 
-        if rack and server.rack and server.rack.id != nb_rack.id:
+        if (
+            server.rack
+            and nb_rack
+            and server.rack.id != nb_rack.id
+        ):
             logging.info('Rack location has changed from {} to {}, updating'.format(
                 server.rack,
                 nb_rack,
@@ -91,6 +95,19 @@ class ServerBase():
                 server.face = None
                 server.position = None
         return update, server
+
+    def update_netbox_expansion_location(self, server, expansion):
+        update = False
+        if expansion.tenant != server.tenant:
+            expansion.tenant = server.tenant
+            update = True
+        if expansion.site != server.site:
+            expansion.site = server.site
+            update = True
+        if expansion.rack != server.rack:
+            expansion.rack = server.rack
+            update = True
+        return update
 
     def get_rack(self):
         rack = Rack()
@@ -226,6 +243,13 @@ class ServerBase():
         )
         return new_blade
 
+    def _netbox_deduplicate_server(self):
+        serial = self.get_service_tag()
+        hostname = self.get_hostname()
+        server = nb.dcim.devices.get(name=hostname)
+        if server and server.serial != serial:
+            server.delete()
+
     def _netbox_create_server(self, datacenter, tenant, rack):
         device_role = get_device_role(config.device.server_role)
         device_type = get_device_type(self.get_product_name())
@@ -247,8 +271,11 @@ class ServerBase():
         )
         return new_server
 
-    def get_netbox_server(self):
-        return nb.dcim.devices.get(serial=self.get_service_tag())
+    def get_netbox_server(self, expansion=False):
+        if expansion is False:
+            return nb.dcim.devices.get(serial=self.get_service_tag())
+        else:
+            return nb.dcim.devices.get(serial=self.get_expansion_service_tag())
 
     def _netbox_set_or_update_blade_slot(self, server, chassis, datacenter):
         # before everything check if right chassis
@@ -283,9 +310,9 @@ class ServerBase():
                 slot=slot
             ))
 
-    def _netbox_set_or_update_blade_expansion_slot(self, server, chassis, datacenter):
+    def _netbox_set_or_update_blade_expansion_slot(self, expansion, chassis, datacenter):
         # before everything check if right chassis
-        actual_device_bay = server.parent_device.device_bay if server.parent_device else None
+        actual_device_bay = expansion.parent_device.device_bay if expansion.parent_device else None
         actual_chassis = actual_device_bay.device if actual_device_bay else None
         slot = self.get_blade_expansion_slot()
         if actual_chassis and \
@@ -293,30 +320,28 @@ class ServerBase():
            actual_device_bay.name == slot:
             return
 
-        server.name += " expansion"
-
         real_device_bays = nb.dcim.device_bays.filter(
             device_id=chassis.id,
             name=slot,
         )
-        if len(real_device_bays) > 0:
-            logging.info(
-                'Setting device expansion ({serial}) new slot on {slot} '
-                '(Chassis {chassis_serial})..'.format(
-                    serial=server.serial, slot=slot, chassis_serial=chassis.serial
-                ))
-            # reset actual device bay if set
-            if actual_device_bay:
-                actual_device_bay.installed_device = None
-                actual_device_bay.save()
-            # setup new device bay
-            real_device_bay = real_device_bays[0]
-            real_device_bay.installed_device = server
-            real_device_bay.save()
-        else:
+        if len(real_device_bays) == 0:
             logging.error('Could not find slot {slot} expansion for chassis'.format(
                 slot=slot
             ))
+            return
+        logging.info(
+            'Setting device expansion ({serial}) new slot on {slot} '
+            '(Chassis {chassis_serial})..'.format(
+                serial=expansion.serial, slot=slot, chassis_serial=chassis.serial
+            ))
+        # reset actual device bay if set
+        if actual_device_bay:
+            actual_device_bay.installed_device = None
+            actual_device_bay.save()
+        # setup new device bay
+        real_device_bay = real_device_bays[0]
+        real_device_bay.installed_device = expansion
+        real_device_bay.save()
 
     def netbox_create_or_update(self, config):
         """
@@ -333,6 +358,9 @@ class ServerBase():
         datacenter = self.get_netbox_datacenter()
         rack = self.get_netbox_rack()
         tenant = self.get_netbox_tenant()
+
+        if config.purge_old_devices:
+            self._netbox_deduplicate_server()
 
         if self.is_blade():
             chassis = nb.dcim.devices.get(
@@ -358,9 +386,10 @@ class ServerBase():
         if config.register or config.update_all or config.update_network:
             self.network = ServerNetwork(server=self)
             self.network.create_or_update_netbox_network_cards()
+        update_inventory = config.inventory and (config.register or
+                config.update_all or config.update_inventory)
         # update inventory if feature is enabled
-        if config.inventory and (config.register or config.update_all or config.update_inventory):
-            self.inventory = Inventory(server=self)
+        if update_inventory:
             self.inventory.create_or_update()
         # update psu
         if config.register or config.update_all or config.update_psu:
@@ -368,14 +397,21 @@ class ServerBase():
             self.power.create_or_update_power_supply()
             self.power.report_power_consumption()
 
-        if self.own_expansion_slot():
+        expansion = nb.dcim.devices.get(serial=self.get_expansion_service_tag())
+        if self.own_expansion_slot() and config.expansion_as_device:
             logging.debug('Update Server expansion...')
-            expansion = nb.dcim.devices.get(serial=self.get_expansion_service_tag())
             if not expansion:
                 expansion = self._netbox_create_blade_expansion(chassis, datacenter, tenant, rack)
 
             # set slot for blade expansion
             self._netbox_set_or_update_blade_expansion_slot(expansion, chassis, datacenter)
+            if update_inventory:
+                # Updates expansion inventory
+                inventory = Inventory(server=self, update_expansion=True)
+                inventory.create_or_update()
+        elif self.own_expansion_slot() and expansion:
+            expansion.delete()
+            expansion = None
 
         update = 0
         # for every other specs
@@ -394,6 +430,17 @@ class ServerBase():
 
         if update:
             server.save()
+
+        if expansion:
+            update = 0
+            expansion_name = server.name + ' expansion'
+            if expansion.name != expansion_name:
+                expansion.name = expansion_name
+                update += 1
+            if self.update_netbox_expansion_location(server, expansion):
+                update += 1
+            if update:
+                expansion.save()
         logging.debug('Finished updating Server!')
 
     def print_debug(self):
