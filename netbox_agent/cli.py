@@ -1,5 +1,4 @@
 from packaging import version
-
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
@@ -39,11 +38,11 @@ def run(config):
         print('netbox-agent is not compatible with Netbox prior to verison 2.9')
         return False
 
+    if config.register or config.update_all or config.update_network or \
+       config.update_location or config.update_inventory or config.update_psu:
+        server.netbox_create_or_update(config)
     if config.debug:
         server.print_debug()
-    if config.register or config.update_all or config.update_network or config.update_location or \
-       config.update_inventory or config.update_psu:
-        server.netbox_create_or_update(config)
     return True
 
 

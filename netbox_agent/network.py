@@ -148,19 +148,19 @@ class Network(object):
         if nic['mac'] is None:
             interface = self.nb_net.interfaces.get(
                 name=nic['name'],
-                **self.custom_arg_id,
+                **self.custom_arg_id
             )
         else:
             interface = self.nb_net.interfaces.get(
                 mac_address=nic['mac'],
                 name=nic['name'],
-                **self.custom_arg_id,
+                **self.custom_arg_id
             )
         return interface
 
     def get_netbox_network_cards(self):
         return self.nb_net.interfaces.filter(
-            **self.custom_arg_id,
+            **self.custom_arg_id
         )
 
     def get_netbox_type_for_nic(self, nic):
@@ -267,12 +267,12 @@ class Network(object):
 
         nb_vlan = None
 
-        params = {
+        params = dict(self.custom_arg)
+        params.update({
             'name': nic['name'],
             'type': type,
             'mgmt_only': mgmt,
-            **self.custom_arg,
-        }
+        })
 
         if not nic.get('virtual', False):
             params['mac_address'] = nic['mac']
@@ -338,59 +338,58 @@ class Network(object):
             netbox_ip = nb.ipam.ip_addresses.create(
                 **query_params
             )
-        else:
-            netbox_ip = list(netbox_ips)[0]
-            # If IP exists in anycast
-            if netbox_ip.role and netbox_ip.role.label == 'Anycast':
-                logging.debug('IP {} is Anycast..'.format(ip))
-                unassigned_anycast_ip = [x for x in netbox_ips if x.interface is None]
-                assigned_anycast_ip = [x for x in netbox_ips if
-                                       x.interface and x.interface.id == interface.id]
-                # use the first available anycast ip
-                if len(unassigned_anycast_ip):
-                    logging.info('Assigning existing Anycast IP {} to interface'.format(ip))
-                    netbox_ip = unassigned_anycast_ip[0]
-                    netbox_ip.interface = interface
-                    netbox_ip.save()
-                # or if everything is assigned to other servers
-                elif not len(assigned_anycast_ip):
-                    logging.info('Creating Anycast IP {} and assigning it to interface'.format(ip))
-                    query_params = {
-                        "address": ip,
-                        "status": "active",
-                        "role": self.ipam_choices['ip-address:role']['Anycast'],
-                        "tenant": self.tenant.id if self.tenant else None,
-                        "assigned_object_type": self.assigned_object_type,
-                        "assigned_object_id": interface.id
-                    }
-                    netbox_ip = nb.ipam.ip_addresses.create(**query_params)
-                return netbox_ip
-            else:
-                if hasattr(netbox_ip, 'interface') and netbox_ip.interface is None or \
-                   hasattr(netbox_ip, 'assigned_object') and netbox_ip.assigned_object is None:
-                    logging.info('Assigning existing IP {ip} to {interface}'.format(
-                        ip=ip, interface=interface))
-                elif hasattr(netbox_ip, 'interface') and \
-                    netbox_ip.interface.id != interface.id or \
-                    hasattr(netbox_ip, 'assigned_object') and \
-                    netbox_ip.assigned_object_id != interface.id:
+            return netbox_ip
 
-                    old_interface = netbox_ip.assigned_object
-                    logging.info(
-                        'Detected interface change for ip {ip}: old interface is '
-                        '{old_interface} (id: {old_id}), new interface is {new_interface} '
-                        ' (id: {new_id})'
-                        .format(
-                            old_interface=old_interface, new_interface=interface,
-                            old_id=netbox_ip.id, new_id=interface.id, ip=netbox_ip.address
-                        ))
-                else:
-                    return netbox_ip
-
-                netbox_ip.assigned_object_type = self.assigned_object_type
-                netbox_ip.assigned_object_id = interface.id
+        netbox_ip = next(netbox_ips)
+        # If IP exists in anycast
+        if netbox_ip.role and netbox_ip.role.label == 'Anycast':
+            logging.debug('IP {} is Anycast..'.format(ip))
+            unassigned_anycast_ip = [x for x in netbox_ips if x.interface is None]
+            assigned_anycast_ip = [x for x in netbox_ips if
+                                   x.interface and x.interface.id == interface.id]
+            # use the first available anycast ip
+            if len(unassigned_anycast_ip):
+                logging.info('Assigning existing Anycast IP {} to interface'.format(ip))
+                netbox_ip = unassigned_anycast_ip[0]
+                netbox_ip.interface = interface
                 netbox_ip.save()
-        return netbox_ip
+            # or if everything is assigned to other servers
+            elif not len(assigned_anycast_ip):
+                logging.info('Creating Anycast IP {} and assigning it to interface'.format(ip))
+                query_params = {
+                    "address": ip,
+                    "status": "active",
+                    "role": self.ipam_choices['ip-address:role']['Anycast'],
+                    "tenant": self.tenant.id if self.tenant else None,
+                    "assigned_object_type": self.assigned_object_type,
+                    "assigned_object_id": interface.id
+                }
+                netbox_ip = nb.ipam.ip_addresses.create(**query_params)
+            return netbox_ip
+        else:
+            ip_interface = getattr(netbox_ip, 'interface', None)
+            assigned_object = getattr(netbox_ip, 'assigned_object', None)
+            if not ip_interface or not assigned_object:
+                logging.info('Assigning existing IP {ip} to {interface}'.format(
+                    ip=ip, interface=interface))
+            elif (ip_interface and ip_interface.id != interface.id) or \
+                 (assigned_object and assigned_object_id != interface.id):
+
+                old_interface = getattr(netbox_ip, "assigned_object", "n/a")
+                logging.info(
+                    'Detected interface change for ip {ip}: old interface is '
+                    '{old_interface} (id: {old_id}), new interface is {new_interface} '
+                    ' (id: {new_id})'
+                    .format(
+                        old_interface=old_interface, new_interface=interface,
+                        old_id=netbox_ip.id, new_id=interface.id, ip=netbox_ip.address
+                    ))
+            else:
+                return netbox_ip
+
+            netbox_ip.assigned_object_type = self.assigned_object_type
+            netbox_ip.assigned_object_id = interface.id
+            netbox_ip.save()
 
     def create_or_update_netbox_network_cards(self):
         if config.update_all is None or config.update_network is None:

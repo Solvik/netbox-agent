@@ -25,7 +25,6 @@ class ServerBase():
         self.bios = dmidecode.get_by_type(self.dmi, 'BIOS')
         self.chassis = dmidecode.get_by_type(self.dmi, 'Chassis')
         self.system = dmidecode.get_by_type(self.dmi, 'System')
-        self.inventory = Inventory(server=self)
 
         self.network = None
 
@@ -279,8 +278,10 @@ class ServerBase():
 
     def _netbox_set_or_update_blade_slot(self, server, chassis, datacenter):
         # before everything check if right chassis
-        actual_device_bay = server.parent_device.device_bay if server.parent_device else None
-        actual_chassis = actual_device_bay.device if actual_device_bay else None
+        actual_device_bay = server.parent_device.device_bay \
+                if server.parent_device else None
+        actual_chassis = actual_device_bay.device \
+                if actual_device_bay else None
         slot = self.get_blade_slot()
         if actual_chassis and \
            actual_chassis.serial == chassis.serial and \
@@ -291,7 +292,11 @@ class ServerBase():
             device_id=chassis.id,
             name=slot,
         )
-        if len(real_device_bays) > 0:
+        real_device_bays = nb.dcim.device_bays.filter(
+            device_id=chassis.id,
+            name=slot,
+        )
+        if real_device_bays:
             logging.info(
                 'Setting device ({serial}) new slot on {slot} '
                 '(Chassis {chassis_serial})..'.format(
@@ -299,10 +304,14 @@ class ServerBase():
                 ))
             # reset actual device bay if set
             if actual_device_bay:
+                # Forces the evaluation of the installed_device attribute to
+                # workaround a bug probably due to lazy loading optimization
+                # that prevents the value change detection
+                actual_device_bay.installed_device
                 actual_device_bay.installed_device = None
                 actual_device_bay.save()
             # setup new device bay
-            real_device_bay = real_device_bays[0]
+            real_device_bay = next(real_device_bays)
             real_device_bay.installed_device = server
             real_device_bay.save()
         else:
@@ -324,7 +333,7 @@ class ServerBase():
             device_id=chassis.id,
             name=slot,
         )
-        if len(real_device_bays) == 0:
+        if not real_device_bays:
             logging.error('Could not find slot {slot} expansion for chassis'.format(
                 slot=slot
             ))
@@ -336,10 +345,14 @@ class ServerBase():
             ))
         # reset actual device bay if set
         if actual_device_bay:
+            # Forces the evaluation of the installed_device attribute to
+            # workaround a bug probably due to lazy loading optimization
+            # that prevents the value change detection
+            actual_device_bay.installed_device
             actual_device_bay.installed_device = None
             actual_device_bay.save()
         # setup new device bay
-        real_device_bay = real_device_bays[0]
+        real_device_bay = next(real_device_bays)
         real_device_bay.installed_device = expansion
         real_device_bay.save()
 
@@ -389,6 +402,7 @@ class ServerBase():
         update_inventory = config.inventory and (config.register or
                 config.update_all or config.update_inventory)
         # update inventory if feature is enabled
+        self.inventory = Inventory(server=self)
         if update_inventory:
             self.inventory.create_or_update()
         # update psu
@@ -417,12 +431,12 @@ class ServerBase():
         # for every other specs
         # check hostname
         if server.name != self.get_hostname():
-            update += 1
             server.name = self.get_hostname()
+            update += 1
 
         if sorted(set([x.name for x in server.tags])) != sorted(set(self.tags)):
-            update += 1
             server.tags = [x.id for x in self.nb_tags]
+            update += 1
 
         if config.update_all or config.update_location:
             ret, server = self.update_netbox_location(server)
@@ -458,3 +472,9 @@ class ServerBase():
         print('NIC:',)
         pprint(self.network.get_network_cards())
         pass
+
+    def own_expansion_slot(self):
+        """
+        Indicates if the device hosts an expansion card
+        """
+        return False

@@ -34,6 +34,7 @@ def get_config():
                    help='Manage blade expansions as external devices')
 
     p.add_argument('--log_level', default='debug')
+    p.add_argument('--netbox.ssl_ca_certs_file', help='SSL CA certificates file')
     p.add_argument('--netbox.url', help='Netbox URL')
     p.add_argument('--netbox.token', help='Netbox API Token')
     p.add_argument('--netbox.ssl_verify', default=True, action='store_true',
@@ -80,8 +81,10 @@ def get_config():
     return options
 
 
+config = get_config()
+
+
 def get_netbox_instance():
-    config = get_config()
     if config.netbox.url is None or config.netbox.token is None:
         logging.error('Netbox URL and token are mandatory')
         sys.exit(1)
@@ -90,7 +93,12 @@ def get_netbox_instance():
         url=get_config().netbox.url,
         token=get_config().netbox.token,
     )
-    if get_config().netbox.ssl_verify is False:
+    ca_certs_file = config.netbox.ssl_ca_certs_file
+    if ca_certs_file is not None:
+        session = requests.Session()
+        session.verify = ca_certs_file
+        nb.http_session = session
+    elif config.netbox.ssl_verify is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         session = requests.Session()
         session.verify = False
@@ -99,5 +107,4 @@ def get_netbox_instance():
     return nb
 
 
-config = get_config()
 netbox_instance = get_netbox_instance()

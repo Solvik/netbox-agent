@@ -450,10 +450,11 @@ class Inventory():
             if memory.get('serial') not in [x.serial for x in nb_memories]:
                 self.create_netbox_memory(memory)
 
-    def create_netbox_gpus(self):
-        for gpu in self.lshw.get_hw_linux('gpu'):
+    def create_netbox_gpus(self, gpus):
+        for gpu in gpus:
             if 'product' in gpu and len(gpu['product']) > 50:
                 gpu['product'] = (gpu['product'][:48] + '..')
+
             manufacturer = self.find_or_create_manufacturer(gpu["vendor"])
             _ = nb.dcim.inventory_items.create(
                 device=self.device_id,
@@ -461,26 +462,44 @@ class Inventory():
                 discovered=True,
                 tags=[{'name': INVENTORY_TAG['gpu']['name']}],
                 name=gpu['product'],
-                description='GPU {}'.format(gpu['product']),
+                description=gpu['description'],
             )
 
             logging.info('Creating GPU model {}'.format(gpu['product']))
 
+    def is_external_gpu(self, gpu):
+        is_3d_gpu = gpu['description'].startswith('3D')
+        return self.server.is_blade() and \
+            self.server.own_gpu_expansion_slot() and is_3d_gpu
+
     def do_netbox_gpus(self):
-        gpus = self.lshw.get_hw_linux('gpu')
+        gpus = []
+        gpu_models = {}
+        for gpu in  self.lshw.get_hw_linux('gpu'):
+            # Filters GPU if an expansion bay is detected:
+            # The internal (VGA) GPU only goes into the blade inventory,
+            # the external (3D) GPU goes into the expansion blade.
+            if config.expansion_as_device and \
+                    self.update_expansion ^ self.is_external_gpu(gpu):
+                continue
+            gpus.append(gpu)
+            gpu_models.setdefault(gpu["product"], 0)
+            gpu_models[gpu["product"]] += 1
+
         nb_gpus = self.get_netbox_inventory(
             device_id=self.device_id,
             tag=INVENTORY_TAG['gpu']['slug'],
         )
-
-        if config.expansion_as_device and len(nb_gpus):
+        nb_gpu_models = {}
+        for gpu in nb_gpus:
+            nb_gpu_models.setdefault(str(gpu), 0)
+            nb_gpu_models[str(gpu)] += 1
+        up_to_date = set(gpu_models) == set(nb_gpu_models)
+        if not gpus or not up_to_date:
             for x in nb_gpus:
                 x.delete()
-        elif not len(nb_gpus) or \
-           len(nb_gpus) and len(gpus) != len(nb_gpus):
-            for x in nb_gpus:
-                x.delete()
-            self.create_netbox_gpus()
+        if gpus and not up_to_date:
+            self.create_netbox_gpus(gpus)
 
     def create_or_update(self):
         if config.inventory is None or config.update_inventory is None:
