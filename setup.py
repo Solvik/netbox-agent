@@ -16,7 +16,7 @@ def get_requirements():
 
 setup(
     name='netbox_agent',
-    version='0.6.3',
+    version='0.7.0',
     description='NetBox agent for server',
     long_description=open('README.md', encoding="utf-8").read(),
     long_description_content_type='text/markdown',
