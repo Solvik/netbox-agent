@@ -45,6 +45,8 @@ def get_config():
                    help="Command to output hostname, used as Device's name in netbox")
     p.add_argument('--device.tags', default=r'',
                    help='tags to use for a host')
+    p.add_argument('--device.custom_fields', default=r'',
+                   help='custom_fields to use for a host, eg: field1=v1,field2=v2')
     p.add_argument('--device.blade_role', default=r'Blade',
                    help='role to use for a blade server')
     p.add_argument('--device.chassis_role', default=r'Server Chassis',

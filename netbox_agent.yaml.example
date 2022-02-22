@@ -18,14 +18,15 @@ network:
 # blade_role: "Blade"
 # server_role: "Server"
 # tags: server, blade, ,just a comma,delimited,list
-
+# custom_fields: field1=value1,field2=value2
+#
 #
 # Use this to set the tenant
 #
 #tenant:
 # driver: "file:/tmp/tenant"
 # regex: "(.*)"
-￼
+
 datacenter_location:
  driver: "cmd:cat /etc/qualification | tr [A-Z] [a-z]"
  regex: "datacenter: (?P<datacenter>[A-Za-z0-9]+)"
