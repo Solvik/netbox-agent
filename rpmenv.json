@@ -1,0 +1,27 @@
+{
+  "extensions": {
+    "enabled": ["python_venv", "blocks"]
+  },
+  "core": {
+    "group": "Application/System",
+    "license": "Apache2",
+    "name": "netbox-agent",
+    "summary": "NetBox agent for server",
+    "url": "https://github.com/Solvik/netbox-agent",
+    "version": "0.7.0",
+    "requires": ["lshw"]
+  },
+  "python_venv": {
+    "python": "python3.6",
+    "requirements": ["requirements.txt"],
+    "name": "netbox-agent",
+    "path": "/opt/"
+  },
+  "blocks": {
+    "post": ["ln -sf /opt/netbox-agent/bin/netbox_agent /usr/bin/netbox_agent"],
+    "desc": [
+      "This project aims to create hardware automatically into Netbox based on standard tools (dmidecode, lldpd, parsing /sys/, etc).",
+      "The goal is to generate an existing infrastructure on Netbox and have the ability to update it regularly by executing the agent."
+    ]
+  }
+}
