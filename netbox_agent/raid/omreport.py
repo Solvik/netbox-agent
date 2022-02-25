@@ -1,25 +1,32 @@
-import re
-import subprocess
-import xml.etree.ElementTree as ET  # NOQA
-
-from netbox_agent.misc import get_vendor
 from netbox_agent.raid.base import Raid, RaidController
+from netbox_agent.misc import get_vendor, get_mount_points
+from netbox_agent.config import config
+import subprocess
+import logging
+import re
 
-# Inspiration from https://github.com/asciiphil/perc-status/blob/master/perc-status
 
+def omreport(sub_command):
+    command = 'omreport {}'.format(sub_command)
+    output = subprocess.getoutput(command)
+    res = {}
+    section_re = re.compile('^[A-Z]')
+    current_section = None
+    current_obj = None
 
-def get_field(obj, fieldname):
-    f = obj.find(fieldname)
-    if f is None:
-        return None
-    if f.attrib['type'] in ['u32', 'u64']:
-        if re.search('Mask$', fieldname):
-            return int(f.text, 2)
-        else:
-            return int(f.text)
-    if f.attrib['type'] == 'astring':
-        return f.text
-    return f.text
+    for line in output.split('\n'):
+        if ': ' in line:
+            attr, value = line.split(': ', 1)
+            attr = attr.strip()
+            value = value.strip()
+            if attr == 'ID':
+                obj = {}
+                res.setdefault(current_section, []).append(obj)
+                current_obj = obj
+            current_obj[attr] = value
+        elif section_re.search(line) is not None:
+            current_section = line.strip()
+    return res
 
 
 class OmreportController(RaidController):
@@ -28,49 +35,88 @@ class OmreportController(RaidController):
         self.controller_index = controller_index
 
     def get_product_name(self):
-        return get_field(self.data, 'Name')
+        return self.data['Name']
 
     def get_manufacturer(self):
         return None
 
     def get_serial_number(self):
-        return get_field(self.data, 'DeviceSerialNumber')
+        return self.data.get('DeviceSerialNumber')
 
     def get_firmware_version(self):
-        return get_field(self.data, 'Firmware Version')
+        return self.data.get('Firmware Version')
+
+    def _get_physical_disks(self):
+        pds = {}
+        res = omreport('storage pdisk controller={}'.format(
+            self.controller_index
+        ))
+        for pdisk in [d for d in list(res.values())[0]]:
+            disk_id = pdisk['ID']
+            size = re.sub('B .*$', 'B', pdisk['Capacity'])
+            pds[disk_id] = {
+                'Vendor': get_vendor(pdisk['Vendor ID']),
+                'Model': pdisk['Product ID'],
+                'SN': pdisk['Serial No.'],
+                'Size': size,
+                'Type': pdisk['Media'],
+                '_src': self.__class__.__name__,
+            }
+        return pds
+
+    def _get_virtual_drives_map(self):
+        pds = {}
+        res = omreport('storage vdisk controller={}'.format(
+            self.controller_index
+        ))
+        for vdisk in [d for d in list(res.values())[0]]:
+            vdisk_id = vdisk['ID']
+            device = vdisk['Device Name']
+            mount_points = get_mount_points()
+            mp = mount_points.get(device, 'n/a')
+            size = re.sub('B .*$', 'B', vdisk['Size'])
+            vd = {
+                'vd_array': vdisk_id,
+                'vd_size': size,
+                'vd_consistency': vdisk['State'],
+                'vd_raid_type': vdisk['Layout'],
+                'vd_device': vdisk['Device Name'],
+                'mount_point': ', '.join(sorted(mp)),
+            }
+            drives_res = omreport(
+                'storage pdisk controller={} vdisk={}'.format(
+                    self.controller_index, vdisk_id
+            ))
+            for pdisk in [d for d in list(drives_res.values())[0]]:
+                pds[pdisk['ID']] = vd
+        return pds
 
     def get_physical_disks(self):
-        ret = []
-        output = subprocess.getoutput(
-            'omreport storage controller controller={} -fmt xml'.format(self.controller_index)
-        )
-        root = ET.fromstring(output)
-        et_array_disks = root.find('ArrayDisks')
-        if et_array_disks is not None:
-            for obj in et_array_disks.findall('DCStorageObject'):
-                ret.append({
-                    'Vendor': get_vendor(get_field(obj, 'Vendor')),
-                    'Model': get_field(obj, 'ProductID'),
-                    'SN': get_field(obj, 'DeviceSerialNumber'),
-                    'Size': '{:.0f}GB'.format(
-                        int(get_field(obj, 'Length')) / 1024 / 1024 / 1024
-                    ),
-                    'Type': 'HDD' if int(get_field(obj, 'MediaType')) == 1 else 'SSD',
-                    '_src': self.__class__.__name__,
-                })
-        return ret
+        pds = self._get_physical_disks()
+        vds = self._get_virtual_drives_map()
+        for pd_identifier, vd in vds.items():
+            if pd_identifier not in pds:
+                logging.error(
+                    'Physical drive {} listed in virtual drive {} not '
+                    'found in drives list'.format(
+                      pd_identifier, vd['vd_array']
+                    )
+                )
+                continue
+            pds[pd_identifier].setdefault('custom_fields', {}).update(vd)
+            pds[pd_identifier]['custom_fields']['pd_identifier'] = pd_identifier
+        return list(pds.values())
 
 
 class OmreportRaid(Raid):
     def __init__(self):
-        output = subprocess.getoutput('omreport storage controller -fmt xml')
-        controller_xml = ET.fromstring(output)
         self.controllers = []
+        res = omreport('storage controller')
 
-        for obj in controller_xml.find('Controllers').findall('DCStorageObject'):
-            ctrl_index = get_field(obj, 'ControllerNum')
+        for controller in res['Controller']:
+            ctrl_index = controller['ID']
             self.controllers.append(
-                OmreportController(ctrl_index, obj)
+                OmreportController(ctrl_index, controller)
             )
 
     def get_controllers(self):

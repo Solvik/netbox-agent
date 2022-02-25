@@ -1,9 +1,3 @@
-import logging
-import socket
-import subprocess
-import sys
-from pprint import pprint
-
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
@@ -12,6 +6,11 @@ from netbox_agent.location import Datacenter, Rack, Tenant
 from netbox_agent.misc import create_netbox_tags, get_device_role, get_device_type
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
+from pprint import pprint
+import subprocess
+import logging
+import socket
+import sys
 
 
 class ServerBase():
@@ -491,5 +490,17 @@ class ServerBase():
     def own_expansion_slot(self):
         """
         Indicates if the device hosts an expansion card
+        """
+        return False
+
+    def own_gpu_expansion_slot(self):
+        """
+        Indicates if the device hosts a GPU expansion card
+        """
+        return False
+
+    def own_drive_expansion_slot(self):
+        """
+        Indicates if the device hosts a drive expansion bay
         """
         return False

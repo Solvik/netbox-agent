@@ -8,7 +8,7 @@ class GenericHost(ServerBase):
         self.manufacturer = dmidecode.get_by_type(self.dmi, 'Baseboard')[0].get('Manufacturer')
 
     def is_blade(self):
-        return None
+        return False
 
     def get_blade_slot(self):
         return None

@@ -325,7 +325,7 @@ class Network(object):
         netbox_ips = nb.ipam.ip_addresses.filter(
             address=ip,
         )
-        if not len(netbox_ips):
+        if not netbox_ips:
             logging.info('Create new IP {ip} on {interface}'.format(
                 ip=ip, interface=interface))
             query_params = {
@@ -340,7 +340,7 @@ class Network(object):
             )
             return netbox_ip
 
-        netbox_ip = next(netbox_ips)
+        netbox_ip = list(netbox_ips)[0]
         # If IP exists in anycast
         if netbox_ip.role and netbox_ip.role.label == 'Anycast':
             logging.debug('IP {} is Anycast..'.format(ip))

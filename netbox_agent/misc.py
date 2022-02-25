@@ -1,10 +1,9 @@
-import socket
-import subprocess
-from shutil import which
-
-from slugify import slugify
-
 from netbox_agent.config import netbox_instance as nb
+from slugify import slugify
+from shutil import which
+import subprocess
+import socket
+import re
 
 
 def is_tool(name):
@@ -74,3 +73,19 @@ def create_netbox_tags(tags):
             )
         ret.append(nb_tag)
     return ret
+
+
+def get_mount_points():
+    mount_points = {}
+    output = subprocess.getoutput('mount')
+    for r in output.split("\n"):
+        if not r.startswith("/dev/"):
+            continue
+        mount_info = r.split()
+        device = mount_info[0]
+        device = re.sub(r'\d+$', '', device)
+        mp = mount_info[2]
+        mount_points.setdefault(device, []).append(mp)
+    return mount_points
+
+
