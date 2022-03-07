@@ -1,9 +1,8 @@
-import json
-import logging
-import subprocess
-import sys
-
 from netbox_agent.misc import is_tool
+import subprocess
+import logging
+import json
+import sys
 
 
 class LSHW():
@@ -15,7 +14,13 @@ class LSHW():
         data = subprocess.getoutput(
             'lshw -quiet -json'
         )
-        self.hw_info = json.loads(data)
+        json_data = json.loads(data)
+        # Starting from version 02.18, `lshw -json` wraps its result in a list
+        # rather than returning directly a dictionary
+        if isinstance(json_data, list):
+            self.hw_info = json_data[0]
+        else:
+            self.hw_info = json_data
         self.info = {}
         self.memories = []
         self.interfaces = []
@@ -77,42 +82,41 @@ class LSHW():
     def find_storage(self, obj):
         if "children" in obj:
             for device in obj["children"]:
-                d = {}
-                d["logicalname"] = device.get("logicalname")
-                d["product"] = device.get("product")
-                d["serial"] = device.get("serial")
-                d["version"] = device.get("version")
-                d["size"] = device.get("size")
-                d["description"] = device.get("description")
-
-                self.disks.append(d)
-
+                self.disks.append({
+                    "logicalname": device.get("logicalname"),
+                    "product": device.get("product"),
+                    "serial": device.get("serial"),
+                    "version": device.get("version"),
+                    "size": device.get("size"),
+                    "description": device.get("description"),
+                    "type": device.get("description"),
+                })
         elif "nvme" in obj["configuration"]["driver"]:
             if not is_tool('nvme'):
                 logging.error('nvme-cli >= 1.0 does not seem to be installed')
-            else:
-                try:
-                    nvme = json.loads(
-                        subprocess.check_output(
-                            ["nvme", '-list', '-o', 'json'],
-                            encoding='utf8')
-                    )
-
-                    for device in nvme["Devices"]:
-                        d = {}
-                        d['logicalname'] = device["DevicePath"]
-                        d['product'] = device["ModelNumber"]
-                        d['serial'] = device["SerialNumber"]
-                        d["version"] = device["Firmware"]
-                        if "UsedSize" in device:
-                            d['size'] = device["UsedSize"]
-                        if "UsedBytes" in device:
-                            d['size'] = device["UsedBytes"]
-                        d['description'] = "NVME Disk"
-
-                        self.disks.append(d)
-                except Exception:
-                    pass
+                return
+            try:
+                nvme = json.loads(
+                    subprocess.check_output(
+                        ["nvme", '-list', '-o', 'json'],
+                        encoding='utf8')
+                )
+                for device in nvme["Devices"]:
+                    d = {
+                        'logicalname': device["DevicePath"],
+                        'product': device["ModelNumber"],
+                        'serial': device["SerialNumber"],
+                        "version": device["Firmware"],
+                        'description': "NVME",
+                        'type': "NVME",
+                    }
+                    if "UsedSize" in device:
+                        d['size'] = device["UsedSize"]
+                    if "UsedBytes" in device:
+                        d['size'] = device["UsedBytes"]
+                    self.disks.append(d)
+            except Exception:
+                pass
 
     def find_cpus(self, obj):
         if "product" in obj:

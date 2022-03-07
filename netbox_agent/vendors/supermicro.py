@@ -77,22 +77,3 @@ class SupermicroHost(ServerBase):
         I only know on model of slot GPU extension card that.
         """
         raise NotImplementedError
-
-    def is_expansion_slot(self, server):
-        """
-        Return True if its an extension slot, based on the name
-        """
-        raise NotImplementedError
-
-    def get_blade_expansion_slot(self):
-        """
-        Expansion slot are always the compute bay number + 1
-        """
-        raise NotImplementedError
-
-    def own_expansion_slot(self):
-        """
-        Say if the device can host an extension card based
-        on the product name
-        """
-        pass

@@ -92,10 +92,12 @@ netbox:
  token: supersecrettoken
  # uncomment to disable ssl verification
  # ssl_verify: false
+ # uncomment to use the system's CA certificates
+ # ssl_ca_certs_file: /etc/ssl/certs/ca-certificates.crt
 
 # Network configuration
 network:
-  # Regex to ignore interfaces 
+  # Regex to ignore interfaces
   ignore_interfaces: "(dummy.*|docker.*)"
   # Regex to ignore IP addresses
   ignore_ips: (127\.0\.0\..*)
@@ -111,7 +113,7 @@ network:
 # blade_role: "Blade"
 # server_role: "Server"
 # tags: server, blade, ,just a comma,delimited,list
-#￼
+# custom_fields: field1=value1,field2=value2#
 #
 # Can use this to set the tenant
 #
@@ -119,7 +121,7 @@ network:
 # driver: "file:/tmp/tenant"
 # regex: "(.*)"
 
-## Enable virtual machine support 
+## Enable virtual machine support
 # virtual:
 #   # not mandatory, can be guessed
 #   enabled: True
@@ -145,7 +147,7 @@ rack_location:
 # driver: "file:/tmp/datacenter"
 # regex: "(.*)"
 
-# Enable local inventory reporting 
+# Enable local inventory reporting
 inventory: true
 ```
 
@@ -159,6 +161,36 @@ The `get_blade_slot` method return the name of the `Device Bay`.
 
 
 Certain vendors don't report the blade slot in `dmidecode`, so we can use the `slot_location` regex feature of the configuration file.
+
+Some blade servers can be equipped with additional hardware using expansion blades, next to the processing blade, such as GPU expansion, or drives bay expansion. By default, the hardware from the expnasion is associated with the blade server itself, but it's possible to register the expansion as its own device using the `--expansion-as-device` command line parameter, or by setting `expansion_as_device` to `true` in the configuration file.
+
+## Drives attributes processing
+
+It is possible to process drives extended attributes such as the drive's physical or logical identifier, logical drive RAID type, size, consistency and so on.
+
+Those attributes as set as `custom_fields` in Netbox, and need to be registered properly before being able to specify them during the inventory phase.
+
+As the custom fields have to be created prior being able to register the disks extended attributes, this feature is only activated using the `--process-virtual-drives` command line parameter, or by setting `process_virtual_drives` to `true` in the configuration file.
+
+The custom fields to create as `DCIM > inventory item` `Text` are described below.
+
+```
+NAME            LABEL                      DESCRIPTION
+mount_point     Mount point                Device mount point(s)
+pd_identifier   Physical disk identifier   Physical disk identifier in the RAID controller
+vd_array        Virtual drive array        Virtual drive array the disk is member of
+vd_consistency  Virtual drive consistency  Virtual disk array consistency
+vd_device       Virtual drive device       Virtual drive system device
+vd_raid_type    Virtual drive RAID         Virtual drive array RAID type
+vd_size         Virtual drive size         Virtual drive array size
+```
+
+In the current implementation, the disks attributes ore not updated: if a disk with the correct serial number is found, it's sufficient to consider it as up to date.
+
+To force the reprocessing of the disks extended attributes, the `--force-disk-refresh` command line option can be used: it removes all existing disks to before populating them with the correct parsing. Unless this option is specified, the extended attributes won't be modified unless a disk is replaced.
+
+It is possible to dump the physical/virtual disks map on the filesystem under the JSON notation to ease or automate disks management. The file path has to be provided using the `--dump-disks-map` command line parameter.
+
 
 ## Anycast IP
 
@@ -256,5 +288,5 @@ On a personal note, I use the docker image from [netbox-community/netbox-docker]
 # git clone https://github.com/netbox-community/netbox-docker
 # cd netbox-docker
 # docker-compose pull
-# docker-compose up 
+# docker-compose up
 ```

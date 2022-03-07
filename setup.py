@@ -1,8 +1,22 @@
 from setuptools import find_packages, setup
+import os
+
+def get_requirements():
+    reqs_path = os.path.join(
+        os.path.dirname(__file__),
+        'requirements.txt'
+    )
+    with open(reqs_path, 'r') as f:
+        reqs = [
+            r.strip() for r in f
+            if r.strip()
+        ]
+    return reqs
+
 
 setup(
     name='netbox_agent',
-    version='0.6.2',
+    version='0.7.0',
     description='NetBox agent for server',
     long_description=open('README.md', encoding="utf-8").read(),
     long_description_content_type='text/markdown',
@@ -13,13 +27,7 @@ setup(
     include_package_data=True,
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     use_scm_version=True,
-    install_requires=[
-        'pynetbox==5.0.5',
-        'netaddr==0.8.0',
-        'netifaces==0.10.9',
-        'pyyaml==5.4.1',
-        'jsonargparse==2.32.2',
-    ],
+    install_requires=get_requirements(),
     zip_safe=False,
     keywords=['netbox'],
     classifiers=[

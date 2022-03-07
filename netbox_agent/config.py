@@ -34,6 +34,7 @@ def get_config():
                    help='Manage blade expansions as external devices')
 
     p.add_argument('--log_level', default='debug')
+    p.add_argument('--netbox.ssl_ca_certs_file', help='SSL CA certificates file')
     p.add_argument('--netbox.url', help='Netbox URL')
     p.add_argument('--netbox.token', help='Netbox API Token')
     p.add_argument('--netbox.ssl_verify', default=True, action='store_true',
@@ -44,6 +45,8 @@ def get_config():
                    help="Command to output hostname, used as Device's name in netbox")
     p.add_argument('--device.tags', default=r'',
                    help='tags to use for a host')
+    p.add_argument('--device.custom_fields', default=r'',
+                   help='custom_fields to use for a host, eg: field1=v1,field2=v2')
     p.add_argument('--device.blade_role', default=r'Blade',
                    help='role to use for a blade server')
     p.add_argument('--device.chassis_role', default=r'Server Chassis',
@@ -75,13 +78,22 @@ def get_config():
     p.add_argument('--network.lldp', help='Enable auto-cabling feature through LLDP infos')
     p.add_argument('--inventory', action='store_true',
                    help='Enable HW inventory (CPU, Memory, RAID Cards, Disks) feature')
+    p.add_argument('--process-virtual-drives', action='store_true',
+                   help='Process virtual drives information from RAID '
+                        'controllers to fill disk custom_fields')
+    p.add_argument('--force-disk-refresh', action='store_true',
+                   help='Forces disks detection reprocessing')
+    p.add_argument('--dump-disks-map',
+                   help='File path to dump physical/virtual disks map')
 
     options = p.parse_args()
     return options
 
 
+config = get_config()
+
+
 def get_netbox_instance():
-    config = get_config()
     if config.netbox.url is None or config.netbox.token is None:
         logging.error('Netbox URL and token are mandatory')
         sys.exit(1)
@@ -90,7 +102,12 @@ def get_netbox_instance():
         url=get_config().netbox.url,
         token=get_config().netbox.token,
     )
-    if get_config().netbox.ssl_verify is False:
+    ca_certs_file = config.netbox.ssl_ca_certs_file
+    if ca_certs_file is not None:
+        session = requests.Session()
+        session.verify = ca_certs_file
+        nb.http_session = session
+    elif config.netbox.ssl_verify is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         session = requests.Session()
         session.verify = False
@@ -99,5 +116,4 @@ def get_netbox_instance():
     return nb
 
 
-config = get_config()
 netbox_instance = get_netbox_instance()
