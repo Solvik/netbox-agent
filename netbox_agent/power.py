@@ -115,7 +115,7 @@ class PowerSupply():
             voltage = [p['voltage'] for p in pwr_feeds]
         else:
             logging.info('Could not find power feeds for Rack, defaulting value to 230')
-            voltage = [230 for _ in nb_psu]
+            voltage = [230 for _ in nb_psus]
 
         for i, nb_psu in enumerate(nb_psus):
             nb_psu.allocated_draw = int(float(psu_cons[i]) * voltage[i])

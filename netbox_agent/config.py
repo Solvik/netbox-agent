@@ -78,6 +78,13 @@ def get_config():
     p.add_argument('--network.lldp', help='Enable auto-cabling feature through LLDP infos')
     p.add_argument('--inventory', action='store_true',
                    help='Enable HW inventory (CPU, Memory, RAID Cards, Disks) feature')
+    p.add_argument('--process-virtual-drives', action='store_true',
+                   help='Process virtual drives information from RAID '
+                        'controllers to fill disk custom_fields')
+    p.add_argument('--force-disk-refresh', action='store_true',
+                   help='Forces disks detection reprocessing')
+    p.add_argument('--dump-disks-map',
+                   help='File path to dump physical/virtual disks map')
 
     options = p.parse_args()
     return options

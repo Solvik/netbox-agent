@@ -1,8 +1,3 @@
-import logging
-import re
-
-import pynetbox
-
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.lshw import LSHW
@@ -10,6 +5,12 @@ from netbox_agent.misc import get_vendor, is_tool
 from netbox_agent.raid.hp import HPRaid
 from netbox_agent.raid.omreport import OmreportRaid
 from netbox_agent.raid.storcli import StorcliRaid
+import traceback
+import pynetbox
+import logging
+import json
+import re
+
 
 INVENTORY_TAG = {
     'cpu': {'name': 'hw:cpu', 'slug': 'hw-cpu'},
@@ -226,7 +227,7 @@ class Inventory():
 
     def get_raid_cards(self, filter_cards=False):
         raid_class = None
-        if self.server.manufacturer == 'Dell':
+        if self.server.manufacturer in ('Dell', 'Huawei'):
             if is_tool('omreport'):
                 raid_class = OmreportRaid
             if is_tool('storcli'):
@@ -302,52 +303,59 @@ class Inventory():
             if raid_card.get_serial_number() not in [x.serial for x in nb_raid_cards]:
                 self.create_netbox_raid_card(raid_card)
 
-    def is_virtual_disk(self, disk):
+    def is_virtual_disk(self, disk, raid_devices):
+        disk_type = disk.get('type')
         logicalname = disk.get('logicalname')
         description = disk.get('description')
         size = disk.get('size')
         product = disk.get('product')
-
+        if logicalname in raid_devices or disk_type is None:
+            return True
         non_raid_disks = [
             'MR9361-8i',
         ]
 
-        if size is None and logicalname is None or \
-           'virtual' in product.lower() or 'logical' in product.lower() or \
+        if logicalname in raid_devices or \
+           disk_type is None or \
            product in non_raid_disks or \
+           'virtual' in product.lower() or \
+           'logical' in product.lower() or \
+           'volume' in description.lower() or \
            description == 'SCSI Enclosure' or \
-           'volume' in description.lower():
+           (size is None and logicalname is None):
             return True
         return False
 
     def get_hw_disks(self):
         disks = []
 
+        for raid_card in self.get_raid_cards(filter_cards=True):
+            disks.extend(raid_card.get_physical_disks())
+
+        raid_devices = [
+            d.get('custom_fields', {}).get('vd_device')
+            for d in disks
+            if d.get('custom_fields', {}).get('vd_device')
+        ]
+
         for disk in self.lshw.get_hw_linux("storage"):
-            if self.is_virtual_disk(disk):
+            if self.is_virtual_disk(disk, raid_devices):
                 continue
-
-            logicalname = disk.get('logicalname')
-            description = disk.get('description')
-            size = disk.get('size', 0)
-            product = disk.get('product')
-            serial = disk.get('serial')
-
-            d = {}
-            d["name"] = ""
-            d['Size'] = '{} GB'.format(int(size / 1024 / 1024 / 1024))
-            d['logicalname'] = logicalname
-            d['description'] = description
-            d['SN'] = serial
-            d['Model'] = product
+            size =int(disk.get('size', 0)) / 1073741824
+            d = {
+                "name": "",
+                'Size': '{} GB'.format(size),
+                'logicalname': disk.get('logicalname'),
+                'description': disk.get('description'),
+                'SN': disk.get('serial'),
+                'Model': disk.get('product'),
+                'Type': disk.get('type'),
+            }
             if disk.get('vendor'):
                 d['Vendor'] = disk['vendor']
             else:
                 d['Vendor'] = get_vendor(disk['product'])
             disks.append(d)
-
-        for raid_card in self.get_raid_cards(filter_cards=True):
-            disks += raid_card.get_physical_disks()
 
         # remove duplicate serials
         seen = set()
@@ -361,53 +369,79 @@ class Inventory():
 
         logicalname = disk.get('logicalname')
         desc = disk.get('description')
-        # nonraid disk
-        if logicalname and desc:
-            if type(logicalname) is list:
-                logicalname = logicalname[0]
-            name = '{} - {} ({})'.format(
-                desc,
-                logicalname,
-                disk.get('Size', 0))
-            description = 'Device {}'.format(disk.get('logicalname', 'Unknown'))
-        else:
-            name = '{} ({})'.format(disk['Model'], disk['Size'])
-            description = '{}'.format(disk['Type'])
+        name = '{} ({})'.format(disk['Model'], disk['Size'])
+        description = disk['Type']
 
-        _ = nb.dcim.inventory_items.create(
-            device=self.device_id,
-            discovered=True,
-            tags=[{'name': INVENTORY_TAG['disk']['name']}],
-            name=name,
-            serial=disk['SN'],
-            part_id=disk['Model'],
-            description=description,
-            manufacturer=manufacturer.id if manufacturer else None
-        )
+        parms = {
+            'device': self.device_id,
+            'discovered': True,
+            'tags': [{'name': INVENTORY_TAG['disk']['name']}],
+            'name': name,
+            'serial': disk['SN'],
+            'part_id': disk['Model'],
+            'description': description,
+            'manufacturer': getattr(manufacturer, "id", None),
+        }
+        if config.process_virtual_drives:
+            parms['custom_fields'] = disk.get("custom_fields", {})
+
+        _ = nb.dcim.inventory_items.create(**parms)
 
         logging.info('Creating Disk {model} {serial}'.format(
             model=disk['Model'],
             serial=disk['SN'],
         ))
 
+    def dump_disks_map(self, disks):
+        disk_map = [d['custom_fields'] for d in disks if 'custom_fields' in d]
+        if config.dump_disks_map == "-":
+            f = sys.stdout
+        else:
+            f = open(config.dump_disks_map, "w")
+        f.write(
+            json.dumps(
+                disk_map,
+                separators=(',', ':'),
+                indent=4,
+                sort_keys=True
+            )
+        )
+        if config.dump_disks_map != "-":
+            f.close()
+
     def do_netbox_disks(self):
         nb_disks = self.get_netbox_inventory(
             device_id=self.device_id,
-            tag=INVENTORY_TAG['disk']['slug'])
+            tag=INVENTORY_TAG['disk']['slug']
+        )
         disks = self.get_hw_disks()
+        if config.dump_disks_map:
+            try:
+                self.dump_disks_map(disks)
+            except Exception as e:
+                logging.error("Failed to dump disks map: {}".format(e))
+                logging.debug(traceback.format_exc())
+        disk_serials = [d['SN'] for d in disks if 'SN' in d]
 
         # delete disks that are in netbox but not locally
         # use the serial_number has the comparison element
         for nb_disk in nb_disks:
-            if nb_disk.serial not in [x['SN'] for x in disks if x.get('SN')]:
+            if nb_disk.serial not in disk_serials or \
+                    config.force_disk_refresh:
                 logging.info('Deleting unknown locally Disk {serial}'.format(
                     serial=nb_disk.serial,
                 ))
                 nb_disk.delete()
 
+        if config.force_disk_refresh:
+            nb_disks = self.get_netbox_inventory(
+                device_id=self.device_id,
+                tag=INVENTORY_TAG['disk']['slug']
+            )
+
         # create disks that are not in netbox
         for disk in disks:
-            if disk.get('SN') not in [x.serial for x in nb_disks]:
+            if disk.get('SN') not in [d.serial for d in nb_disks]:
                 self.create_netbox_disk(disk)
 
     def create_netbox_memory(self, memory):

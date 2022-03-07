@@ -1,11 +1,18 @@
-import re
-import subprocess
-
-from netbox_agent.config import config
-from netbox_agent.misc import get_vendor
 from netbox_agent.raid.base import Raid, RaidController
+from netbox_agent.misc import get_vendor
+from netbox_agent.config import config
+import subprocess
+import logging
+import re
 
 REGEXP_CONTROLLER_HP = re.compile(r'Smart Array ([a-zA-Z0-9- ]+) in Slot ([0-9]+)')
+
+
+def ssacli(command):
+    output = subprocess.getoutput('ssacli {}'.format(command) )
+    lines = output.split('\n')
+    lines = list(filter(None, lines))
+    return lines
 
 
 def _parse_ctrl_output(lines):
@@ -18,11 +25,11 @@ def _parse_ctrl_output(lines):
         ctrl = REGEXP_CONTROLLER_HP.search(line)
         if ctrl is not None:
             current_ctrl = ctrl.group(1)
-            controllers[current_ctrl] = {"Slot": ctrl.group(2)}
-            if "Embedded" not in line:
-                controllers[current_ctrl]["External"] = True
+            controllers[current_ctrl] = {'Slot': ctrl.group(2)}
+            if 'Embedded' not in line:
+                controllers[current_ctrl]['External'] = True
             continue
-        attr, val = line.split(": ", 1)
+        attr, val = line.split(': ', 1)
         attr = attr.strip()
         val = val.strip()
         controllers[current_ctrl][attr] = val
@@ -39,19 +46,44 @@ def _parse_pd_output(lines):
         if not line or line.startswith('Note:'):
             continue
         # Parses the Array the drives are in
-        if line.startswith("Array"):
+        if line.startswith('Array'):
             current_array = line.split(None, 1)[1]
         # Detects new physical drive
-        if line.startswith("physicaldrive"):
+        if line.startswith('physicaldrive'):
             current_drv = line.split(None, 1)[1]
             drives[current_drv] = {}
             if current_array is not None:
-                drives[current_drv]["Array"] = current_array
+                drives[current_drv]['Array'] = current_array
             continue
-        if ": " not in line:
+        if ': ' not in line:
             continue
-        attr, val = line.split(": ", 1)
+        attr, val = line.split(': ', 1)
         drives.setdefault(current_drv, {})[attr] = val
+    return drives
+
+
+def _parse_ld_output(lines):
+    drives = {}
+    current_array = None
+    current_drv = None
+
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith('Note:'):
+            continue
+        # Parses the Array the drives are in
+        if line.startswith('Array'):
+            current_array = line.split(None, 1)[1]
+            drives[current_array] = {}
+        # Detects new physical drive
+        if line.startswith('Logical Drive'):
+            current_drv = line.split(': ', 1)[1]
+            drives.setdefault(current_array, {})['LogicalDrive'] = current_drv
+            continue
+        if ': ' not in line:
+            continue
+        attr, val = line.split(': ', 1)
+        drives.setdefault(current_array, {})[attr] = val
     return drives
 
 
@@ -59,7 +91,9 @@ class HPRaidController(RaidController):
     def __init__(self, controller_name, data):
         self.controller_name = controller_name
         self.data = data
-        self.drives = self._get_physical_disks()
+        self.pdrives = self._get_physical_disks()
+        self.ldrives = self._get_logical_drives()
+        self._get_virtual_drives_map()
 
     def get_product_name(self):
         return self.controller_name
@@ -77,15 +111,12 @@ class HPRaidController(RaidController):
         return self.data.get('External', False)
 
     def _get_physical_disks(self):
-        output = subprocess.getoutput(
-            'ssacli ctrl slot={slot} pd all show detail'.format(slot=self.data['Slot'])
-        )
-        lines = output.split('\n')
-        lines = list(filter(None, lines))
-        drives = _parse_pd_output(lines)
-        ret = []
+        lines = ssacli('ctrl slot={} pd all show detail'.format(self.data['Slot']))
+        pdrives = _parse_pd_output(lines)
+        ret = {}
 
-        for name, attrs in drives.items():
+        for name, attrs in pdrives.items():
+            array = attrs.get('Array', '')
             model = attrs.get('Model', '').strip()
             vendor = None
             if model.startswith('HP'):
@@ -95,7 +126,8 @@ class HPRaidController(RaidController):
             else:
                 vendor = get_vendor(model)
 
-            ret.append({
+            ret[name] = {
+                'Array': array,
                 'Model': model,
                 'Vendor': vendor,
                 'SN': attrs.get('Serial Number', '').strip(),
@@ -103,11 +135,40 @@ class HPRaidController(RaidController):
                 'Type': 'SSD' if attrs.get('Interface Type') == 'Solid State SATA'
                 else 'HDD',
                 '_src': self.__class__.__name__,
-            })
+            }
         return ret
 
+    def _get_logical_drives(self):
+        lines = ssacli('ctrl slot={} ld all show detail'.format(self.data['Slot']))
+        ldrives = _parse_ld_output(lines)
+        ret = {}
+
+        for array, attrs in ldrives.items():
+            ret[array] = {
+                'vd_array': array,
+                'vd_size': attrs['Size'],
+                'vd_consistency': attrs['Status'],
+                'vd_raid_type': 'RAID {}'.format(attrs['Fault Tolerance']),
+                'vd_device': attrs['LogicalDrive'],
+                'mount_point': attrs['Mount Points']
+            }
+        return ret
+
+    def _get_virtual_drives_map(self):
+        for name, attrs in self.pdrives.items():
+            array = attrs["Array"]
+            ld = self.ldrives.get(array)
+            if ld is None:
+                logging.error(
+                    "Failed to find array information for physical drive {}."
+                    " Ignoring.".format(name)
+                )
+                continue
+            attrs['custom_fields'] = ld
+            attrs['custom_fields']['pd_identifier'] = name
+
     def get_physical_disks(self):
-        return self.drives
+        return list(self.pdrives.values())
 
 
 class HPRaid(Raid):
