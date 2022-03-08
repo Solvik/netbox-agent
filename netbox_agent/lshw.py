@@ -69,15 +69,21 @@ class LSHW():
             return self.memories
 
     def find_network(self, obj):
-        d = {}
-        d["name"] = obj["logicalname"]
-        d["macaddress"] = obj["serial"]
-        d["serial"] = obj["serial"]
-        d["product"] = obj["product"]
-        d["vendor"] = obj["vendor"]
-        d["description"] = obj["description"]
-
-        self.interfaces.append(d)
+        # Some interfaces do not have device (logical) name (eth0, for
+        # instance), such as not connected network mezzanine cards in blade
+        # servers. In such situations, the card will be named `unknown[0-9]`.
+        unkn_intfs = [
+            i for i in self.interfaces if i["name"].startswith("unknown")
+        ]
+        unkn_name = "unknown{}".format(len(unkn_intfs))
+        self.interfaces.append({
+            "name": obj.get("logicalname", unkn_name),
+            "macaddress": obj.get("serial", ""),
+            "serial": obj.get("serial", ""),
+            "product": obj["product"],
+            "vendor": obj["vendor"],
+            "description": obj["description"],
+        })
 
     def find_storage(self, obj):
         if "children" in obj:
@@ -120,13 +126,12 @@ class LSHW():
 
     def find_cpus(self, obj):
         if "product" in obj:
-            c = {}
-            c["product"] = obj["product"]
-            c["vendor"] = obj["vendor"]
-            c["description"] = obj["description"]
-            c["location"] = obj["slot"]
-
-            self.cpus.append(c)
+            self.cpus.append({
+                "product": obj["product"],
+                "vendor": obj["vendor"],
+                "description": obj["description"],
+                "location": obj["slot"],
+            })
 
     def find_memories(self, obj):
         if "children" not in obj:
@@ -137,25 +142,23 @@ class LSHW():
             if "empty" in dimm["description"]:
                 continue
 
-            d = {}
-            d["slot"] = dimm.get("slot")
-            d["description"] = dimm.get("description")
-            d["id"] = dimm.get("id")
-            d["serial"] = dimm.get("serial", 'N/A')
-            d["vendor"] = dimm.get("vendor", 'N/A')
-            d["product"] = dimm.get("product", 'N/A')
-            d["size"] = dimm.get("size", 0) / 2 ** 20 / 1024
-
-            self.memories.append(d)
+            self.memories.append({
+                "slot": dimm.get("slot"),
+                "description": dimm.get("description"),
+                "id": dimm.get("id"),
+                "serial": dimm.get("serial", 'N/A'),
+                "vendor": dimm.get("vendor", 'N/A'),
+                "product": dimm.get("product", 'N/A'),
+                "size": dimm.get("size", 0) / 2 ** 20 / 1024,
+            })
 
     def find_gpus(self, obj):
         if "product" in obj:
-            c = {}
-            c["product"] = obj["product"]
-            c["vendor"] = obj["vendor"]
-            c["description"] = obj["description"]
-
-            self.gpus.append(c)
+            self.gpus.append({
+                "product": obj["product"],
+                "vendor": obj["vendor"],
+                "description": obj["description"],
+            })
 
     def walk_bridge(self, obj):
         if "children" not in obj:
