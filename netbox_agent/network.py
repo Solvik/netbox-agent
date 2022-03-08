@@ -261,7 +261,7 @@ class Network(object):
 
     def create_netbox_nic(self, nic, mgmt=False):
         # TODO: add Optic Vendor, PN and Serial
-        type = self.get_netbox_type_for_nic(nic)
+        nic_type = self.get_netbox_type_for_nic(nic)
         logging.info('Creating NIC {name} ({mac}) on {device}'.format(
             name=nic['name'], mac=nic['mac'], device=self.device.name))
 
@@ -270,11 +270,10 @@ class Network(object):
         params = dict(self.custom_arg)
         params.update({
             'name': nic['name'],
-            'type': type,
+            'type': nic_type,
             'mgmt_only': mgmt,
         })
-
-        if not nic.get('virtual', False):
+        if nic['mac']:
             params['mac_address'] = nic['mac']
 
         interface = self.nb_net.interfaces.create(**params)
