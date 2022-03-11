@@ -6,15 +6,32 @@ import logging
 import re
 
 
+class OmreportControllerError(Exception):
+    pass
+
+
 def omreport(sub_command):
-    command = 'omreport {}'.format(sub_command)
-    output = subprocess.getoutput(command)
+    command = ["omreport"]
+    command.extend(sub_command.split())
+    p = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT
+    )
+    p.wait()
+    stdout = p.stdout.read().decode("utf-8")
+    if p.returncode != 0:
+        mesg = "Failed to execute command '{}':\n{}".format(
+            " ".join(command), stdout
+        )
+        raise OmreportControllerError(mesg)
+
     res = {}
     section_re = re.compile('^[A-Z]')
     current_section = None
     current_obj = None
 
-    for line in output.split('\n'):
+    for line in stdout.split('\n'):
         if ': ' in line:
             attr, value = line.split(': ', 1)
             attr = attr.strip()

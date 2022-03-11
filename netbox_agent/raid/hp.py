@@ -7,10 +7,26 @@ import re
 
 REGEXP_CONTROLLER_HP = re.compile(r'Smart Array ([a-zA-Z0-9- ]+) in Slot ([0-9]+)')
 
+class HPRaidControllerError(Exception):
+    pass
 
-def ssacli(command):
-    output = subprocess.getoutput('ssacli {}'.format(command) )
-    lines = output.split('\n')
+
+def ssacli(sub_command):
+    command = ["ssacli"]
+    command.extend(sub_command.split())
+    p = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT
+    )
+    p.wait()
+    stdout = p.stdout.read().decode("utf-8")
+    if p.returncode != 0:
+        mesg = "Failed to execute command '{}':\n{}".format(
+            " ".join(command), stdout
+        )
+        raise HPRaidControllerError(mesg)
+    lines = stdout.split('\n')
     lines = list(filter(None, lines))
     return lines
 
@@ -92,8 +108,10 @@ class HPRaidController(RaidController):
         self.controller_name = controller_name
         self.data = data
         self.pdrives = self._get_physical_disks()
-        self.ldrives = self._get_logical_drives()
-        self._get_virtual_drives_map()
+        arrays = [d['Array'] for d in self.pdrives.values() if d.get('Array')]
+        if arrays:
+            self.ldrives = self._get_logical_drives()
+            self._get_virtual_drives_map()
 
     def get_product_name(self):
         return self.controller_name
@@ -135,6 +153,7 @@ class HPRaidController(RaidController):
                 'Type': 'SSD' if attrs.get('Interface Type') == 'Solid State SATA'
                 else 'HDD',
                 '_src': self.__class__.__name__,
+                'custom_fields':  {'pd_identifier': name}
             }
         return ret
 
@@ -164,8 +183,7 @@ class HPRaidController(RaidController):
                     " Ignoring.".format(name)
                 )
                 continue
-            attrs['custom_fields'] = ld
-            attrs['custom_fields']['pd_identifier'] = name
+            attrs['custom_fields'].update(ld)
 
     def get_physical_disks(self):
         return list(self.pdrives.values())

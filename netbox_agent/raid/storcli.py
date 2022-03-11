@@ -8,10 +8,27 @@ import re
 import os
 
 
+class StorcliControllerError(Exception):
+    pass
+
+
 def storecli(sub_command):
-    command = 'storcli {} J'.format(sub_command)
-    output = subprocess.getoutput(command)
-    data = json.loads(output)
+    command = ["storcli"]
+    command.extend(sub_command.split())
+    command.append("J")
+    p = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT
+    )
+    p.wait()
+    stdout = p.stdout.read().decode("utf-8")
+    if p.returncode != 0:
+        mesg = "Failed to execute command '{}':\n{}".format(
+            " ".join(command), stdout
+        )
+        raise StorcliControllerError(mesg)
+    data = json.loads(stdout)
     controllers = dict([
         (
             c['Command Status']['Controller'],
@@ -22,7 +39,7 @@ def storecli(sub_command):
     if not controllers:
         logging.error(
             "Failed to execute command '{}'. "
-            "Ignoring data.".format(command)
+            "Ignoring data.".format(" ".join(command))
         )
         return {}
     return controllers
