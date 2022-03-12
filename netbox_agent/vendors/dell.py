@@ -86,10 +86,3 @@ class DellHost(ServerBase):
         Expansion slot are always the compute bay number + 1
         """
         raise NotImplementedError
-
-    def own_expansion_slot(self):
-        """
-        Say if the device can host an extension card based
-        on the product name
-        """
-        pass

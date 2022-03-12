@@ -51,7 +51,7 @@ class PowerSupply():
         )
 
     def create_or_update_power_supply(self):
-        nb_psus = self.get_netbox_power_supply()
+        nb_psus = list(self.get_netbox_power_supply())
         psus = self.get_power_supply()
 
         # Delete unknown PSU
@@ -105,18 +105,20 @@ class PowerSupply():
             return False
 
         # find power feeds for rack or dc
-        voltage = None
         pwr_feeds = None
         if self.netbox_server.rack:
             pwr_feeds = nb.dcim.power_feeds.filter(
                 rack=self.netbox_server.rack.id
             )
-        if pwr_feeds is None or not len(pwr_feeds):
+
+        if pwr_feeds:
+            voltage = [p['voltage'] for p in pwr_feeds]
+        else:
             logging.info('Could not find power feeds for Rack, defaulting value to 230')
-            voltage = 230
+            voltage = [230 for _ in nb_psus]
 
         for i, nb_psu in enumerate(nb_psus):
-            nb_psu.allocated_draw = float(psu_cons[i]) * voltage
+            nb_psu.allocated_draw = int(float(psu_cons[i]) * voltage[i])
             if nb_psu.allocated_draw < 1:
                 logging.info('PSU is not connected or in standby mode')
                 continue
