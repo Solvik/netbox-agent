@@ -444,8 +444,15 @@ class ServerBase():
             server.name = self.get_hostname()
             update += 1
 
-        if sorted(set([x.name for x in server.tags])) != sorted(set(self.tags)):
-            server.tags = [x.id for x in self.nb_tags]
+        server_tags = sorted(set([x.name for x in server.tags]))
+        tags = sorted(set(self.tags))
+        if server_tags != tags:
+            new_tags_ids = [x.id for x in self.nb_tags]
+            if not config.preserve_tags:
+                server.tags = new_tags_ids
+            else:
+                server_tags_ids = [x.id for x in server.tags]
+                server.tags = sorted(set(new_tags_ids + server_tags_ids))
             update += 1
 
         if server.custom_fields != self.custom_fields:

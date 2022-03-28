@@ -45,6 +45,7 @@ def get_config():
                    help="Command to output hostname, used as Device's name in netbox")
     p.add_argument('--device.tags', default=r'',
                    help='tags to use for a host')
+    p.add_argument('--preserve-tags', action='store_true', help='Append new unique tags, preserve those already present')
     p.add_argument('--device.custom_fields', default=r'',
                    help='custom_fields to use for a host, eg: field1=v1,field2=v2')
     p.add_argument('--device.blade_role', default=r'Blade',
