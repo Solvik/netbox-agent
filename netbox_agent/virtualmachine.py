@@ -5,7 +5,7 @@ from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.location import Tenant
 from netbox_agent.logging import logging  # NOQA
-from netbox_agent.misc import create_netbox_tags, get_hostname
+from netbox_agent.misc import create_netbox_tags, get_hostname, get_device_platform
 from netbox_agent.network import VirtualNetwork
 
 
@@ -90,10 +90,13 @@ class VirtualMachine(object):
         if not vm:
             logging.debug('Creating Virtual machine..')
             cluster = self.get_netbox_cluster(config.virtual.cluster_name)
+            device_platform = get_device_platform(config)
 
             vm = nb.virtualization.virtual_machines.create(
                 name=hostname,
                 cluster=cluster.id,
+                platform=device_platform.id,
+                device_platform = get_device_platform(config),
                 vcpus=vcpus,
                 memory=memory,
                 tenant=tenant.id if tenant else None,
@@ -114,6 +117,11 @@ class VirtualMachine(object):
             if sorted(set(vm.tags)) != sorted(set(self.tags)):
                 vm.tags = self.tags
                 updated += 1
+            if get_device_platform(config) is not None:
+                if vm.platform != get_device_platform(config).name:
+                    updated += 1
+                    vm.platform = get_device_platform(config).id
+                    logging.debug('Finished updating Platform!')
 
         if updated:
             vm.save()

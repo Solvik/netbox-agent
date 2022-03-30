@@ -29,6 +29,18 @@ def get_device_type(type):
     return device_type
 
 
+def get_device_platform(config):
+    device_platform = nb.dcim.platforms.get(
+        name=config.device.platform
+    )
+    if device_platform is None:
+        device_platform = nb.dcim.platforms.create(
+            name=config.device.platform,
+            slug=slugify(config.device.platform)
+        )
+    return device_platform
+
+
 def get_vendor(name):
     vendors = {
         'PERC': 'Dell',

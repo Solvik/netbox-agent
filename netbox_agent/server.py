@@ -3,7 +3,7 @@ from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.inventory import Inventory
 from netbox_agent.location import Datacenter, Rack, Tenant
-from netbox_agent.misc import create_netbox_tags, get_device_role, get_device_type
+from netbox_agent.misc import create_netbox_tags, get_device_role, get_device_type, get_device_platform
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
 from pprint import pprint
@@ -262,6 +262,7 @@ class ServerBase():
     def _netbox_create_server(self, datacenter, tenant, rack):
         device_role = get_device_role(config.device.server_role)
         device_type = get_device_type(self.get_product_name())
+        device_platform = get_device_platform(config)
         if not device_type:
             raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
         serial = self.get_service_tag()
@@ -273,6 +274,7 @@ class ServerBase():
             serial=serial,
             device_role=device_role.id,
             device_type=device_type.id,
+            platform=device_platform.id,
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
@@ -462,6 +464,11 @@ class ServerBase():
         if config.update_all or config.update_location:
             ret, server = self.update_netbox_location(server)
             update += ret
+
+        if get_device_platform(config) is not None:
+            if server.platform != get_device_platform(config).name:
+                update += 1
+                server.platform = get_device_platform(config).id
 
         if update:
             server.save()
