@@ -31,18 +31,23 @@ def get_device_type(type):
 
 def get_device_platform(config):
     if config.device.platform is None:
-        return None
+        try:
+            import platform
 
-    device_platform = nb.dcim.platforms.get(
-        name=config.device.platform
-    )
+            linux_distribution = " ".join(platform.linux_distribution())
+            if not linux_distribution:
+                return None
+        except ModuleNotFoundError:
+            return None
+    else:
+        linux_distribution = config.device.platform
+
+    device_platform = nb.dcim.platforms.get(name=linux_distribution)
     if device_platform is None:
         device_platform = nb.dcim.platforms.create(
-            name=config.device.platform,
-            slug=slugify(config.device.platform)
+            name=linux_distribution, slug=slugify(linux_distribution)
         )
     return device_platform
-
 
 def get_vendor(name):
     vendors = {
