@@ -465,11 +465,10 @@ class ServerBase():
             ret, server = self.update_netbox_location(server)
             update += ret
 
-        if config.device.platform is not None:
-            platform = get_device_platform(config)
-            if server.platform != platform.name:
-                update += 1
-                server.platform = platform.id
+        platform = get_device_platform(config)
+        if server.platform != platform.name:
+            server.platform = platform.id
+            update += 1
 
         if update:
             server.save()
