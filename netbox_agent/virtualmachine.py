@@ -31,6 +31,7 @@ class VirtualMachine(object):
         else:
             self.dmi = dmidecode.parse()
         self.network = None
+        self.device_platform = get_device_platform(config.device.platform)
 
         self.tags = list(set(config.device.tags.split(','))) if config.device.tags else []
         if self.tags and len(self.tags):
@@ -90,13 +91,12 @@ class VirtualMachine(object):
         if not vm:
             logging.debug('Creating Virtual machine..')
             cluster = self.get_netbox_cluster(config.virtual.cluster_name)
-            device_platform = get_device_platform(config)
 
             vm = nb.virtualization.virtual_machines.create(
                 name=hostname,
                 cluster=cluster.id,
-                platform=device_platform.id if device_platform is not None else None,
-                device_platform=device_platform,
+                platform=self.device_platform,
+                device_platform=self.device_platform,
                 vcpus=vcpus,
                 memory=memory,
                 tenant=tenant.id if tenant else None,
@@ -117,11 +117,9 @@ class VirtualMachine(object):
             if sorted(set(vm.tags)) != sorted(set(self.tags)):
                 vm.tags = self.tags
                 updated += 1
-            if get_device_platform(config) is not None:
-                if vm.platform != get_device_platform(config).name:
-                    updated += 1
-                    vm.platform = get_device_platform(config).id
-                    logging.debug('Finished updating Platform!')
+            if vm.platform != self.device_platform:
+                vm.platform = self.device_platform
+                updated += 1
 
         if updated:
             vm.save()
