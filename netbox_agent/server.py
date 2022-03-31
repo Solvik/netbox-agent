@@ -24,6 +24,7 @@ class ServerBase():
         self.bios = dmidecode.get_by_type(self.dmi, 'BIOS')
         self.chassis = dmidecode.get_by_type(self.dmi, 'Chassis')
         self.system = dmidecode.get_by_type(self.dmi, 'System')
+        self.device_platform = get_device_platform(config.device.platform)
 
         self.network = None
 
@@ -262,7 +263,6 @@ class ServerBase():
     def _netbox_create_server(self, datacenter, tenant, rack):
         device_role = get_device_role(config.device.server_role)
         device_type = get_device_type(self.get_product_name())
-        device_platform = get_device_platform(config)
         if not device_type:
             raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
         serial = self.get_service_tag()
@@ -274,7 +274,7 @@ class ServerBase():
             serial=serial,
             device_role=device_role.id,
             device_type=device_type.id,
-            platform=device_platform.id,
+            platform=self.device_platform,
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
@@ -465,9 +465,8 @@ class ServerBase():
             ret, server = self.update_netbox_location(server)
             update += ret
 
-        platform = get_device_platform(config)
-        if server.platform != platform.name:
-            server.platform = platform.id
+        if server.platform != self.device_platform:
+            server.platform = self.device_platform
             update += 1
 
         if update:
@@ -494,6 +493,7 @@ class ServerBase():
         print('Is blade:', self.is_blade())
         print('Got expansion:', self.own_expansion_slot())
         print('Product Name:', self.get_product_name())
+        print('Platform:', self.device_platform)
         print('Chassis:', self.get_chassis())
         print('Chassis service tag:', self.get_chassis_service_tag())
         print('Service tag:', self.get_service_tag())

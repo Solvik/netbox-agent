@@ -29,18 +29,18 @@ def get_device_type(type):
     return device_type
 
 
-def get_device_platform(config):
-    if config.device.platform is None:
+def get_device_platform(device_platform):
+    if device_platform is None:
         try:
             import platform
 
             linux_distribution = " ".join(platform.linux_distribution())
             if not linux_distribution:
                 return None
-        except ModuleNotFoundError:
+        except (ModuleNotFoundError, NameError):
             return None
     else:
-        linux_distribution = config.device.platform
+        linux_distribution = device_platform
 
     device_platform = nb.dcim.platforms.get(name=linux_distribution)
     if device_platform is None:
