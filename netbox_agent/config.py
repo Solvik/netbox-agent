@@ -44,7 +44,7 @@ def get_config():
     p.add_argument('--hostname_cmd', default=None,
                    help="Command to output hostname, used as Device's name in netbox")
     p.add_argument('--device.platform', default=None,
-                   help='Device platform. Here we use OS distribution.')
+                   help='Override device platform. Here we use OS distribution.')
     p.add_argument('--device.tags', default=r'',
                    help='tags to use for a host')
     p.add_argument('--preserve-tags', action='store_true', help='Append new unique tags, preserve those already present')
