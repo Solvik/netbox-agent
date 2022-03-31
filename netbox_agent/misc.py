@@ -30,6 +30,9 @@ def get_device_type(type):
 
 
 def get_device_platform(config):
+    if config.device.platform is None:
+        return None
+
     device_platform = nb.dcim.platforms.get(
         name=config.device.platform
     )
