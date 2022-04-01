@@ -3,7 +3,7 @@ from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.inventory import Inventory
 from netbox_agent.location import Datacenter, Rack, Tenant
-from netbox_agent.misc import create_netbox_tags, get_device_role, get_device_type
+from netbox_agent.misc import create_netbox_tags, get_device_role, get_device_type, get_device_platform
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
 from pprint import pprint
@@ -24,6 +24,7 @@ class ServerBase():
         self.bios = dmidecode.get_by_type(self.dmi, 'BIOS')
         self.chassis = dmidecode.get_by_type(self.dmi, 'Chassis')
         self.system = dmidecode.get_by_type(self.dmi, 'System')
+        self.device_platform = get_device_platform(config.device.platform)
 
         self.network = None
 
@@ -273,6 +274,7 @@ class ServerBase():
             serial=serial,
             device_role=device_role.id,
             device_type=device_type.id,
+            platform=self.device_platform,
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
@@ -463,6 +465,10 @@ class ServerBase():
             ret, server = self.update_netbox_location(server)
             update += ret
 
+        if server.platform != self.device_platform:
+            server.platform = self.device_platform
+            update += 1
+
         if update:
             server.save()
 
@@ -487,6 +493,7 @@ class ServerBase():
         print('Is blade:', self.is_blade())
         print('Got expansion:', self.own_expansion_slot())
         print('Product Name:', self.get_product_name())
+        print('Platform:', self.device_platform)
         print('Chassis:', self.get_chassis())
         print('Chassis service tag:', self.get_chassis_service_tag())
         print('Service tag:', self.get_service_tag())

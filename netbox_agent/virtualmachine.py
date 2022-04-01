@@ -5,7 +5,7 @@ from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.location import Tenant
 from netbox_agent.logging import logging  # NOQA
-from netbox_agent.misc import create_netbox_tags, get_hostname
+from netbox_agent.misc import create_netbox_tags, get_hostname, get_device_platform
 from netbox_agent.network import VirtualNetwork
 
 
@@ -31,6 +31,7 @@ class VirtualMachine(object):
         else:
             self.dmi = dmidecode.parse()
         self.network = None
+        self.device_platform = get_device_platform(config.device.platform)
 
         self.tags = list(set(config.device.tags.split(','))) if config.device.tags else []
         if self.tags and len(self.tags):
@@ -94,6 +95,8 @@ class VirtualMachine(object):
             vm = nb.virtualization.virtual_machines.create(
                 name=hostname,
                 cluster=cluster.id,
+                platform=self.device_platform,
+                device_platform=self.device_platform,
                 vcpus=vcpus,
                 memory=memory,
                 tenant=tenant.id if tenant else None,
@@ -113,6 +116,9 @@ class VirtualMachine(object):
                 updated += 1
             if sorted(set(vm.tags)) != sorted(set(self.tags)):
                 vm.tags = self.tags
+                updated += 1
+            if vm.platform != self.device_platform:
+                vm.platform = self.device_platform
                 updated += 1
 
         if updated:

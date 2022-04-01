@@ -29,6 +29,26 @@ def get_device_type(type):
     return device_type
 
 
+def get_device_platform(device_platform):
+    if device_platform is None:
+        try:
+            import platform
+
+            linux_distribution = " ".join(platform.linux_distribution())
+            if not linux_distribution:
+                return None
+        except (ModuleNotFoundError, NameError):
+            return None
+    else:
+        linux_distribution = device_platform
+
+    device_platform = nb.dcim.platforms.get(name=linux_distribution)
+    if device_platform is None:
+        device_platform = nb.dcim.platforms.create(
+            name=linux_distribution, slug=slugify(linux_distribution)
+        )
+    return device_platform
+
 def get_vendor(name):
     vendors = {
         'PERC': 'Dell',
