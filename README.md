@@ -51,7 +51,7 @@ The agent can be run from a shell and get its configuration from either the conf
 Configuration values are overridden based on the following precedence: command line arguments (might include config file) > environment variables > default config file > defaults.
 
 ```
-# netbox_agent -c /etc/netbox_agent.yml --register
+# netbox_agent -c /etc/netbox_agent.yaml --register
 INFO:root:Creating chassis blade (serial: QTFCQ574502EF)
 INFO:root:Creating blade (serial: QTFCQ574502D2) myserver on chassis QTFCQ574502EF
 INFO:root:Setting device (QTFCQ574502D2) new slot on Slot 9 (Chassis QTFCQ574502EF)..
