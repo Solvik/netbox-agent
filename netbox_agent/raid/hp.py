@@ -20,13 +20,13 @@ def ssacli(sub_command):
     )
     p.wait()
     stdout = p.stdout.read().decode("utf-8")
-    if p.returncode == 1 and stdout.find('does not have any physical') == -1:
+    if p.returncode != 0 and 'does not have any physical' not in stdout:
         mesg = "Failed to execute command '{}':\n{}".format(
             " ".join(command), stdout
         )
         raise HPRaidControllerError(mesg)
     else:
-        if stdout.find('does not have any physical') != -1:
+        if 'does not have any physical' in stdout:
             return list()
         else:
             lines = stdout.split('\n')
