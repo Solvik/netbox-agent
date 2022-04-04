@@ -10,6 +10,7 @@ REGEXP_CONTROLLER_HP = re.compile(r'Smart Array ([a-zA-Z0-9- ]+) in Slot ([0-9]+
 class HPRaidControllerError(Exception):
     pass
 
+
 def ssacli(sub_command):
     command = ["ssacli"]
     command.extend(sub_command.split())
@@ -20,18 +21,15 @@ def ssacli(sub_command):
     )
     p.wait()
     stdout = p.stdout.read().decode("utf-8")
-    if p.returncode == 1 and stdout.find('does not have any physical') == -1:
+    if p.returncode != 0:
         mesg = "Failed to execute command '{}':\n{}".format(
             " ".join(command), stdout
         )
         raise HPRaidControllerError(mesg)
-    else:
-        if stdout.find('does not have any physical') != -1:
-            return list()
-        else:
-            lines = stdout.split('\n')
-            lines = list(filter(None, lines))
+    lines = stdout.split('\n')
+    lines = list(filter(None, lines))
     return lines
+
 
 def _parse_ctrl_output(lines):
     controllers = {}
