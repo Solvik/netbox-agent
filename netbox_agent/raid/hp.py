@@ -38,7 +38,10 @@ def _parse_ctrl_output(lines):
     current_ctrl = None
 
     for line in lines:
-        if not line or line.startswith('Note:'):
+        if not line or line.startswith('Note:') or \
+           'Please execute the "reenablecache' in line or \
+           'reboot after the operation' in line or \
+           'to complete the cache recovery process' in line:
             continue
         ctrl = REGEXP_CONTROLLER_HP.search(line)
         if ctrl is not None:
