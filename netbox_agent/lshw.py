@@ -86,18 +86,8 @@ class LSHW():
         })
 
     def find_storage(self, obj):
-        if "children" in obj:
-            for device in obj["children"]:
-                self.disks.append({
-                    "logicalname": device.get("logicalname"),
-                    "product": device.get("product"),
-                    "serial": device.get("serial"),
-                    "version": device.get("version"),
-                    "size": device.get("size"),
-                    "description": device.get("description"),
-                    "type": device.get("description"),
-                })
-        elif "nvme" in obj["configuration"]["driver"]:
+        serials = []
+        if "nvme" in obj["configuration"]["driver"]:
             if not is_tool('nvme'):
                 logging.error('nvme-cli >= 1.0 does not seem to be installed')
                 return
@@ -108,13 +98,14 @@ class LSHW():
                         encoding='utf8')
                 )
                 for device in nvme["Devices"]:
+                    serials += device["SerialNumber"].strip()
                     d = {
                         'logicalname': device["DevicePath"],
                         'product': device["ModelNumber"],
-                        'serial': device["SerialNumber"],
+                        'serial': device["SerialNumber"].strip(),
                         "version": device["Firmware"],
-                        'description': "NVME",
-                        'type': "NVME",
+                        'description': "NVMe device",
+                        'type': "NVMe device",
                     }
                     if "UsedSize" in device:
                         d['size'] = device["UsedSize"]
@@ -123,6 +114,20 @@ class LSHW():
                     self.disks.append(d)
             except Exception:
                 pass
+
+        if "children" in obj:
+            for device in obj["children"]:
+                if device.get("serial").strip() in serials:
+                    continue
+                self.disks.append({
+                    "logicalname": device.get("logicalname"),
+                    "product": device.get("product"),
+                    "serial": device.get("serial").strip(),
+                    "version": device.get("version"),
+                    "size": device.get("size"),
+                    "description": device.get("description"),
+                    "type": device.get("description"),
+                    })
 
     def find_cpus(self, obj):
         if "product" in obj:
