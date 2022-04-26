@@ -53,7 +53,7 @@ class LLDP():
         # lldp.eth0.chassis.mgmt-ip=100.66.7.222
         if self.data['lldp'].get(interface) is None:
             return None
-        return self.data['lldp'][interface]['chassis']['mgmt-ip']
+        return self.data['lldp'][interface]['chassis'].get('mgmt-ip')
 
     def get_switch_port(self, interface):
         # lldp.eth0.port.descr=GigabitEthernet1/0/1
