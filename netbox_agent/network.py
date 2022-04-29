@@ -245,7 +245,7 @@ class Network(object):
             interface.untagged_vlan = None
         # Finally if LLDP reports a vlan-id with the pvid attribute
         elif lldp_vlan:
-            pvid_vlan = [key for (key, value) in lldp_vlan.items() if value['pvid']]
+            pvid_vlan = [key for (key, value) in lldp_vlan.items() if value.get('pvid')]
             if len(pvid_vlan) > 0 and (
                     interface.mode is None or
                     interface.mode.value != self.dcim_choices['interface:mode']['Access'] or
