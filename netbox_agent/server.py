@@ -274,7 +274,7 @@ class ServerBase():
             serial=serial,
             device_role=device_role.id,
             device_type=device_type.id,
-            platform=self.device_platform,
+            platform=self.device_platform.id,
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
