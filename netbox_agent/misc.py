@@ -32,12 +32,17 @@ def get_device_type(type):
 def get_device_platform(device_platform):
     if device_platform is None:
         try:
-            import platform
+            # Python 3.8+ moved linux_distribution() to distro
+            try:
+                import distro
+                linux_distribution = " ".join(distro.linux_distribution())
+            except ImportError:
+                import platform
+                linux_distribution = " ".join(platform.linux_distribution())
 
-            linux_distribution = " ".join(platform.linux_distribution())
             if not linux_distribution:
                 return None
-        except (ModuleNotFoundError, NameError):
+        except (ModuleNotFoundError, NameError, AttributeError):
             return None
     else:
         linux_distribution = device_platform
