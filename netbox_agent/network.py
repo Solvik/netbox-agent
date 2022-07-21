@@ -214,7 +214,7 @@ class Network(object):
         lldp_vlan = self.lldp.get_switch_vlan(nic['name']) if config.network.lldp else None
         # For strange reason, we need to get the object from scratch
         # The object returned by pynetbox's save isn't always working (since pynetbox 6)
-        interface = nb.dcim.interfaces.get(id=interface.id)
+        interface = self.nb_net.interfaces.get(id=interface.id)
 
         # Handle the case were the local interface isn't an interface vlan as reported by Netbox
         # and that LLDP doesn't report a vlan-id
