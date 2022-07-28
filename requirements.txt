@@ -5,3 +5,4 @@ pyyaml==5.4.1
 jsonargparse==3.11.2
 python-slugify==5.0.2
 packaging==20.9
+distro=1.7.0
