@@ -201,6 +201,22 @@ class Network(object):
         vlan = nb.ipam.vlans.get(
             vid=vlan_id,
         )
+        #/var/tmp/netbox-agent# lldpctl
+        # -------------------------------------------------------------------------------
+        # LLDP neighbors:
+        # -------------------------------------------------------------------------------
+        # Interface:    eno1, via: LLDP, RID: 8, Time: 13 days, 05:07:41
+        #   Chassis:
+        #     ChassisID:    local G4U19
+        #     SysName:      G4U19
+        #     Capability:   Bridge, on
+        #   Port:
+        #     PortID:       ifname gi35
+        #     TTL:          120
+        #   VLAN:         4095, pvid: yes
+        # on Cisco SMB, the vlan will be 4095 for port is member of Port-Channel instead of VLAN 1
+        if vlan_id == "4095":
+            vlan_id = "1"
         if vlan is None:
             vlan = nb.ipam.vlans.create(
                 name='VLAN {}'.format(vlan_id),
