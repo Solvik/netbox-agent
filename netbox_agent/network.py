@@ -544,32 +544,40 @@ class ServerNetwork(Network):
             return nb_server_interface
 
         switch_interface = self.lldp.get_switch_port(nb_server_interface.name)
-        nb_switch_interface = nb.dcim.interfaces.get(
-            device=nb_switch,
-            name=switch_interface,
-        )
-        if nb_switch_interface is None:
-            logging.error('Switch interface {} cannot be found'.format(switch_interface))
-            return nb_server_interface
-
-        logging.info('Found interface {} on switch {}'.format(
-            switch_interface,
-            switch_ip,
-        ))
-        cable = nb.dcim.cables.create(
-            termination_a_id=nb_server_interface.id,
-            termination_a_type="dcim.interface",
-            termination_b_id=nb_switch_interface.id,
-            termination_b_type="dcim.interface",
-        )
-        nb_server_interface.cable = cable
-        logging.info(
-            'Connected interface {interface} with {switch_interface} of {switch_ip}'.format(
-                interface=nb_server_interface.name,
-                switch_interface=switch_interface,
-                switch_ip=switch_ip,
+        switch_interfaces = [switch_interface]
+        interface_match = re.match(r"([a-z]{2})(\d+)", switch_interface)
+        if interface_match is not None:
+            logging.debug(f"Converting interface {switch_interface} to canonical name")
+            switch_interfaces.append(f"GigabitEthernet{interface_match.group(2)}")
+        logging.debug(f"switch interfaces is: {switch_interfaces}")
+        for switch_interface in switch_interfaces:
+            nb_switch_interface = nb.dcim.interfaces.get(
+                device=nb_switch,
+                name=switch_interface,
             )
-        )
+            if nb_switch_interface is None:
+                logging.error('Switch interface {} cannot be found'.format(switch_interface))
+                continue
+                # return nb_server_interface
+
+            logging.info('Found interface {} on switch {}'.format(
+                switch_interface,
+                switch_ip,
+            ))
+            cable = nb.dcim.cables.create(
+                termination_a_id=nb_server_interface.id,
+                termination_a_type="dcim.interface",
+                termination_b_id=nb_switch_interface.id,
+                termination_b_type="dcim.interface",
+            )
+            nb_server_interface.cable = cable
+            logging.info(
+                'Connected interface {interface} with {switch_interface} of {switch_ip}'.format(
+                    interface=nb_server_interface.name,
+                    switch_interface=switch_interface,
+                    switch_ip=switch_ip,
+                )
+            )
         return nb_server_interface
 
     def create_or_update_cable(self, switch_ip, switch_interface, nb_server_interface):

@@ -1,5 +1,6 @@
 import logging
 import subprocess
+import socket
 
 from netbox_agent.misc import is_tool
 
@@ -51,12 +52,38 @@ class LLDP():
 
     def get_switch_ip(self, interface):
         # lldp.eth0.chassis.mgmt-ip=100.66.7.222
+        # lldp.eno1.chassis.name=G4U19 # try to conncet to chassis name instead of mgmt-ip in case ip return None
         if self.data['lldp'].get(interface) is None:
             return None
-        return self.data['lldp'][interface]['chassis'].get('mgmt-ip')
+        if self.data['lldp'][interface]['chassis'].get('mgmt-ip') is None:
+            logging.debug("No switch IP found, trying to connect via switch domain name")
+            ip = socket.gethostbyname(self.data['lldp'][interface]['chassis'].get('name'))
+            return ip
+        else:
+            return self.data['lldp'][interface]['chassis'].get('mgmt-ip')
 
     def get_switch_port(self, interface):
         # lldp.eth0.port.descr=GigabitEthernet1/0/1
+        # lldp.eno1.port.ifname=gi35
+        # Cisco SMB SG300 didn't return canonical_int in case True/False, so add an extra convert to ully expanded name
+        # To avoid `ERROR:root:Switch interface gi35 cannot be found`
+        # NAPALM result:
+        #         "GigabitEthernet35": [
+        #     {
+        #         "parent_interface": "N/A",
+        #         "remote_port": "xx:xx:xx:xx:xx:xx",
+        #         "remote_port_description": "eno1",
+        #         "remote_chassis_id": "yy:yy:yy:yy:yy:yy",
+        #         "remote_system_name": "abc",
+        #         "remote_system_description": "Debian GNU/Linux 11 (bullseye)",
+        #         "remote_system_capab": [
+        #             "B"
+        #         ],
+        #         "remote_system_enable_capab": [
+        #             "B"
+        #         ]
+        #     }
+        # ],
         if self.data['lldp'].get(interface) is None:
             return None
         if self.data['lldp'][interface]['port'].get('ifname'):
