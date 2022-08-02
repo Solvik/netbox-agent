@@ -198,13 +198,6 @@ class Network(object):
     def get_or_create_vlan(self, vlan_id):
         # FIXME: we may need to specify the datacenter
         # since users may have same vlan id in multiple dc
-<<<<<<< HEAD
-        logging.debug(f"VLAN ID is: {vlan_id}")
-        vlan = nb.ipam.vlans.get(
-            vid=vlan_id,
-        )
-=======
->>>>>>> 4b0b3997f5fa5ef8ef871ed60a060ab05e2cd7ee
         #/var/tmp/netbox-agent# lldpctl
         # -------------------------------------------------------------------------------
         # LLDP neighbors:
@@ -221,6 +214,9 @@ class Network(object):
         # on Cisco SMB, the vlan will be 4095 for port is member of Port-Channel instead of VLAN 1
         if vlan_id == "4095":
             vlan_id = "1"
+        vlan = nb.ipam.vlans.get(
+            vid=vlan_id,
+        )
         vlan = nb.ipam.vlans.get(
             vid=vlan_id,
         )
