@@ -198,6 +198,7 @@ class Network(object):
     def get_or_create_vlan(self, vlan_id):
         # FIXME: we may need to specify the datacenter
         # since users may have same vlan id in multiple dc
+        logging.debug(f"VLAN ID is: {vlan_id}")
         vlan = nb.ipam.vlans.get(
             vid=vlan_id,
         )
@@ -305,6 +306,7 @@ class Network(object):
             # if pvid is not present, it'll be processed as a vlan tagged interface
             vlans = self.lldp.get_switch_vlan(nic['name'])
             for vid, vlan_infos in vlans.items():
+                logging.debug(f"vid: {vid}, infos: {vlan_infos}")
                 nb_vlan = self.get_or_create_vlan(vid)
                 if vlan_infos.get('vid'):
                     interface.mode = self.dcim_choices['interface:mode']['Access']

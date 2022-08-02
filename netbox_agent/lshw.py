@@ -14,6 +14,7 @@ class LSHW():
         data = subprocess.getoutput(
             'lshw -quiet -json'
         )
+
         json_data = json.loads(data)
         # Starting from version 02.18, `lshw -json` wraps its result in a list
         # rather than returning directly a dictionary
@@ -72,8 +73,9 @@ class LSHW():
         # Some interfaces do not have device (logical) name (eth0, for
         # instance), such as not connected network mezzanine cards in blade
         # servers. In such situations, the card will be named `unknown[0-9]`.
+        #DEBUG:root:lshw interfaces is: [{'name': ['enp68s0f0', '/dev/fb0'], 'macaddress': 'xx:ec:xx:fb:xx:xx', 'serial': 'xx:ec:xx:fb:xx:xx', 'product': 'Ethernet Controller X710 for 10GBASE-T', 'vendor': 'Intel Corporation', 'description': 'Ethernet interface'}]
         unkn_intfs = [
-            i for i in self.interfaces if i["name"].startswith("unknown")
+            i for i in self.interfaces if i["name"][0].startswith("unknown")
         ]
         unkn_name = "unknown{}".format(len(unkn_intfs))
         self.interfaces.append({
@@ -86,18 +88,8 @@ class LSHW():
         })
 
     def find_storage(self, obj):
-        if "children" in obj:
-            for device in obj["children"]:
-                self.disks.append({
-                    "logicalname": device.get("logicalname"),
-                    "product": device.get("product"),
-                    "serial": device.get("serial"),
-                    "version": device.get("version"),
-                    "size": device.get("size"),
-                    "description": device.get("description"),
-                    "type": device.get("description"),
-                })
-        elif "nvme" in obj["configuration"]["driver"]:
+        if "nvme" in obj["configuration"]["driver"]:
+            logging.debug("go to nvme")
             if not is_tool('nvme'):
                 logging.error('nvme-cli >= 1.0 does not seem to be installed')
                 return
@@ -123,7 +115,25 @@ class LSHW():
                     self.disks.append(d)
             except Exception:
                 pass
-
+        elif "children" in obj:
+            logging.debug("go to children")
+            for device in obj["children"]:
+                logging.debug(device)
+                # if device.get("logicalname") is None or device.get("product") is None or \
+                # device.get("serial") is None or device.get("version") is None or \
+                # device.get("size") is None:
+                #     continue
+                if device.get("size") is None:
+                    continue
+                self.disks.append({
+                    "logicalname": device.get("logicalname"),
+                    "product": device.get("product"),
+                    "serial": device.get("serial"),
+                    "version": device.get("version"),
+                    "size": device.get("size"),
+                    "description": device.get("description"),
+                    "type": device.get("description"),
+                })
     def find_cpus(self, obj):
         if "product" in obj:
             self.cpus.append({
