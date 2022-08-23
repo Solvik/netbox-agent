@@ -321,6 +321,7 @@ class Inventory():
            'virtual' in product.lower() or \
            'logical' in product.lower() or \
            'volume' in description.lower() or \
+           'dvd-ram' in description.lower() or \
            description == 'SCSI Enclosure' or \
            (size is None and logicalname is None):
             return True
@@ -341,23 +342,21 @@ class Inventory():
         for disk in self.lshw.get_hw_linux("storage"):
             if self.is_virtual_disk(disk, raid_devices):
                 continue
-            size = int(getattr(disk, "size", 0))
-            if size > 0:
-                size /= 1073741824
-                d = {
-                    "name": "",
-                    'Size': '{} GB'.format(size),
-                    'logicalname': disk.get('logicalname'),
-                    'description': disk.get('description'),
-                    'SN': disk.get('serial'),
-                    'Model': disk.get('product'),
-                    'Type': disk.get('type'),
-                }
-                if disk.get('vendor'):
-                    d['Vendor'] = disk['vendor']
-                else:
-                    d['Vendor'] = get_vendor(disk['product'])
-                disks.append(d)
+            size = int(getattr(disk, "size", 0)) / 1073741824
+            d = {
+                "name": "",
+                'Size': '{} GB'.format(size),
+                'logicalname': disk.get('logicalname'),
+                'description': disk.get('description'),
+                'SN': disk.get('serial'),
+                'Model': disk.get('product'),
+                'Type': disk.get('type'),
+            }
+            if disk.get('vendor'):
+                d['Vendor'] = disk['vendor']
+            else:
+                d['Vendor'] = get_vendor(disk['product'])
+            disks.append(d)
 
         # remove duplicate serials
         seen = set()
