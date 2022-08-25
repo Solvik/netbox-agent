@@ -321,6 +321,7 @@ class Inventory():
            'virtual' in product.lower() or \
            'logical' in product.lower() or \
            'volume' in description.lower() or \
+           'dvd-ram' in description.lower() or \
            description == 'SCSI Enclosure' or \
            (size is None and logicalname is None):
             return True
@@ -341,7 +342,7 @@ class Inventory():
         for disk in self.lshw.get_hw_linux("storage"):
             if self.is_virtual_disk(disk, raid_devices):
                 continue
-            size =int(disk.get('size', 0)) / 1073741824
+            size = int(getattr(disk, "size", 0)) / 1073741824
             d = {
                 "name": "",
                 'Size': '{} GB'.format(size),
