@@ -43,6 +43,10 @@ def get_config():
     p.add_argument('--virtual.cluster_name', help='Cluster name of VM')
     p.add_argument('--hostname_cmd', default=None,
                    help="Command to output hostname, used as Device's name in netbox")
+    p.add_argument('--rack_unit', default=None,
+                   help="The Unit location of server on rack")
+    p.add_argument('--rack_face', default=None,
+                   help="Front/Rear of server on rack")
     p.add_argument('--device.platform', default=None,
                    help='Override device platform. Here we use OS distribution.')
     p.add_argument('--device.tags', default=r'',
@@ -71,12 +75,6 @@ def get_config():
     p.add_argument('--rack_location.driver', help='Rack location driver, ie: cmd, file')
     p.add_argument('--rack_location.driver_file', help='Rack location custom driver file path')
     p.add_argument('--rack_location.regex', help='Rack location regex to extract Rack name')
-    p.add_argument('--rack_unit.driver', help='Rack Unit driver, ie: cmd, file')
-    p.add_argument('--rack_unit.driver_file', help='Rack Unit custom driver file path')
-    p.add_argument('--rack_unit.regex', help='Rack Unit regex to extract Rack name')
-    p.add_argument('--rack_face.driver', help='Rack Face driver, ie: cmd, file')
-    p.add_argument('--rack_face.driver_file', help='Rack Face custom driver file path')
-    p.add_argument('--rack_face.regex', help='Rack Face regex to extract Rack name')
     p.add_argument('--slot_location.driver', help='Slot location driver, ie: cmd, file')
     p.add_argument('--slot_location.driver_file', help='Slot location custom driver file path')
     p.add_argument('--slot_location.regex', help='Slot location regex to extract slot name')

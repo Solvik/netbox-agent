@@ -2,7 +2,7 @@ import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.inventory import Inventory
-from netbox_agent.location import Datacenter, Rack, Tenant, Rack_Unit, Rack_Face
+from netbox_agent.location import Datacenter, Rack, Tenant
 from netbox_agent.misc import create_netbox_tags, get_device_role, get_device_type, get_device_platform
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
@@ -88,22 +88,22 @@ class ServerBase():
             update = True
             server.site = nb_dc.id
 
-        if (
-            server.rack
-            and nb_rack
-            and server.rack.id != nb_rack.id
-        ):
-            logging.info('Rack location has changed from {} to {}, updating'.format(
-                server.rack,
-                nb_rack,
-            ))
-            update = True
-            server.rack = nb_rack
-            if nb_rack is None:
-                server.face = None
-                server.position = None
-        server.position = Rack_Unit().get()
-        server.face = Rack_Face().get()
+        # if (
+        #     server.rack
+        #     and nb_rack
+        #     and server.rack.id != nb_rack.id
+        # ):
+        logging.info('Rack location has changed from {} to {}, updating'.format(
+            server.rack,
+            nb_rack,
+        ))
+        update = True
+        server.rack = nb_rack
+        if nb_rack is None:
+            server.face = None
+            server.position = None
+        server.position = config.rack_unit
+        server.face = config.rack_face
         return update, server
 
     def update_netbox_expansion_location(self, server, expansion):
