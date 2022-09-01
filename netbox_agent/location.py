@@ -71,6 +71,25 @@ class Datacenter(LocationBase):
         regex = config.datacenter_location.regex
         super().__init__(driver, driver_value, driver_file, regex)
 
+class Rack_Unit(LocationBase):
+    def __init__(self):
+        driver = config.rack_unit.driver.split(':')[0] if \
+            config.rack_unit.driver else None
+        driver_value = ':'.join(config.rack_unit.driver.split(':')[1:]) if \
+            config.rack_unit.driver else None
+        driver_file = config.rack_unit.driver_file
+        regex = config.rack_unit.regex
+        super().__init__(driver, driver_value, driver_file, regex)
+
+class Rack_Face(LocationBase):
+    def __init__(self):
+        driver = config.rack_face.driver.split(':')[0] if \
+            config.rack_face.driver else None
+        driver_value = ':'.join(config.rack_face.driver.split(':')[1:]) if \
+            config.rack_face.driver else None
+        driver_file = config.rack_face.driver_file
+        regex = config.rack_face.regex
+        super().__init__(driver, driver_value, driver_file, regex)
 
 class Rack(LocationBase):
     def __init__(self):
