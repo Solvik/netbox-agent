@@ -97,7 +97,8 @@ class PowerSupply():
         try:
             psu_cons = self.server.get_power_consumption()
         except NotImplementedError:
-            logging.error('Cannot report power consumption for this vendor')
+            # currently the function `get_power_consumption` is support only with `dell` so it should be warning instead error
+            logging.warning('Cannot report power consumption for this vendor')
             return False
         nb_psus = self.get_netbox_power_supply()
 
