@@ -54,7 +54,7 @@ class SupermicroHost(ServerBase):
         # in this case, we'll read from FRU instead 
         if self.system[0]['Serial Number'].strip() in config.device.ignore_serial_number:
             serial_number = self.get_fru().strip()
-            if serial_number is None or serial_number is empty:
+            if serial_number is None:
                 logging.error("The fru BS is Empty")
             else:
                 return self.get_fru().strip()
