@@ -88,4 +88,4 @@ class SupermicroHost(ServerBase):
             logging.error('IPMICFG does not seem to be present on your system. Add it your path or '
                         'check the compatibility of this project with your distro.')
             sys.exit(1)
-        return subprocess.getoutput('IPMICFG -fru PS')
+        return subprocess.getoutput('IPMICFG -fru BS')
