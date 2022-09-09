@@ -47,6 +47,8 @@ def get_config():
                    help="The Unit location of server on rack")
     p.add_argument('--rack_face', default=None,
                    help="Front/Rear of server on rack")
+    p.add_argument('--device.ignore_serial_number', default=[],
+                   help="Ignore serial number and use FRU instead serial number from dmidecode")
     p.add_argument('--device.platform', default=None,
                    help='Override device platform. Here we use OS distribution.')
     p.add_argument('--device.tags', default=r'',

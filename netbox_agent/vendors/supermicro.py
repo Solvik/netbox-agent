@@ -1,6 +1,8 @@
 from netbox_agent.location import Slot
 from netbox_agent.server import ServerBase
-
+from netbox_agent.misc import is_tool
+from netbox_agent.config import config
+import subprocess
 
 class SupermicroHost(ServerBase):
     """
@@ -48,6 +50,10 @@ class SupermicroHost(ServerBase):
     def get_service_tag(self):
         if self.is_blade():
             return self.baseboard[0]['Serial Number'].strip()
+        # some servers model or seller set Hardware system serial as ["123456789", "0123456789"] instead default from manufacture
+        # in this case, we'll read from FRU instead 
+        if self.system[0]['Serial Number'].strip() in config.device.ignore_serial_number:
+            return self.get_fru().strip()
         return self.system[0]['Serial Number'].strip()
 
     def get_product_name(self):
@@ -77,3 +83,9 @@ class SupermicroHost(ServerBase):
         I only know on model of slot GPU extension card that.
         """
         raise NotImplementedError
+    def get_fru(self):
+        if not is_tool('IPMICFG'):
+            logging.error('IPMICFG does not seem to be present on your system. Add it your path or '
+                        'check the compatibility of this project with your distro.')
+            sys.exit(1)
+        return subprocess.getoutput('IPMICFG -fru PS')
