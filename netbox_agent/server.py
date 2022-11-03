@@ -62,7 +62,7 @@ class ServerBase():
     def get_netbox_datacenter(self):
         dc = self.get_datacenter()
         if dc is None:
-            logging.error("Specificing a datacenter (Site) is mandatory in Netbox")
+            logging.error("Specifying a datacenter (Site) is mandatory in Netbox")
             sys.exit(1)
 
         nb_dc = nb.dcim.sites.get(
