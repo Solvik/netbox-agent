@@ -96,8 +96,8 @@ class VirtualMachine(object):
             vm = nb.virtualization.virtual_machines.create(
                 name=hostname,
                 cluster=cluster.id,
-                platform=self.device_platform,
-                device_platform=self.device_platform,
+                platform=self.device_platform.id,
+                device_platform=self.device_platform.id,
                 vcpus=vcpus,
                 memory=memory,
                 tenant=tenant.id if tenant else None,
