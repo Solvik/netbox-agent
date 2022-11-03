@@ -97,7 +97,6 @@ class VirtualMachine(object):
                 name=hostname,
                 cluster=cluster.id,
                 platform=self.device_platform.id,
-                device_platform=self.device_platform.id,
                 vcpus=vcpus,
                 memory=memory,
                 tenant=tenant.id if tenant else None,
