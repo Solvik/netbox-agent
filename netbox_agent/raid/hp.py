@@ -63,6 +63,8 @@ def _parse_pd_output(lines):
         line = line.strip()
         if not line or line.startswith('Note:'):
             continue
+        if 'cache' in line or 'reboot' in line:
+            continue
         # Parses the Array the drives are in
         if line.startswith('Array'):
             current_array = line.split(None, 1)[1]
