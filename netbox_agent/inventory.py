@@ -309,14 +309,13 @@ class Inventory():
         description = disk.get('description')
         size = disk.get('size')
         product = disk.get('product')
-        if logicalname in raid_devices or disk_type is None:
+        if logicalname in raid_devices or disk_type is None or product is None or description is None:
             return True
         non_raid_disks = [
             'MR9361-8i',
         ]
 
         if logicalname in raid_devices or \
-           disk_type is None or \
            product in non_raid_disks or \
            'virtual' in product.lower() or \
            'logical' in product.lower() or \
