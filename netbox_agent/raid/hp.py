@@ -36,9 +36,14 @@ def ssacli(sub_command):
 def _parse_ctrl_output(lines):
     controllers = {}
     current_ctrl = None
-
+    ignore_patterns = ['Note:', 'Error:', 'is not loaded', 'README']
+    ignore_match = False
     for line in lines:
-        if not line or line.startswith('Note:'):
+        for pattern in ignore_patterns:
+            if not line or pattern in line:
+                ignore_match = True
+                break
+        if ignore_match:
             continue
         ctrl = REGEXP_CONTROLLER_HP.search(line)
         if ctrl is not None:
