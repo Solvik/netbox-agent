@@ -36,7 +36,7 @@ def ssacli(sub_command):
 def _parse_ctrl_output(lines):
     controllers = {}
     current_ctrl = None
-    ignore_patterns = ['Note:', 'Error:', 'is not loaded', 'README']
+    ignore_patterns = ['Note:', 'Error:', 'is not loaded', 'README', 'failure']
     ignore_match = False
     for line in lines:
         for pattern in ignore_patterns:
