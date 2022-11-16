@@ -33,17 +33,21 @@ def ssacli(sub_command):
             lines = list(filter(None, lines))
     return lines
 
+def _test_if_valid_line(line):
+    ignore_patterns = ['Note:', 'Error:', 'is not loaded', 'README', 'failure', 'cache']
+    for pattern in ignore_patterns:
+        if not line or pattern in line:
+            return None
+    return line
+
 def _parse_ctrl_output(lines):
     controllers = {}
     current_ctrl = None
-    ignore_patterns = ['Note:', 'Error:', 'is not loaded', 'README']
-    ignore_match = False
+
     for line in lines:
-        for pattern in ignore_patterns:
-            if not line or pattern in line:
-                ignore_match = True
-                break
-        if ignore_match:
+        line = line.strip()
+        line = _test_if_valid_line(line)
+        if line is None:
             continue
         ctrl = REGEXP_CONTROLLER_HP.search(line)
         if ctrl is not None:
@@ -51,7 +55,10 @@ def _parse_ctrl_output(lines):
             controllers[current_ctrl] = {'Slot': ctrl.group(2)}
             if 'Embedded' not in line:
                 controllers[current_ctrl]['External'] = True
+                continue
+        if ': ' not in line:
             continue
+
         attr, val = line.split(': ', 1)
         attr = attr.strip()
         val = val.strip()
@@ -66,9 +73,8 @@ def _parse_pd_output(lines):
 
     for line in lines:
         line = line.strip()
-        if not line or line.startswith('Note:'):
-            continue
-        if 'cache' in line or 'reboot' in line:
+        line = _test_if_valid_line(line)
+        if line is None:
             continue
         # Parses the Array the drives are in
         if line.startswith('Array'):
@@ -83,8 +89,11 @@ def _parse_pd_output(lines):
         if ': ' not in line:
             continue
         attr, val = line.split(': ', 1)
+        attr = attr.strip()
+        val = val.strip()
         drives.setdefault(current_drv, {})[attr] = val
     return drives
+
 
 
 def _parse_ld_output(lines):
@@ -94,7 +103,8 @@ def _parse_ld_output(lines):
 
     for line in lines:
         line = line.strip()
-        if not line or line.startswith('Note:'):
+        line = _test_if_valid_line(line)
+        if line is None:
             continue
         # Parses the Array the drives are in
         if line.startswith('Array'):
