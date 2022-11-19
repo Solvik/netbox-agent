@@ -371,13 +371,14 @@ class Inventory():
         desc = disk.get('description')
         name = '{} ({})'.format(disk['Model'], disk['Size'])
         description = disk['Type']
+        sn = getattr(disk, 'SN', 'unknown')
 
         parms = {
             'device': self.device_id,
             'discovered': True,
             'tags': [{'name': INVENTORY_TAG['disk']['name']}],
             'name': name,
-            'serial': disk['SN'],
+            'serial': sn,
             'part_id': disk['Model'],
             'description': description,
             'manufacturer': getattr(manufacturer, "id", None),
@@ -389,7 +390,7 @@ class Inventory():
 
         logging.info('Creating Disk {model} {serial}'.format(
             model=disk['Model'],
-            serial=disk['SN'],
+            serial=sn,
         ))
 
     def dump_disks_map(self, disks):
