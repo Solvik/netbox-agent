@@ -21,14 +21,17 @@ def storecli(sub_command):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT
     )
-    p.wait()
-    stdout = p.stdout.read().decode("utf-8")
-    if p.returncode != 0:
+
+    stdout, stderr = p.communicate()
+    if stderr:
         mesg = "Failed to execute command '{}':\n{}".format(
             " ".join(command), stdout
         )
         raise StorcliControllerError(mesg)
+
+    stdout = stdout.decode("utf-8")
     data = json.loads(stdout)
+
     controllers = dict([
         (
             c['Command Status']['Controller'],
