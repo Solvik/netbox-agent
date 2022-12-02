@@ -34,7 +34,7 @@ def ssacli(sub_command):
     return lines
 
 def _test_if_valid_line(line):
-    ignore_patterns = ['Note:', 'Error:', 'is not loaded', 'README', 'failure', 'cache']
+    ignore_patterns = ['Note:', 'Error:', 'is not loaded', 'README', ' failure', ' cache']
     for pattern in ignore_patterns:
         if not line or pattern in line:
             return None
