@@ -232,7 +232,7 @@ class Inventory():
                 raid_class = OmreportRaid
             if is_tool('storcli'):
                 raid_class = StorcliRaid
-        elif self.server.manufacturer == 'HP':
+        elif self.server.manufacturer in ('HP', 'HPE'):
             if is_tool('ssacli'):
                 raid_class = HPRaid
 
