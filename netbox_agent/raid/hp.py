@@ -172,7 +172,12 @@ class HPRaidController(RaidController):
                 'Type': 'SSD' if attrs.get('Interface Type') == 'Solid State SATA'
                 else 'HDD',
                 '_src': self.__class__.__name__,
-                'custom_fields':  {'pd_identifier': name}
+                'custom_fields':  {
+                    'pd_identifier': name,
+                    'mount_point': attrs['Mount Points'],
+                    'vd_device': attrs['Disk Name'],
+                    'vd_size': attrs['Size'],
+                }
             }
         return ret
 
