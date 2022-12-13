@@ -18,20 +18,20 @@ def ssacli(sub_command):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT
     )
-    p.wait()
-    stdout = p.stdout.read().decode("utf-8")
-    if p.returncode != 0 and 'does not have any physical' not in stdout:
+    stdout, stderr = p.communicate()
+    stdout = stdout.decode("utf-8")
+    if p.returncode != 0:
         mesg = "Failed to execute command '{}':\n{}".format(
             " ".join(command), stdout
         )
         raise HPRaidControllerError(mesg)
+
+    if 'does not have any physical' in stdout:
+        return list()
     else:
-        if 'does not have any physical' in stdout:
-            return list()
-        else:
-            lines = stdout.split('\n')
-            lines = list(filter(None, lines))
-    return lines
+        lines = stdout.split('\n')
+        lines = list(filter(None, lines))
+        return lines
 
 def _test_if_valid_line(line):
     ignore_patterns = ['Note:', 'Error:', 'is not loaded', 'README', ' failure', ' cache']
