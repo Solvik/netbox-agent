@@ -371,7 +371,7 @@ class Inventory():
         desc = disk.get('description')
         name = '{} ({})'.format(disk['Model'], disk['Size'])
         description = disk['Type']
-        sn = getattr(disk, 'SN', 'unknown')
+        sn = disk.get('SN', 'unknown')
 
         parms = {
             'device': self.device_id,
