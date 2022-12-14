@@ -174,9 +174,9 @@ class HPRaidController(RaidController):
                 '_src': self.__class__.__name__,
                 'custom_fields':  {
                     'pd_identifier': name,
-                    'mount_point': attrs['Mount Points'],
-                    'vd_device': attrs['Disk Name'],
-                    'vd_size': attrs['Size'],
+                    'mount_point': attrs.get('Mount Points', '').strip(),
+                    'vd_device': attrs.get('Disk Name', '').strip(),
+                    'vd_size': attrs.get('Size', '').strip(),
                 }
             }
         return ret
@@ -189,11 +189,11 @@ class HPRaidController(RaidController):
         for array, attrs in ldrives.items():
             ret[array] = {
                 'vd_array': array,
-                'vd_size': attrs['Size'],
-                'vd_consistency': attrs['Status'],
-                'vd_raid_type': 'RAID {}'.format(attrs['Fault Tolerance']),
-                'vd_device': attrs['LogicalDrive'],
-                'mount_point': attrs['Mount Points']
+                'vd_size': attrs.get('Size', '').strip(),
+                'vd_consistency': attrs.get('Status', '').strip(),
+                'vd_raid_type': 'RAID {}'.format(attrs.get('Fault Tolerance', 'N/A').strip()),
+                'vd_device': attrs.get('LogicalDrive', '').strip(),
+                'mount_point': attrs.get('Mount Points', '').strip()
             }
         return ret
 
