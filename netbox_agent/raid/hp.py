@@ -51,8 +51,9 @@ def _parse_ctrl_output(lines):
             continue
         ctrl = REGEXP_CONTROLLER_HP.search(line)
         if ctrl is not None:
-            current_ctrl = ctrl.group(1)
-            controllers[current_ctrl] = {'Slot': ctrl.group(2)}
+            slot = ctrl.group(2)
+            current_ctrl = "{} - Slot {}".format(ctrl.group(1), slot)
+            controllers[current_ctrl] = {'Slot': slot}
             if 'Embedded' not in line:
                 controllers[current_ctrl]['External'] = True
                 continue
