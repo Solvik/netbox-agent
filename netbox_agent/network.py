@@ -85,6 +85,7 @@ class Network(object):
                 ip_addr.append(addr)
 
             mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
+            mtu = int(open('/sys/class/net/{}/mtu'.format(interface), 'r').read().strip())
             vlan = None
             if len(interface.split('.')) > 1:
                 vlan = int(interface.split('.')[1])
@@ -114,6 +115,7 @@ class Network(object):
                 'ethtool': Ethtool(interface).parse(),
                 'virtual': virtual,
                 'vlan': vlan,
+                'mtu': mtu,
                 'bonding': bonding,
                 'bonding_slaves': bonding_slaves,
             }
@@ -275,6 +277,9 @@ class Network(object):
         })
         if nic['mac']:
             params['mac_address'] = nic['mac']
+
+        if nic['mtu']:
+            params['mtu'] = nic['mtu']
 
         interface = self.nb_net.interfaces.create(**params)
 
@@ -442,6 +447,13 @@ class Network(object):
 
             ret, interface = self.reset_vlan_on_interface(nic, interface)
             nic_update += ret
+
+            if hasattr(interface, 'mtu'):
+                if nic['mtu'] != interface.mtu:
+                    logging.info('Interface mtu is wrong, updating to: {mtu}'.format(
+                        mtu=nic['mtu']))
+                    interface.mtu = nic['mtu']
+                    nic_update += 1
 
             if hasattr(interface, 'type'):
                 _type = self.get_netbox_type_for_nic(nic)
