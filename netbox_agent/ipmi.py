@@ -55,6 +55,7 @@ class IPMI():
 
         ret = {}
         ret['name'] = 'IPMI'
+        ret["mtu"] = 1500
         ret['bonding'] = False
         ret['mac'] = _ipmi['MAC Address']
         ret['vlan'] = int(_ipmi['802.1q VLAN ID']) \
