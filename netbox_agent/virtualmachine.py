@@ -10,19 +10,26 @@ from netbox_agent.network import VirtualNetwork
 
 
 def is_vm(dmi):
-    bios = dmidecode.get_by_type(dmi, 'BIOS')
-    system = dmidecode.get_by_type(dmi, 'System')
+    bios = dmidecode.get_by_type(dmi, 'BIOS')[0]
+    system = dmidecode.get_by_type(dmi, 'System')[0]
 
-    if 'Hyper-V' in bios[0]['Version'] or \
-       'Xen' in bios[0]['Version'] or \
-       'Google Compute Engine' in system[0]['Product Name'] or \
-       ('Amazon EC2' in system[0]['Manufacturer'] and not system[0]['Product Name'].endswith('.metal')) or \
-       'RHEV Hypervisor' in system[0]['Product Name'] or \
-       'QEMU' in system[0]['Manufacturer'] or \
-       'VirtualBox' in bios[0]['Version'] or \
-       'VMware' in system[0]['Manufacturer']:
-        return True
-    return False
+    return (
+        (
+            'Hyper-V' in bios['Version'] or
+            'Xen' in bios['Version'] or
+            'Google Compute Engine' in system['Product Name']
+        ) or
+        (
+            (
+                'Amazon EC2' in system['Manufacturer'] and
+                not system['Product Name'].endswith('.metal')
+            ) or
+            'RHEV Hypervisor' in system['Product Name'] or
+            'QEMU' in system['Manufacturer'] or
+            'VirtualBox' in bios['Version'] or
+            'VMware' in system['Manufacturer']
+        )
+    )
 
 
 class VirtualMachine(object):
