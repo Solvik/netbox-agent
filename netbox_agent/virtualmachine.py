@@ -14,20 +14,17 @@ def is_vm(dmi):
     system = dmidecode.get_by_type(dmi, 'System')[0]
 
     return (
+        config.virtual.enabled or
+        'Google Compute Engine' in system['Product Name'] or
+        'Hyper-V' in bios['Version'] or
+        'QEMU' in system['Manufacturer'] or
+        'RHEV Hypervisor' in system['Product Name'] or
+        'VMware' in system['Manufacturer'] or
+        'VirtualBox' in bios['Version'] or
+        'Xen' in bios['Version'] or
         (
-            'Hyper-V' in bios['Version'] or
-            'Xen' in bios['Version'] or
-            'Google Compute Engine' in system['Product Name']
-        ) or
-        (
-            (
-                'Amazon EC2' in system['Manufacturer'] and
-                not system['Product Name'].endswith('.metal')
-            ) or
-            'RHEV Hypervisor' in system['Product Name'] or
-            'QEMU' in system['Manufacturer'] or
-            'VirtualBox' in bios['Version'] or
-            'VMware' in system['Manufacturer']
+            'Amazon EC2' in system['Manufacturer'] and
+            not system['Product Name'].endswith('.metal')
         )
     )
 
