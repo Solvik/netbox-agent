@@ -78,6 +78,7 @@ def get_config():
                    help='Regex to ignore interfaces')
     p.add_argument('--network.ignore_ips', default=r'^(127\.0\.0\..*|fe80.*|::1.*)',
                    help='Regex to ignore IPs')
+    p.add_argument('--network.ipmi', default=True, help='Enable gathering IPMI information')
     p.add_argument('--network.lldp', help='Enable auto-cabling feature through LLDP infos')
     p.add_argument('--inventory', action='store_true',
                    help='Enable HW inventory (CPU, Memory, RAID Cards, Disks) feature')
