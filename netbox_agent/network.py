@@ -496,9 +496,12 @@ class Network(object):
 class ServerNetwork(Network):
     def __init__(self, server, *args, **kwargs):
         super(ServerNetwork, self).__init__(server, args, kwargs)
-        self.ipmi = self.get_ipmi()
+
+        if config.network.ipmi:
+            self.ipmi = self.get_ipmi()
         if self.ipmi:
             self.nics.append(self.ipmi)
+
         self.server = server
         self.device = self.server.get_netbox_server()
         self.nb_net = nb.dcim
