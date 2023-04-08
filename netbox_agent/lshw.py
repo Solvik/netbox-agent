@@ -72,9 +72,17 @@ class LSHW():
         # Some interfaces do not have device (logical) name (eth0, for
         # instance), such as not connected network mezzanine cards in blade
         # servers. In such situations, the card will be named `unknown[0-9]`.
-        unkn_intfs = [
-            i for i in self.interfaces if i["name"].startswith("unknown")
-        ]
+        unkn_intfs = []
+        for i in self.interfaces:
+            # newer versions of lshw can return a list of names, see issue #227
+            if not isinstance(i["name"], list):
+                if i["name"].startswith("unknown"):
+                    unkn_intfs.push(i)
+            else:
+                for j in i["name"]:
+                    if j.startswith("unknown"):
+                        unkn_intfs.push(j)
+                        
         unkn_name = "unknown{}".format(len(unkn_intfs))
         self.interfaces.append({
             "name": obj.get("logicalname", unkn_name),
