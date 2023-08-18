@@ -19,6 +19,7 @@ MANUFACTURERS = {
     'Generic': GenericHost,
 }
 
+MIN_NETBOX_VERSION = '3.3'
 
 def run(config):
     dmi = dmidecode.parse()
@@ -34,8 +35,8 @@ def run(config):
         except KeyError:
             server = GenericHost(dmi=dmi)
 
-    if version.parse(nb.version) < version.parse('2.9'):
-        print('netbox-agent is not compatible with Netbox prior to verison 2.9')
+    if version.parse(nb.version) < version.parse(MIN_NETBOX_VERSION):
+        print(f'netbox-agent is not compatible with Netbox prior to verison {MIN_NETBOX_VERSION}')
         return False
 
     if config.register or config.update_all or config.update_network or \
