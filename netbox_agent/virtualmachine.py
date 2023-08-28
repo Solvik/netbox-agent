@@ -7,6 +7,7 @@ from netbox_agent.location import Tenant
 from netbox_agent.logging import logging  # NOQA
 from netbox_agent.misc import create_netbox_tags, get_hostname, get_device_platform
 from netbox_agent.network import VirtualNetwork
+from pprint import pprint
 
 
 def is_vm(dmi):
@@ -130,3 +131,14 @@ class VirtualMachine(object):
 
         if updated:
             vm.save()
+
+    def print_debug(self):
+        self.network = VirtualNetwork(server=self)
+        print('Cluster:', self.get_netbox_cluster(config.virtual.cluster_name))
+        print('Platform:', self.device_platform)
+        print('VM:', self.get_netbox_vm())
+        print('vCPU:', self.get_vcpus())
+        print('Memory:', f"{self.get_memory()} MB")
+        print('NIC:',)
+        pprint(self.network.get_network_cards())
+        pass

@@ -47,7 +47,7 @@ def run(config):
 
 
 def main():
-    return run(config)
+    return 0 if run(config) else 1
 
 
 if __name__ == '__main__':
