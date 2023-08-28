@@ -31,8 +31,9 @@ class LLDP():
                 vlans[interface] = {}
 
             for path_component in path_components:
-                current_dict[path_component] = current_dict.get(path_component, {})
-                current_dict = current_dict[path_component]
+                if not isinstance(current_dict.get(path_component), dict):
+                    current_dict[path_component] = {}
+                current_dict = current_dict.get(path_component)
                 if 'vlan-id' in path:
                     vid = value
                     vlans[interface][value] = vlans[interface].get(vid, {})
