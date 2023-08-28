@@ -556,12 +556,19 @@ class ServerNetwork(Network):
             switch_ip,
         ))
         cable = nb.dcim.cables.create(
-            termination_a_id=nb_server_interface.id,
-            termination_a_type="dcim.interface",
-            termination_b_id=nb_switch_interface.id,
-            termination_b_type="dcim.interface",
+            a_terminations=[
+                {
+                    'object_id': nb_server_interface.id,
+                    'object_type':'dcim.interface'
+                }
+            ],
+            b_terminations=[
+                {
+                    'object_id': nb_switch_interface.id,
+                    'object_type': 'dcim.interface'
+                }
+            ],
         )
-        nb_server_interface.cable = cable
         logging.info(
             'Connected interface {interface} with {switch_interface} of {switch_ip}'.format(
                 interface=nb_server_interface.name,
@@ -579,7 +586,7 @@ class ServerNetwork(Network):
                 switch_ip, switch_interface, nb_server_interface
             )
         else:
-            nb_sw_int = nb_server_interface.cable.termination_b
+            nb_sw_int = nb_server_interface.cable.b_terminations[0]
             nb_sw = nb_sw_int.device
             nb_mgmt_int = nb.dcim.interfaces.get(
                 device_id=nb_sw.id,
