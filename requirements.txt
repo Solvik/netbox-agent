@@ -6,7 +6,7 @@ jsonargparse==4.23.1
 netaddr==0.8.0
 netifaces2==0.0.18
 packaging==23.1
-pynetbox==7.0.1
+pynetbox==7.2.0
 python-slugify==8.0.1
 PyYAML==6.0.1
 requests==2.31.0
