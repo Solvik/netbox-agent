@@ -544,7 +544,7 @@ class ServerNetwork(Network):
 
         switch_interface = self.lldp.get_switch_port(nb_server_interface.name)
         nb_switch_interface = nb.dcim.interfaces.get(
-            device=nb_switch,
+            device=nb_switch.name,
             name=switch_interface,
         )
         if nb_switch_interface is None:
