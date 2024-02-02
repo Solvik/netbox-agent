@@ -202,6 +202,7 @@ class Network(object):
         # since users may have same vlan id in multiple dc
         vlan = nb.ipam.vlans.get(
             vid=vlan_id,
+            site=self.server.get_datacenter(),
         )
         if vlan is None:
             vlan = nb.ipam.vlans.create(
