@@ -204,6 +204,7 @@ class ServerBase():
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
             tags=[{'name': x} for x in self.tags],
+            role=device_type.id,
             custom_fields=self.custom_fields,
         )
         return new_chassis
@@ -226,6 +227,7 @@ class ServerBase():
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
+            role=device_role.id,
             tags=[{'name': x} for x in self.tags],
             custom_fields=self.custom_fields,
         )
@@ -249,6 +251,7 @@ class ServerBase():
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
+            role=device_role.id,
             tags=[{'name': x} for x in self.tags],
         )
         return new_blade
@@ -278,6 +281,7 @@ class ServerBase():
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
+            role=device_role.id,
             tags=[{'name': x} for x in self.tags],
         )
         return new_server
