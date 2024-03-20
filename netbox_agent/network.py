@@ -326,26 +326,38 @@ class Network(object):
         * If IP exists and isn't assigned, take it
         * If IP exists and interface is wrong, change interface
         '''
-        netbox_ips = nb.ipam.ip_addresses.filter(
+        netbox_ip = None
+        # Check if the IP is not 0.0.0.0/0
+        if ip != '0.0.0.0/0':
+            netbox_ips = nb.ipam.ip_addresses.filter(
             address=ip,
-        )
-        if not netbox_ips:
-            logging.info('Create new IP {ip} on {interface}'.format(
-                ip=ip, interface=interface))
-            query_params = {
-                'address': ip,
-                'status': "active",
-                'assigned_object_type': self.assigned_object_type,
-                'assigned_object_id': interface.id
-            }
+            )
+            if not netbox_ips:
+                logging.info('Create new IP {ip} on {interface}'.format(
+                    ip=ip, interface=interface))
+                query_params = {
+                    'address': ip,
+                    'status': "active",
+                    'assigned_object_type': self.assigned_object_type,
+                    'assigned_object_id': interface.id
+                }
 
             netbox_ip = nb.ipam.ip_addresses.create(
                 **query_params
             )
             return netbox_ip
+        else:
+            # IP already exists, log a warning and return None
+            logging.warning('IP {ip} already exists in NetBox'.format(ip=ip))
+                return None
+    else:
+        # Log that this IP is not being added due to being 0.0.0.0/0
+        logging.info('Skipping IP {ip} on {interface} as it is 0.0.0.0/0'.format(
+            ip=ip, interface=interface))
 
-        netbox_ip = list(netbox_ips)[0]
-        # If IP exists in anycast
+    # Check if netbox_ip is not None before accessing its properties
+    if netbox_ip is not None:
+        # Proceed with further processing only if netbox_ip is created
         if netbox_ip.role and netbox_ip.role.label == 'Anycast':
             logging.debug('IP {} is Anycast..'.format(ip))
             unassigned_anycast_ip = [x for x in netbox_ips if x.interface is None]
@@ -377,7 +389,7 @@ class Network(object):
                 logging.info('Assigning existing IP {ip} to {interface}'.format(
                     ip=ip, interface=interface))
             elif (ip_interface and ip_interface.id != interface.id) or \
-                 (assigned_object and assigned_object_id != interface.id):
+                 (assigned_object and assigned_object.id != interface.id):
 
                 old_interface = getattr(netbox_ip, "assigned_object", "n/a")
                 logging.info(
