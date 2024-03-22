@@ -533,61 +533,61 @@ class ServerNetwork(Network):
         ipmi = IPMI().parse()
         return ipmi
 
-def connect_interface_to_switch(self, switch_ip, switch_interface, nb_server_interface):
-    logging.info('Interface {} is not connected to switch, trying to connect..'.format(
-        nb_server_interface.name
-    ))
-    nb_mgmt_ip = nb.ipam.ip_addresses.get(
-        address=switch_ip,
-    )
-    
-    # Add the check here
-    if nb_mgmt_ip is not None:
-        try:
-            nb_switch = nb_mgmt_ip.assigned_object.device
-            logging.info('Found a switch in Netbox based on LLDP infos: {} (id: {})'.format(
-                switch_ip,
-                nb_switch.id
-            ))
-        except KeyError:
-            logging.error(
-                'Switch IP {} is found but not associated to a Netbox Switch Device'.format(
-                    switch_ip
-                )
-            )
-            return nb_server_interface
-    else:
-        logging.error('No NetBox IP found for switch IP {}'.format(switch_ip))
-        return nb_server_interface
-
-    switch_interface = self.lldp.get_switch_port(nb_server_interface.name)
-    nb_switch_interface = nb.dcim.interfaces.get(
-        device=nb_switch,
-        name=switch_interface,
-    )
-    if nb_switch_interface is None:
-        logging.error('Switch interface {} cannot be found'.format(switch_interface))
-        return nb_server_interface
-
-    logging.info('Found interface {} on switch {}'.format(
-        switch_interface,
-        switch_ip,
-    ))
-    cable = nb.dcim.cables.create(
-        termination_a_id=nb_server_interface.id,
-        termination_a_type="dcim.interface",
-        termination_b_id=nb_switch_interface.id,
-        termination_b_type="dcim.interface",
-    )
-    nb_server_interface.cable = cable
-    logging.info(
-        'Connected interface {interface} with {switch_interface} of {switch_ip}'.format(
-            interface=nb_server_interface.name,
-            switch_interface=switch_interface,
-            switch_ip=switch_ip,
+    def connect_interface_to_switch(self, switch_ip, switch_interface, nb_server_interface):
+        logging.info('Interface {} is not connected to switch, trying to connect..'.format(
+            nb_server_interface.name
+        ))
+        nb_mgmt_ip = nb.ipam.ip_addresses.get(
+            address=switch_ip,
         )
-    )
-    return nb_server_interface
+        
+        # Add the check here
+        if nb_mgmt_ip is not None:
+            try:
+                nb_switch = nb_mgmt_ip.assigned_object.device
+                logging.info('Found a switch in Netbox based on LLDP infos: {} (id: {})'.format(
+                    switch_ip,
+                    nb_switch.id
+                ))
+            except KeyError:
+                logging.error(
+                    'Switch IP {} is found but not associated to a Netbox Switch Device'.format(
+                        switch_ip
+                    )
+                )
+                return nb_server_interface
+        else:
+            logging.error('No NetBox IP found for switch IP {}'.format(switch_ip))
+            return nb_server_interface
+
+        switch_interface = self.lldp.get_switch_port(nb_server_interface.name)
+        nb_switch_interface = nb.dcim.interfaces.get(
+            device=nb_switch,
+            name=switch_interface,
+        )
+        if nb_switch_interface is None:
+            logging.error('Switch interface {} cannot be found'.format(switch_interface))
+            return nb_server_interface
+
+        logging.info('Found interface {} on switch {}'.format(
+            switch_interface,
+            switch_ip,
+        ))
+        cable = nb.dcim.cables.create(
+            termination_a_id=nb_server_interface.id,
+            termination_a_type="dcim.interface",
+            termination_b_id=nb_switch_interface.id,
+            termination_b_type="dcim.interface",
+        )
+        nb_server_interface.cable = cable
+        logging.info(
+            'Connected interface {interface} with {switch_interface} of {switch_ip}'.format(
+                interface=nb_server_interface.name,
+                switch_interface=switch_interface,
+                switch_ip=switch_ip,
+            )
+        )
+        return nb_server_interface
 
     def create_or_update_cable(self, switch_ip, switch_interface, nb_server_interface):
         update = False
