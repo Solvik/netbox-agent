@@ -540,10 +540,8 @@ class ServerNetwork(Network):
         nb_mgmt_ip = nb.ipam.ip_addresses.get(
             address=switch_ip,
         )
-        if not nb_mgmt_ip:
-            logging.error('Switch IP {} cannot be found in Netbox'.format(switch_ip))
-            return nb_server_interface
-
+        # Add the check here
+    if nb_mgmt_ip is not None:
         try:
             nb_switch = nb_mgmt_ip.assigned_object.device
             logging.info('Found a switch in Netbox based on LLDP infos: {} (id: {})'.format(
@@ -557,6 +555,9 @@ class ServerNetwork(Network):
                 )
             )
             return nb_server_interface
+    else:
+        logging.error('No NetBox IP found for switch IP {}'.format(switch_ip))
+        return nb_server_interface
 
         switch_interface = self.lldp.get_switch_port(nb_server_interface.name)
         nb_switch_interface = nb.dcim.interfaces.get(
