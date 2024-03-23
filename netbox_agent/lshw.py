@@ -88,9 +88,9 @@ class LSHW():
             "name": obj.get("logicalname", unkn_name),
             "macaddress": obj.get("serial", ""),
             "serial": obj.get("serial", ""),
-            "product": obj["product"],
-            "vendor": obj["vendor"],
-            "description": obj["description"],
+            "product": obj.get("product", "Unknown NIC"),
+            "vendor": obj.get("vendor", "Unknown"),
+            "description": obj.get("description", ""),
         })
 
     def find_storage(self, obj):
@@ -135,10 +135,10 @@ class LSHW():
     def find_cpus(self, obj):
         if "product" in obj:
             self.cpus.append({
-                "product": obj["product"],
-                "vendor": obj["vendor"],
-                "description": obj["description"],
-                "location": obj["slot"],
+                "product": obj.get("product", "Unknown CPU"),
+                "vendor": obj.get("vendor", "Unknown vendor"),
+                "description": obj.get("description", ""),
+                "location": obj.get("slot", ""),
             })
 
     def find_memories(self, obj):
@@ -162,11 +162,12 @@ class LSHW():
 
     def find_gpus(self, obj):
         if "product" in obj:
-            self.gpus.append({
-                "product": obj["product"],
-                "vendor": obj["vendor"],
-                "description": obj["description"],
-            })
+            infos = {
+                "product": obj.get("product", "Unknown GPU"),
+                "vendor": obj.get("vendor", "Unknown"),
+                "description": obj.get("description", ""),
+            }
+            self.gpus.append(infos)
 
     def walk_bridge(self, obj):
         if "children" not in obj:
