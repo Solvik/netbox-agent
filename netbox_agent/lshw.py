@@ -120,7 +120,7 @@ class LSHW():
             logging.info("Found %d NVME devices", num_devices)
 
             for device in nvme["Devices"]:
-                logging.info("Found NVME device %s with serial %s and size %s", device["DevicePath"], device["SerialNumber"], device["Size"])
+                logging.info("Found NVME device %s with serial %s and size %s", device["DevicePath"], device["SerialNumber"], device["PhysicalSize"])
 
 
                 d = {
