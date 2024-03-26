@@ -341,11 +341,14 @@ class Inventory():
         for disk in self.lshw.get_hw_linux("storage"):
             if self.is_virtual_disk(disk, raid_devices):
                 continue
+
+            logging.info("Found disk size %s" % disk.get('size')
+
             if disk.get('type') != "NVME":
                 size = int(getattr(disk, "size", 0)) / 1073741824
             else:
                 size = int(getattr(disk, "size", 0))
-                
+
             d = {
                 "name": "",
                 'Size': '{} GB'.format(size),
