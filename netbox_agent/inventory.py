@@ -346,7 +346,7 @@ class Inventory():
 
             if disk.get('type') != "NVME":
                 size_bytes = int(getattr(disk, "size", 0))
-                if size_bytes > 1000 * 1024 * 1024:  # Check if size is greater than 1000 GB
+                if size_bytes > 1000:  # Check if size is greater than 1000 GB
                     size = size_bytes / (1024**4)  # Convert to TB
                     size_str = '{} TB'.format(size)
                 else:
