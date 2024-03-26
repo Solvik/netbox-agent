@@ -132,10 +132,7 @@ class LSHW():
                     'type': "NVME",
                     'size': device["PhysicalSize"]
                 }
-                if "UsedSize" in device:
-                    d['size'] = device["UsedSize"]
-                if "UsedBytes" in device:
-                    d['size'] = device["UsedBytes"]
+                
                 self.disks.append(d)
         except Exception as e:
             logging.error("Error while trying to find NVME devices: %s", e)
