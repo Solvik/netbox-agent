@@ -105,15 +105,20 @@ class LSHW():
                     "description": device.get("description"),
                     "type": device.get("description"),
                 })
+        
         if not is_tool('nvme'):
             logging.error('nvme-cli >= 1.0 does not seem to be installed')
             return
         try:
+            logging.info("Trying to find NVME devices")
             nvme = json.loads(
                 subprocess.check_output(
                     ["nvme", '-list', '-o', 'json'],
                     encoding='utf8')
             )
+            num_devices = len(nvme["Devices"])
+            logging.info("Found %d NVME devices", num_devices)
+            
             for device in nvme["Devices"]:
                 logging.info("Found NVME device %s with serial %s and size %s", device["DevicePath"], device["SerialNumber"], device["Size"])
 
