@@ -118,7 +118,7 @@ class LSHW():
             )
             num_devices = len(nvme["Devices"])
             logging.info("Found %d NVME devices", num_devices)
-            
+
             for device in nvme["Devices"]:
                 logging.info("Found NVME device %s with serial %s and size %s", device["DevicePath"], device["SerialNumber"], device["Size"])
 
@@ -137,7 +137,8 @@ class LSHW():
                 if "UsedBytes" in device:
                     d['size'] = device["UsedBytes"]
                 self.disks.append(d)
-        except Exception:
+        except Exception as e:
+            logging.error("Error while trying to find NVME devices: %s", e)
             pass
 
     def find_cpus(self, obj):
