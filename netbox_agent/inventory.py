@@ -353,6 +353,7 @@ class Inventory():
                     size = size_bytes / 1024**3  # Convert to GB
                     size_str = '{} GB'.format(size)
             else:
+                size_bytes = int(getattr(disk, "size", 0))
                 if size_bytes > 1000:  # Check if size is greater than 1000 GB
                     size = size_bytes / (1024**4)  # Convert to TB
                     size_str = '{} TB'.format(size)
