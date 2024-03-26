@@ -115,7 +115,8 @@ class LSHW():
                     encoding='utf8')
             )
             for device in nvme["Devices"]:
-                logging.info("Found NVME device %s with serial %s", device["DevicePath"], device["SerialNumber"])
+                logging.info("Found NVME device %s with serial %s and size %s", device["DevicePath"], device["SerialNumber"], device["Size"])
+
 
                 d = {
                     'logicalname': device["DevicePath"],
