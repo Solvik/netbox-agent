@@ -105,32 +105,31 @@ class LSHW():
                     "description": device.get("description"),
                     "type": device.get("description"),
                 })
-        elif "nvme" in obj["configuration"]["driver"]:
-            if not is_tool('nvme'):
-                logging.error('nvme-cli >= 1.0 does not seem to be installed')
-                return
-            try:
-                nvme = json.loads(
-                    subprocess.check_output(
-                        ["nvme", '-list', '-o', 'json'],
-                        encoding='utf8')
-                )
-                for device in nvme["Devices"]:
-                    d = {
-                        'logicalname': device["DevicePath"],
-                        'product': device["ModelNumber"],
-                        'serial': device["SerialNumber"],
-                        "version": device["Firmware"],
-                        'description': "NVME",
-                        'type': "NVME",
-                    }
-                    if "UsedSize" in device:
-                        d['size'] = device["UsedSize"]
-                    if "UsedBytes" in device:
-                        d['size'] = device["UsedBytes"]
-                    self.disks.append(d)
-            except Exception:
-                pass
+        if not is_tool('nvme'):
+            logging.error('nvme-cli >= 1.0 does not seem to be installed')
+            return
+        try:
+            nvme = json.loads(
+                subprocess.check_output(
+                    ["nvme", '-list', '-o', 'json'],
+                    encoding='utf8')
+            )
+            for device in nvme["Devices"]:
+                d = {
+                    'logicalname': device["DevicePath"],
+                    'product': device["ModelNumber"],
+                    'serial': device["SerialNumber"],
+                    "version": device["Firmware"],
+                    'description': "NVME",
+                    'type': "NVME",
+                }
+                if "UsedSize" in device:
+                    d['size'] = device["UsedSize"]
+                if "UsedBytes" in device:
+                    d['size'] = device["UsedBytes"]
+                self.disks.append(d)
+        except Exception:
+            pass
 
     def find_cpus(self, obj):
         if "product" in obj:
@@ -181,7 +180,9 @@ class LSHW():
             if "children" in bus:
                 for b in bus["children"]:
                     if b["class"] == "storage":
+                        logging.info("found storage")
                         self.find_storage(b)
+
                     if b["class"] == "network":
                         self.find_network(b)
                     if b["class"] == "display":
