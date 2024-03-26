@@ -115,7 +115,8 @@ class LSHW():
                     encoding='utf8')
             )
             for device in nvme["Devices"]:
-                logging.info("Found NVME device %s", device["DevicePath"])
+                logging.info("Found NVME device %s with serial %s", device["DevicePath"], device["SerialNumber"])
+
                 d = {
                     'logicalname': device["DevicePath"],
                     'product': device["ModelNumber"],
@@ -123,6 +124,7 @@ class LSHW():
                     "version": device["Firmware"],
                     'description': "NVME",
                     'type': "NVME",
+                    'size': device["PhysicalSize"]
                 }
                 if "UsedSize" in device:
                     d['size'] = device["UsedSize"]
