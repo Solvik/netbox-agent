@@ -342,7 +342,7 @@ class Inventory():
             if self.is_virtual_disk(disk, raid_devices):
                 continue
 
-            logging.info("Found disk size %s" % disk.get('size')
+            logging.info("Found disk size %s", % disk.get('size'))
 
             if disk.get('type') != "NVME":
                 size = int(getattr(disk, "size", 0)) / 1073741824
