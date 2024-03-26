@@ -121,9 +121,6 @@ class VirtualMachine(object):
             if vm.memory != memory:
                 vm.memory = memory
                 updated += 1
-            if sorted(set(vm.tags)) != sorted(set(self.tags), key=lambda x: x.id):
-                vm.tags = self.tags
-                updated += 1
 
             if vm.platform != self.device_platform:
                 vm.platform = self.device_platform
