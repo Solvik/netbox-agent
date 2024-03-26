@@ -345,32 +345,19 @@ class Inventory():
             logging.info("Found disk size %s", disk.get('size'))
 
             if disk.get('type') != "NVME":
-                size_bytes = int(getattr(disk, "size", 0))
-                if size_bytes > 1000:  # Check if size is greater than 1000 GB
-                    size = size_bytes / (1024**4)  # Convert to TB
-                    size_str = '{} TB'.format(size)
-                else:
-                    size = size_bytes / 1024**3  # Convert to GB
-                    size_str = '{} GB'.format(size)
+                size = int(getattr(disk, "size", 0)) / 1073741824
             else:
-                size_bytes = int(getattr(disk, "size", 0))
-                if size_bytes > 1000:  # Check if size is greater than 1000 GB
-                    size = size_bytes / (1024**4)  # Convert to TB
-                    size_str = '{} TB'.format(size)
-                else:
-                    size = int(disk.get('size', 0))
-                    size_str = '{} GB'.format(size)
+                size = int(disk.get('size', 0))
 
             d = {
                 "name": "",
-                'Size': size_str,
+                'Size': '{} GB'.format(size),
                 'logicalname': disk.get('logicalname'),
                 'description': disk.get('description'),
                 'SN': disk.get('serial'),
                 'Model': disk.get('product'),
                 'Type': disk.get('type'),
             }
-
             if disk.get('vendor'):
                 d['Vendor'] = disk['vendor']
             else:
