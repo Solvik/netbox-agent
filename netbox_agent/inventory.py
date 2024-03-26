@@ -347,7 +347,7 @@ class Inventory():
             if disk.get('type') != "NVME":
                 size = int(getattr(disk, "size", 0)) / 1073741824
             else:
-                size = int(getattr(disk, "size", 0))
+                size = int(disk.get('size', 0))
 
             d = {
                 "name": "",
