@@ -20,6 +20,7 @@ MANUFACTURERS = {
     'Generic': GenericHost,
     'To Be Filled By O.E.M.': HetznerHost,
     'System Serial Number': HetznerHost,
+    'Default string': HetznerHost,
 }
 
 
