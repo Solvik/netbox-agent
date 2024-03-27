@@ -284,7 +284,10 @@ class ServerBase():
 
     def get_netbox_server(self, expansion=False):
         if expansion is False:
-            return nb.dcim.devices.get(serial=self.get_service_tag())
+            if self.get_service_tag() and self.get_service_tag() != "":
+                return nb.dcim.devices.get(serial=self.get_service_tag())
+            else:
+                return nb.dcim.devices.get(name=self.get_hostname())
         else:
             return nb.dcim.devices.get(serial=self.get_expansion_service_tag())
 
