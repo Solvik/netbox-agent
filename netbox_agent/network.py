@@ -327,7 +327,7 @@ class Network(object):
         * If IP exists and interface is wrong, change interface
         '''
 
-        print(self.server)
+        
         netbox_ips = nb.ipam.ip_addresses.filter(
             address=ip,
         )
@@ -347,6 +347,7 @@ class Network(object):
             return netbox_ip
 
         netbox_ip = list(netbox_ips)[0]
+
         # If IP exists in anycast
         if netbox_ip.role and netbox_ip.role.label == 'Anycast':
             logging.debug('IP {} is Anycast..'.format(ip))

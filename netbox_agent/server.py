@@ -410,7 +410,10 @@ class ServerBase():
 
 
             if not server:
-                server = self._netbox_create_blade(chassis, datacenter, tenant, rack)
+                server = nb.dcim.devices.get(name=self.get_service_tag(), tenant=tenant.id)
+                
+                if not server:
+                    server = self._netbox_create_blade(chassis, datacenter, tenant, rack)
 
             # Set slot for blade
             self._netbox_set_or_update_blade_slot(server, chassis, datacenter)
