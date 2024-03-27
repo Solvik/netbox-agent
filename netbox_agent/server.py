@@ -140,6 +140,7 @@ class ServerBase():
         Return the Chassis Name from dmidecode info
         """
         logging.info("Product Name: {}".format(self.system[0]['Product Name'].strip()))
+        print(self.system)
 
         return self.system[0]['Product Name'].strip()
 
