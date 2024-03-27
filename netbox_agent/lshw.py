@@ -77,11 +77,11 @@ class LSHW():
             # newer versions of lshw can return a list of names, see issue #227
             if not isinstance(i["name"], list):
                 if i["name"].startswith("unknown"):
-                    unkn_intfs.push(i)
+                    unkn_intfs.append(i)
             else:
                 for j in i["name"]:
                     if j.startswith("unknown"):
-                        unkn_intfs.push(j)
+                        unkn_intfs.append(j)
                         
         unkn_name = "unknown{}".format(len(unkn_intfs))
         self.interfaces.append({
