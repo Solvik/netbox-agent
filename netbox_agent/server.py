@@ -405,7 +405,7 @@ class ServerBase():
             if not chassis:
                 chassis = self._netbox_create_chassis(datacenter, tenant, rack)
 
-            logging.info("Find server with servicetag: {}".format(self.get_service_tag()))
+            logging.info("Find blade server with servicetag: {}".format(self.get_service_tag()))
             server = nb.dcim.devices.get(serial=self.get_service_tag())
 
 
@@ -423,14 +423,17 @@ class ServerBase():
             
             if self.get_service_tag() and self.get_service_tag() != "":
                 server = nb.dcim.devices.get(serial=self.get_service_tag())
-
+                logging.info("Server not found, checking with hostname")
                 if not server:
                     server = nb.dcim.devices.get(name=self.get_hostname())
+                    logging.info("Found server with hostname: {}".format(self.get_hostname()))
+                    print(server)
             else:
                 server = nb.dcim.devices.get(name=self.get_hostname())
             
             if not server:
                 server = self._netbox_create_server(datacenter, tenant, rack)
+        sys.exit()
 
         logging.debug('Updating Server...')
         # check network cards
