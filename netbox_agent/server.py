@@ -141,7 +141,7 @@ class ServerBase():
         """
 
         if self.system[0]['Product Name'].strip() == ' ' or self.system[0]['Product Name'].strip() == '':
-            return 'Server'
+            return 'generic-server'
 
         return self.system[0]['Product Name'].strip()
 
