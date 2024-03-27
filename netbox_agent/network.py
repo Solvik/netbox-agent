@@ -81,7 +81,7 @@ class Network(object):
             #
             for addr in ip6_addr:
                 addr["addr"] = addr["addr"].replace('%{}'.format(interface), '')
-                addr["mask"] = addr["mask"].split('/')[0]
+                addr["netmask"] = addr["netmask"].split('/')[0]
                 ip_addr.append(addr)
 
             mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
@@ -109,7 +109,7 @@ class Network(object):
                 'ip': [
                     '{}/{}'.format(
                         x['addr'],
-                        IPAddress(x['mask']).netmask_bits()
+                        IPAddress(x['netmask']).netmask_bits()
                     ) for x in ip_addr
                 ] if ip_addr else None,  # FIXME: handle IPv6 addresses
                 'ethtool': Ethtool(interface).parse(),
