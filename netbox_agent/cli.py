@@ -19,6 +19,7 @@ MANUFACTURERS = {
     'Quanta Cloud Technology Inc.': QCTHost,
     'Generic': GenericHost,
     'To Be Filled By O.E.M.': HetznerHost,
+    'System Serial Number': HetznerHost,
 }
 
 
