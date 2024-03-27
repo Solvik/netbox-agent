@@ -419,6 +419,7 @@ class Network(object):
             )
 
             netbox_ips = list(netbox_ips)
+            print(netbox_ips)
             all_local_ips = list(chain.from_iterable([
                 x['ip'] for x in self.nics if x['ip'] is not None
             ]))
