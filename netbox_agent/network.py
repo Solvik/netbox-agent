@@ -327,7 +327,7 @@ class Network(object):
         * If IP exists and interface is wrong, change interface
         '''
 
-        print(self.server.id)
+        print(self.server)
         netbox_ips = nb.ipam.ip_addresses.filter(
             address=ip,
         )
