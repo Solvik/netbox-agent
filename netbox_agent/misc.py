@@ -20,8 +20,7 @@ def get_device_role(role):
     return device_role
 
 
-def get_device_type(type)
-    
+def get_device_type(type):
     device_type = nb.dcim.device_types.get(
         model=type
     )
