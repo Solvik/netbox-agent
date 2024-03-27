@@ -395,7 +395,10 @@ class ServerBase():
             if not chassis:
                 chassis = self._netbox_create_chassis(datacenter, tenant, rack)
 
+            logging.info("Find server with servicetag: {}".format(self.get_service_tag()))
             server = nb.dcim.devices.get(serial=self.get_service_tag())
+
+
             if not server:
                 server = self._netbox_create_blade(chassis, datacenter, tenant, rack)
 

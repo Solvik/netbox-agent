@@ -29,6 +29,7 @@ def run(config):
         server = VirtualMachine(dmi=dmi)
     else:
         manufacturer = dmidecode.get_by_type(dmi, 'Chassis')[0].get('Manufacturer')
+        logging.info("Found manufacturer: %s" % manufacturer)
         try:
             server = MANUFACTURERS[manufacturer](dmi=dmi)
         except KeyError:
