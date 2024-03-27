@@ -410,7 +410,7 @@ class ServerBase():
 
 
             if not server:
-                server = nb.dcim.devices.get(name=self.get_service_tag(), tenant=tenant.id)
+                server = nb.dcim.devices.get(name=self.get_service_tag(), tenant=tenant)
                 
                 if not server:
                     server = self._netbox_create_blade(chassis, datacenter, tenant, rack)
