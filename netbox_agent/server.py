@@ -435,7 +435,7 @@ class ServerBase():
             
             if not server:
                 server = self._netbox_create_server(datacenter, tenant, rack)
-        sys.exit()
+        
 
         logging.debug('Updating Server...')
         # check network cards

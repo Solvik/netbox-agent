@@ -409,11 +409,11 @@ class Network(object):
         local_nics = [x['name'] for x in self.nics]
         for nic in nb_nics:
             if nic.name not in local_nics:
-                logging.info('Deleting netbox interface {name} because not present locally'.format(
+                logging.info('Deleting netbox interface {name} because not present locally '.format(
                     name=nic.name
                 ))
-                nb_nics.remove(nic)
-                nic.delete()
+                #nb_nics.remove(nic)
+                #nic.delete()
 
         # delete IP on netbox that are not known on this server
         if len(nb_nics):
