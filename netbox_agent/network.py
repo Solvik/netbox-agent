@@ -432,7 +432,7 @@ class Network(object):
                         ip=netbox_ip.address, interface=netbox_ip.assigned_object))
                     netbox_ip.assigned_object_type = None
                     netbox_ip.assigned_object_id = None
-                    netbox_ip.save()
+                    #netbox_ip.save()
 
         # update each nic
         for nic in self.nics:
