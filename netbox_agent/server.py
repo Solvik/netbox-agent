@@ -426,10 +426,10 @@ class ServerBase():
                 print(server)
                 
                 if not server:
-                    logging.info("Server not found, checking with hostname")
+                    logging.info("Server not found, checking with hostname " + self.get_hostname())
                     server = nb.dcim.devices.get(name=self.get_hostname())
                     logging.info("Found server with hostname: {}".format(self.get_hostname()))
-                    print(server)
+                    print(server.id)
             else:
                 server = nb.dcim.devices.get(name=self.get_hostname())
             
