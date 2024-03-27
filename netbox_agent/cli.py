@@ -8,6 +8,7 @@ from netbox_agent.vendors.generic import GenericHost
 from netbox_agent.vendors.hp import HPHost
 from netbox_agent.vendors.qct import QCTHost
 from netbox_agent.vendors.supermicro import SupermicroHost
+from netbox_agent.vendors.hetzner import HetznerHost
 from netbox_agent.virtualmachine import VirtualMachine, is_vm
 
 MANUFACTURERS = {
@@ -17,6 +18,7 @@ MANUFACTURERS = {
     'Supermicro': SupermicroHost,
     'Quanta Cloud Technology Inc.': QCTHost,
     'Generic': GenericHost,
+    'To Be Filled By O.E.M.': HetznerHost,
 }
 
 
