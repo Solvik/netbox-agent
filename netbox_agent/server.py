@@ -424,8 +424,9 @@ class ServerBase():
             if self.get_service_tag() and self.get_service_tag() != "":
                 server = nb.dcim.devices.get(serial=self.get_service_tag())
                 print(server)
-                logging.info("Server not found, checking with hostname")
+                
                 if not server:
+                    logging.info("Server not found, checking with hostname")
                     server = nb.dcim.devices.get(name=self.get_hostname())
                     logging.info("Found server with hostname: {}".format(self.get_hostname()))
                     print(server)
