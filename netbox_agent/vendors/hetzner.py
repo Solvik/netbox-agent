@@ -1,5 +1,6 @@
 import re
 import netbox_agent.dmidecode as dmidecode
+import netbox_agent.misc as misc
 from netbox_agent.server import ServerBase
 
 
@@ -27,9 +28,8 @@ class HetznerHost(ServerBase):
         Returns:
             str: The validated chassis service tag if it meets the criteria, otherwise returns the hostname of the machine.
         """
-        serial_number_pattern = r'^(?=.*\d)[A-Za-z0-9]{1,12}$'
 
-        if re.match(serial_number_pattern, self.get_service_tag()):
+        if misc.verify_serial(self.get_service_tag()):
             return self.get_service_tag()
 
         return self.get_hostname()

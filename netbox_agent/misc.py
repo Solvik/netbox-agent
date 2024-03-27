@@ -84,6 +84,14 @@ def get_hostname(config):
         return '{}'.format(socket.gethostname())
     return subprocess.getoutput(config.hostname_cmd)
 
+def verify_serial(serial: str):
+    
+    serial_number_pattern = r'^(?=.*\d)[A-Za-z0-9]{1,12}$'
+
+    if re.match(serial_number_pattern, serial):
+        return True
+    
+    return False
 
 def create_netbox_tags(tags):
     ret = []
