@@ -406,7 +406,10 @@ class ServerBase():
             self._netbox_set_or_update_blade_slot(server, chassis, datacenter)
         else:
             logging.info("Find server with servicetag: {}".format(self.get_service_tag()))
-            server = nb.dcim.devices.get(serial=self.get_service_tag())
+            if self.get_service_tag() and self.get_service_tag() != "":
+                server = nb.dcim.devices.get(serial=self.get_service_tag())
+            else:
+                server = nb.dcim.devices.get(name=self.get_hostname())
             if not server:
                 server = self._netbox_create_server(datacenter, tenant, rack)
 
