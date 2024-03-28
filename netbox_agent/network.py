@@ -551,7 +551,7 @@ class ServerNetwork(Network):
         switch_interface = self.lldp.get_switch_port(nb_server_interface.name)
         try:
                 nb_switch_interface = nb.dcim.interfaces.get(
-                device=nb_switch,
+                device=nb_switch.id,
                 name=switch_interface,
             )
         except Exception as e:
