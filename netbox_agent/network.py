@@ -462,12 +462,6 @@ class Network(object):
                 interface.mac_address = nic['mac']
                 nic_update += 1
             
-            if nic['mtu'] != interface.mtu:
-                logging.info('Updating interface {interface} mtu to: {mtu}'.format(
-                    interface=interface, mtu=nic['mtu']))
-                interface.mtu = nic['mtu']
-                nic_update += 1
-
             ret, interface = self.reset_vlan_on_interface(nic, interface)
             nic_update += ret
 
