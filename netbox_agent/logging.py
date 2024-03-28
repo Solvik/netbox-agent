@@ -6,4 +6,4 @@ logger = logging.getLogger()
 if config.log_level.lower() == 'debug':
     logger.setLevel(logging.DEBUG)
 else:
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.WARNING)
