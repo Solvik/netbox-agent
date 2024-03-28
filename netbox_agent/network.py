@@ -1,4 +1,5 @@
 import logging
+import sys
 import os
 import re
 from itertools import chain
@@ -548,10 +549,15 @@ class ServerNetwork(Network):
             return nb_server_interface
 
         switch_interface = self.lldp.get_switch_port(nb_server_interface.name)
-        nb_switch_interface = nb.dcim.interfaces.get(
-            device=nb_switch,
-            name=switch_interface,
-        )
+        try:
+                nb_switch_interface = nb.dcim.interfaces.get(
+                device=nb_switch,
+                name=switch_interface,
+            )
+        except Exception as e:
+            logging.error('There was an error retreiving the switch interface: {}'.format(e))
+            sys.exit()
+
         if nb_switch_interface is None:
             logging.error('Switch interface {} cannot be found'.format(switch_interface))
             return nb_server_interface
