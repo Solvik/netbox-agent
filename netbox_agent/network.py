@@ -104,9 +104,13 @@ class Network(object):
                 '/sys/class/net/{}/tun_flags'.format(interface)
             )
 
+            def is_valid_mac_address(mac):
+                # Function to check if a MAC address is valid
+                return len(mac.split(':')) == 6 and all(len(part) == 2 and part.isalnum() for part in mac.split(':'))
+
             nic = {
                 'name': interface,
-                'mac': mac if mac != '00:00:00:00:00:00' else None,
+                'mac': mac if is_valid_mac_address(mac) and mac != '00:00:00:00:00:00' else '00:00:00:00:00:00',
                 'ip': [
                     '{}/{}'.format(
                         x['addr'],
