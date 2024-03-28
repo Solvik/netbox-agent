@@ -588,7 +588,7 @@ class ServerNetwork(Network):
         update = False
         if nb_server_interface.cable is None:
             update = True
-            logging.debug()
+            logging.debug("Found {switch_ip} neding to be connected from {switch_interface} to {nb_server_interface}")
             nb_server_interface = self.connect_interface_to_switch(
                 switch_ip, switch_interface, nb_server_interface
             )
