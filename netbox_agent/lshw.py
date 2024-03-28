@@ -14,7 +14,13 @@ class LSHW():
         data = subprocess.getoutput(
             'lshw -quiet -json'
         )
-        json_data = json.loads(data)
+        # lshw version 02.18.85-0.7 has a bug that causes it to return wrong JSON
+        try:
+            json_data = json.loads(data)
+        except Exception as e:
+            logging.error("Error while trying to parse lshw output: %s", e)
+            sys.exit(1)
+
         # Starting from version 02.18, `lshw -json` wraps its result in a list
         # rather than returning directly a dictionary
         if isinstance(json_data, list):

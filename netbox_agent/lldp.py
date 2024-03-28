@@ -9,6 +9,7 @@ class LLDP():
         if not is_tool('lldpctl'):
             logging.debug('lldpd package seems to be missing or daemon not running.')
         if output:
+            logging.debug('Found LLDP to be installed and working.')
             self.output = output
         else:
             self.output = subprocess.getoutput('lldpctl -f keyvalue')
