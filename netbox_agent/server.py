@@ -291,13 +291,28 @@ class ServerBase():
 
     def get_netbox_server(self, expansion=False):
         if expansion is False:
+
             if self.get_service_tag() and self.get_service_tag() != "":
-                return nb.dcim.devices.get(serial=self.get_service_tag())
+                logging.info("Getting server with servicetag!")
+                logging.info("Servicetag: " + self.get_service_tag())
+
+                server = nb.dcim.devices.get(serial=self.get_service_tag())
+
+                if not server:
+                    logging.info("no server found, checking again with hostname!")
+                    server = nb.dcim.devices.get(name=self.get_service_tag())
+                    if not server:
+                        logging.error("No server found by serial or hostname")
+                        sys.exit()
+                    logging.info("Server found, keep going!")
+
+                return server
             else:
+                logging.info("Getting server with hostname!")
                 return nb.dcim.devices.get(name=self.get_hostname())
         else:
             return nb.dcim.devices.get(serial=self.get_expansion_service_tag())
-
+        
     def _netbox_set_or_update_blade_slot(self, server, chassis, datacenter):
         # before everything check if right chassis
         actual_device_bay = server.parent_device.device_bay \
@@ -432,6 +447,8 @@ class ServerBase():
                     print(server.id)
             else:
                 server = nb.dcim.devices.get(name=self.get_hostname())
+                logging.info("Found server with hostname: {}".format(self.get_hostname()))
+                print(server.id)
             
             if not server:
                 server = self._netbox_create_server(datacenter, tenant, rack)
@@ -490,6 +507,10 @@ class ServerBase():
 
         if server.custom_fields != self.custom_fields:
             server.custom_fields = self.custom_fields
+            update += 1
+        
+        if server.serial = "":
+            server.serial = self.get_service_tag()
             update += 1
 
         if config.update_all or config.update_location:
