@@ -438,17 +438,14 @@ class ServerBase():
             
             if self.get_service_tag() and self.get_service_tag() != "":
                 server = nb.dcim.devices.get(serial=self.get_service_tag())
-                print(server)
                 
                 if not server:
                     logging.info("Server not found, checking with hostname " + self.get_hostname())
                     server = nb.dcim.devices.get(name=self.get_hostname())
                     logging.info("Found server with hostname: {}".format(self.get_hostname()))
-                    print(server.id)
             else:
                 server = nb.dcim.devices.get(name=self.get_hostname())
                 logging.info("Found server with hostname: {}".format(self.get_hostname()))
-                print(server.id)
             
             if not server:
                 server = self._netbox_create_server(datacenter, tenant, rack)

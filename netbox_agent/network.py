@@ -380,7 +380,7 @@ class Network(object):
                 netbox_ip = nb.ipam.ip_addresses.create(**query_params)
             return netbox_ip
         else:
-            print(netbox_ip)
+            
             ip_interface = getattr(netbox_ip, 'interface', None)
             assigned_object = getattr(netbox_ip, 'assigned_object', None)
             if not ip_interface or not assigned_object:
@@ -428,7 +428,7 @@ class Network(object):
             )
 
             netbox_ips = list(netbox_ips)
-            print(netbox_ips)
+            
             all_local_ips = list(chain.from_iterable([
                 x['ip'] for x in self.nics if x['ip'] is not None
             ]))

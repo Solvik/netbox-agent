@@ -40,7 +40,7 @@ def run(config):
             server = GenericHost(dmi=dmi)
 
     if version.parse(nb.version) < version.parse('2.9'):
-        print('netbox-agent is not compatible with Netbox prior to verison 2.9')
+        logging.error('netbox-agent is not compatible with Netbox prior to verison 2.9')
         return False
 
     if config.register or config.update_all or config.update_network or \
