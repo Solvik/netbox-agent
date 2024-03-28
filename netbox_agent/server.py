@@ -509,7 +509,7 @@ class ServerBase():
             server.custom_fields = self.custom_fields
             update += 1
         
-        if server.serial = "":
+        if server.serial == "":
             server.serial = self.get_service_tag()
             update += 1
 
