@@ -110,7 +110,7 @@ class Network(object):
 
             nic = {
                 'name': interface,
-                'mac': mac if is_valid_mac_address(mac) and mac != '00:00:00:00:00:00' else '00:00:00:00:00:00',
+                'mac': mac if is_valid_mac_address(mac) and mac != '00:00:00:00:00:00' else None,
                 'ip': [
                     '{}/{}'.format(
                         x['addr'],
