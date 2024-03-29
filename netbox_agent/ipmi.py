@@ -39,7 +39,7 @@ class IPMI():
     def __init__(self):
         self.ret, self.output = subprocess.getstatusoutput('ipmitool lan print')
         if self.ret != 0:
-            logging.warning('Cannot get ipmi info: {}'.format(self.output))
+            logging.info('Cannot get ipmi info: {}'.format(self.output))
 
     def parse(self):
         _ipmi = {}
