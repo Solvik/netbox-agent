@@ -66,9 +66,13 @@ class IPMI():
         ret["mtu"] = 1500
         ret['bonding'] = False
         ret['mac'] = _ipmi['MAC Address']
+        if 'vlan' not in _ipmi:
+            ret['vlan'] = None
+
         if '802.1q VLAN ID' in _ipmi:
             ret['vlan'] = int(_ipmi['802.1q VLAN ID']) \
                 if _ipmi['802.1q VLAN ID'] != 'Disabled' else None
+            
         ip = _ipmi['IP Address']
         netmask = _ipmi['Subnet Mask']
         address = str(IPNetwork('{}/{}'.format(ip, netmask)))
