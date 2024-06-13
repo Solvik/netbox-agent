@@ -51,7 +51,7 @@ class IPMI():
 
     def parse(self):
         _ipmi = {}
-        if self.ret != 0:
+        if self.ret != 0 and "IP Address" not in self.output:
             return _ipmi
 
         for line in self.output.splitlines():
