@@ -43,6 +43,7 @@ class IPMI():
         self.error_output = result.stderr.decode('utf-8')
         
         if self.ret != 0 and "IP Address" not in self.output:
+            logging.info("Returned error code and IP Address not defined")
             logging.info('Cannot get ipmi info: {}'.format(self.error_output))
         else:
             logging.info('IPMI info retrieved successfully')
