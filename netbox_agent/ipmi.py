@@ -37,17 +37,16 @@ class IPMI():
     """
 
     def __init__(self):
-        def __init__(self):
-            result = subprocess.run(['ipmitool', 'lan', 'print'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            self.ret = result.returncode
-            self.output = result.stdout.decode('utf-8')
-            self.error_output = result.stderr.decode('utf-8')
-            
-            if self.ret != 0:
-                logging.info('Cannot get ipmi info: {}'.format(self.error_output))
-            else:
-                logging.info('IPMI info retrieved successfully')
-                logging.info(self.output)
+        result = subprocess.run(['ipmitool', 'lan', 'print'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.ret = result.returncode
+        self.output = result.stdout.decode('utf-8')
+        self.error_output = result.stderr.decode('utf-8')
+        
+        if self.ret != 0 and "IP Address" not in self.output:
+            logging.info('Cannot get ipmi info: {}'.format(self.error_output))
+        else:
+            logging.info('IPMI info retrieved successfully')
+            logging.info(self.output)
 
     def parse(self):
         _ipmi = {}
