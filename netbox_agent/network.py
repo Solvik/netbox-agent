@@ -377,7 +377,7 @@ class Network(object):
                 logging.info('Assigning existing IP {ip} to {interface}'.format(
                     ip=ip, interface=interface))
             elif (ip_interface and ip_interface.id != interface.id) or \
-                 (assigned_object and assigned_object_id != interface.id):
+                 (assigned_object and assigned_object.id != interface.id):
 
                 old_interface = getattr(netbox_ip, "assigned_object", "n/a")
                 logging.info(

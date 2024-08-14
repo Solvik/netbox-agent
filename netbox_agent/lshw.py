@@ -47,6 +47,9 @@ class LSHW():
                     if j["class"] == "storage":
                         self.find_storage(j)
 
+                    if j["class"] == "nvme":
+                        self.find_storage(j)
+
                     if j["class"] == "memory":
                         self.find_memories(j)
 
@@ -82,7 +85,6 @@ class LSHW():
                 for j in i["name"]:
                     if j.startswith("unknown"):
                         unkn_intfs.push(j)
-                        
         unkn_name = "unknown{}".format(len(unkn_intfs))
         self.interfaces.append({
             "name": obj.get("logicalname", unkn_name),
@@ -94,7 +96,7 @@ class LSHW():
         })
 
     def find_storage(self, obj):
-        if "children" in obj:
+        if obj["id"] != "nvme" and "children" in obj:
             for device in obj["children"]:
                 self.disks.append({
                     "logicalname": device.get("logicalname"),
@@ -116,19 +118,19 @@ class LSHW():
                         encoding='utf8')
                 )
                 for device in nvme["Devices"]:
-                    d = {
-                        'logicalname': device["DevicePath"],
-                        'product': device["ModelNumber"],
-                        'serial': device["SerialNumber"],
-                        "version": device["Firmware"],
-                        'description': "NVME",
-                        'type': "NVME",
-                    }
-                    if "UsedSize" in device:
-                        d['size'] = device["UsedSize"]
-                    if "UsedBytes" in device:
-                        d['size'] = device["UsedBytes"]
-                    self.disks.append(d)
+                    if obj["serial"] == device["SerialNumber"]:
+                        d = {
+                            'logicalname': device["DevicePath"],
+                            'product': obj["product"],
+                            'serial': obj["serial"],
+                            'version': obj["version"],
+                            'description': obj["description"],
+                            'type': "NVME",
+                            'vendor': obj['vendor'],
+                            'size': device["PhysicalSize"]
+                        }
+                        logging.debug(d)
+                        self.disks.append(d)
             except Exception:
                 pass
 

@@ -39,7 +39,9 @@ class IPMI():
     def __init__(self):
         self.ret, self.output = subprocess.getstatusoutput('ipmitool lan print')
         if self.ret != 0:
-            logging.error('Cannot get ipmi info: {}'.format(self.output))
+            if self.output != "":
+                self.ret = 0
+            logging.error('Failure when getting ipmi info: {}'.format(self.output))
 
     def parse(self):
         _ipmi = {}
@@ -53,16 +55,21 @@ class IPMI():
             value = ':'.join(line.split(':')[1:]).strip()
             _ipmi[key] = value
 
+        if not _ipmi:
+            return _ipmi
+
         ret = {}
         ret['name'] = 'IPMI'
         ret["mtu"] = 1500
         ret['bonding'] = False
         ret['mac'] = _ipmi['MAC Address']
-        ret['vlan'] = int(_ipmi['802.1q VLAN ID']) \
-            if _ipmi['802.1q VLAN ID'] != 'Disabled' else None
         ip = _ipmi['IP Address']
         netmask = _ipmi['Subnet Mask']
-        address = str(IPNetwork('{}/{}'.format(ip, netmask)))
+        if '802.1q VLAN ID' in _ipmi and _ipmi['802.1q VLAN ID'] != 'Disabled':
+            ret['vlan'] = int(_ipmi['802.1q VLAN ID'])
+        else:
+            ret['vlan'] = None
+        address = str(IPNetwork(f'{ip}/{netmask}'))
 
         ret['ip'] = [address]
         ret['ipmi'] = True

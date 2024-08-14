@@ -341,10 +341,15 @@ class Inventory():
         for disk in self.lshw.get_hw_linux("storage"):
             if self.is_virtual_disk(disk, raid_devices):
                 continue
-            size = int(getattr(disk, "size", 0)) / 1073741824
+            size = disk['size'] / 1073741824
+            size_unit = 'GB'
+            if size > 1024:
+                size = size / 1024
+                size_unit = 'TB'
+            size_with_unit = '{0:.0f}{1}'.format(size, size_unit)
             d = {
-                "name": "",
-                'Size': '{} GB'.format(size),
+                "name": 'NVMe {} ({})'.format(disk.get('product'), size_with_unit),
+                'Size': size_with_unit,
                 'logicalname': disk.get('logicalname'),
                 'description': disk.get('description'),
                 'SN': disk.get('serial'),
