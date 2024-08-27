@@ -1,7 +1,7 @@
 pynetbox==7.4.0
 netaddr
 netifaces
-pyyaml==6.0.0
+pyyaml>=6.0.0
 jsonargparse
 python-slugify
 packaging
