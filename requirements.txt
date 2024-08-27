@@ -1,4 +1,4 @@
-pynetbox==7.0.0
+pynetbox==7.4.0
 netaddr
 netifaces
 pyyaml==6.0.0
