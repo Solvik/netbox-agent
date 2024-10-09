@@ -20,7 +20,7 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 
 # Requirements
 
-- Netbox >= 2.6
+- Netbox >= 3.7
 - Python >= 3.7
 - [pynetbox](https://github.com/digitalocean/pynetbox/)
 - [python3-netaddr](https://github.com/drkjam/netaddr)
