@@ -62,7 +62,7 @@ class IPMI():
             ip = _ipmi['IP Address']
             netmask = _ipmi['Subnet Mask']
         except KeyError as e:
-            logging.error("IPMI decoding failed, missing: ", e.args[0])
+            logging.error("IPMI decoding failed, missing: %s", e.args[0])
             return {}
         address = str(IPNetwork('{}/{}'.format(ip, netmask)))
 
