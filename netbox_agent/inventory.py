@@ -341,7 +341,7 @@ class Inventory():
         for disk in self.lshw.get_hw_linux("storage"):
             if self.is_virtual_disk(disk, raid_devices):
                 continue
-            size = int(getattr(disk, "size", 0)) / 1073741824
+            size = round(int(disk.get("size", 0)) / 1073741824, 1)
             d = {
                 "name": "",
                 'Size': '{} GB'.format(size),
