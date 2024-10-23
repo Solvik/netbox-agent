@@ -172,7 +172,7 @@ class Inventory():
             discovered=True,
             tags=[{'name': INVENTORY_TAG['interface']['name']}],
             name="{}".format(iface['product']),
-            serial='{}'.format(iface['serial']),
+            serial='{}'.format(iface['serial'][:50]),
             description='{} {}'.format(iface['description'], iface['name'])
         )
 
@@ -256,7 +256,7 @@ class Inventory():
         )
 
         name = raid_card.get_product_name()
-        serial = raid_card.get_serial_number()
+        serial = raid_card.get_serial_number()[:50]
         nb_raid_card = nb.dcim.inventory_items.create(
             device=self.device_id,
             discovered=True,
@@ -371,7 +371,7 @@ class Inventory():
         desc = disk.get('description')
         name = '{} ({})'.format(disk['Model'], disk['Size'])
         description = disk['Type']
-        sn = disk.get('SN', 'unknown')
+        sn = disk.get('SN', 'unknown')[:50]
 
         parms = {
             'device': self.device_id,
@@ -455,7 +455,7 @@ class Inventory():
             tags=[{'name': INVENTORY_TAG['memory']['name']}],
             name=name,
             part_id=memory['product'],
-            serial=memory['serial'],
+            serial=memory['serial'][:50],
             description=memory['description'],
         )
 
