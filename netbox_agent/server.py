@@ -484,11 +484,16 @@ class ServerBase():
                 expansion.save()
 
         myips = nb.ipam.ip_addresses.filter(device_id=server.id)
+        update = 0
 
         for ip in myips:
-            if ip.assigned_object.display == "IPMI":
-                server.update({'oob_ip': ip.id})
+            if ip.assigned_object.display == "IPMI" and ip != server.oob_ip:
+                server.oob_ip = ip.id
+                update += 1
                 break
+
+        if update:
+            server.save()
 
         logging.debug('Finished updating Server!')
 
