@@ -213,7 +213,7 @@ class Network(object):
     def reset_vlan_on_interface(self, nic, interface):
         update = False
         vlan_id = nic['vlan']
-        lldp_vlan = self.lldp.get_switch_vlan(nic['name']) if config.network.lldp else None
+        lldp_vlan = self.lldp.get_switch_vlan(nic['name']) if config.network.lldp and isinstance(self, ServerNetwork) else None
         # For strange reason, we need to get the object from scratch
         # The object returned by pynetbox's save isn't always working (since pynetbox 6)
         interface = self.nb_net.interfaces.get(id=interface.id)
@@ -301,7 +301,7 @@ class Network(object):
             interface.save()
 
         # cable the interface
-        if config.network.lldp:
+        if config.network.lldp and isinstance(self, ServerNetwork):
             switch_ip = self.lldp.get_switch_ip(interface.name)
             switch_interface = self.lldp.get_switch_port(interface.name)
 
@@ -473,7 +473,7 @@ class Network(object):
                     interface.lag = None
 
             # cable the interface
-            if config.network.lldp:
+            if config.network.lldp and isinstance(self, ServerNetwork):
                 switch_ip = self.lldp.get_switch_ip(interface.name)
                 switch_interface = self.lldp.get_switch_port(interface.name)
                 if switch_ip and switch_interface:
