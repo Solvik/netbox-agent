@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from itertools import chain
+from itertools import chain, islice
 
 import netifaces
 from netaddr import IPAddress
@@ -413,11 +413,19 @@ class Network(object):
 
         # delete IP on netbox that are not known on this server
         if len(nb_nics):
-            netbox_ips = nb.ipam.ip_addresses.filter(
-                **{self.intf_type: [x.id for x in nb_nics]}
-            )
+            def batched(iterable, n):
+                batch = tuple(islice(iterable, n))
 
-            netbox_ips = list(netbox_ips)
+                while batch:
+                    yield batch
+                    batch = tuple(islice(iterable, n))
+
+            netbox_ips = []
+            for ids in batched((x.id for x in nb_nics), 25):
+                netbox_ips += list(
+                    nb.ipam.ip_addresses.filter(**{self.intf_type: ids})
+                )
+
             all_local_ips = list(chain.from_iterable([
                 x['ip'] for x in self.nics if x['ip'] is not None
             ]))
