@@ -28,6 +28,8 @@ def get_config():
     p.add_argument('--update-inventory', action='store_true', help='Update inventory')
     p.add_argument('--update-location', action='store_true', help='Update location')
     p.add_argument('--update-psu', action='store_true', help='Update PSU')
+    p.add_argument('--update-old-devices', action='store_true',
+                   help='Update serial number of existing (old ?) devices having same name but different serial')
     p.add_argument('--purge-old-devices', action='store_true',
                    help='Purge existing (old ?) devices having same name but different serial')
     p.add_argument('--expansion-as-device', action='store_true',
