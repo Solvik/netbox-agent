@@ -28,6 +28,8 @@ def get_config():
     p.add_argument('--update-inventory', action='store_true', help='Update inventory')
     p.add_argument('--update-location', action='store_true', help='Update location')
     p.add_argument('--update-psu', action='store_true', help='Update PSU')
+    p.add_argument('--update-old-devices', action='store_true',
+                   help='Update serial number of existing (old ?) devices having same name but different serial')
     p.add_argument('--purge-old-devices', action='store_true',
                    help='Purge existing (old ?) devices having same name but different serial')
     p.add_argument('--expansion-as-device', action='store_true',
@@ -91,6 +93,9 @@ def get_config():
                    help='File path to dump physical/virtual disks map')
 
     options = p.parse_args()
+    if options.update_old_devices and options.purge_old_devices:
+        logging.warning("Use update_old_devices or purge_old_devices, not both at the same time")
+        sys.exit(1)
     return options
 
 

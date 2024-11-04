@@ -257,8 +257,13 @@ class ServerBase():
         serial = self.get_service_tag()
         hostname = self.get_hostname()
         server = nb.dcim.devices.get(name=hostname)
+
         if server and server.serial != serial:
-            server.delete()
+            if config.purge_old_devices:
+                server.delete()
+            elif config.update_old_devices:
+                server.serial = serial
+                server.save()
 
     def _netbox_create_server(self, datacenter, tenant, rack):
         device_role = get_device_role(config.device.server_role)
@@ -384,7 +389,7 @@ class ServerBase():
         rack = self.get_netbox_rack()
         tenant = self.get_netbox_tenant()
 
-        if config.purge_old_devices:
+        if config.update_old_devices or config.purge_old_devices:
             self._netbox_deduplicate_server()
 
         if self.is_blade():
