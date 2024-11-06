@@ -35,7 +35,7 @@ def get_device_platform(device_platform):
             # Python 3.8+ moved linux_distribution() to distro
             try:
                 import distro
-                linux_distribution = " ".join(distro.linux_distribution())
+                linux_distribution = "{name} {version_id} {release_codename}".format(**distro.os_release_info())
             except ImportError:
                 import platform
                 linux_distribution = " ".join(platform.linux_distribution())
