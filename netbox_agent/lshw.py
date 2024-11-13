@@ -1,19 +1,18 @@
-from netbox_agent.misc import is_tool
-import subprocess
-import logging
 import json
+import logging
+import subprocess
 import sys
 
+from netbox_agent.misc import is_tool
 
-class LSHW():
+
+class LSHW:
     def __init__(self):
-        if not is_tool('lshw'):
-            logging.error('lshw does not seem to be installed')
+        if not is_tool("lshw"):
+            logging.error("lshw does not seem to be installed")
             sys.exit(1)
 
-        data = subprocess.getoutput(
-            'lshw -quiet -json'
-        )
+        data = subprocess.getoutput("lshw -quiet -json")
         json_data = json.loads(data)
         # Starting from version 02.18, `lshw -json` wraps its result in a list
         # rather than returning directly a dictionary
@@ -63,9 +62,9 @@ class LSHW():
             return self.gpus
         if hwclass == "network":
             return self.interfaces
-        if hwclass == 'storage':
+        if hwclass == "storage":
             return self.disks
-        if hwclass == 'memory':
+        if hwclass == "memory":
             return self.memories
 
     def find_network(self, obj):
@@ -82,64 +81,70 @@ class LSHW():
                 for j in i["name"]:
                     if j.startswith("unknown"):
                         unkn_intfs.append(j)
-                        
+
         unkn_name = "unknown{}".format(len(unkn_intfs))
-        self.interfaces.append({
-            "name": obj.get("logicalname", unkn_name),
-            "macaddress": obj.get("serial", ""),
-            "serial": obj.get("serial", ""),
-            "product": obj.get("product", "Unknown NIC"),
-            "vendor": obj.get("vendor", "Unknown"),
-            "description": obj.get("description", ""),
-        })
+        self.interfaces.append(
+            {
+                "name": obj.get("logicalname", unkn_name),
+                "macaddress": obj.get("serial", ""),
+                "serial": obj.get("serial", ""),
+                "product": obj.get("product", "Unknown NIC"),
+                "vendor": obj.get("vendor", "Unknown"),
+                "description": obj.get("description", ""),
+            }
+        )
 
     def find_storage(self, obj):
         if "children" in obj:
             for device in obj["children"]:
-                self.disks.append({
-                    "logicalname": device.get("logicalname"),
-                    "product": device.get("product"),
-                    "serial": device.get("serial"),
-                    "version": device.get("version"),
-                    "size": device.get("size"),
-                    "description": device.get("description"),
-                    "type": device.get("description"),
-                })
+                self.disks.append(
+                    {
+                        "logicalname": device.get("logicalname"),
+                        "product": device.get("product"),
+                        "serial": device.get("serial"),
+                        "version": device.get("version"),
+                        "size": device.get("size"),
+                        "description": device.get("description"),
+                        "type": device.get("description"),
+                    }
+                )
         elif "nvme" in obj["configuration"]["driver"]:
-            if not is_tool('nvme'):
-                logging.error('nvme-cli >= 1.0 does not seem to be installed')
+            if not is_tool("nvme"):
+                logging.error("nvme-cli >= 1.0 does not seem to be installed")
                 return
             try:
                 nvme = json.loads(
                     subprocess.check_output(
-                        ["nvme", '-list', '-o', 'json'],
-                        encoding='utf8')
+                        ["nvme", "-list", "-o", "json"], encoding="utf8"
+                    )
                 )
                 for device in nvme["Devices"]:
                     d = {
-                        'logicalname': device["DevicePath"],
-                        'product': device["ModelNumber"],
-                        'serial': device["SerialNumber"],
+                        "logicalname": device["DevicePath"],
+                        "product": device["ModelNumber"],
+                        "serial": device["SerialNumber"],
                         "version": device["Firmware"],
-                        'description': "NVME",
-                        'type': "NVME",
+                        "description": "NVME",
+                        "type": "NVME",
                     }
                     if "UsedSize" in device:
-                        d['size'] = device["UsedSize"]
+                        d["size"] = device["UsedSize"]
                     if "UsedBytes" in device:
-                        d['size'] = device["UsedBytes"]
+                        d["size"] = device["UsedBytes"]
                     self.disks.append(d)
             except Exception:
                 pass
 
     def find_cpus(self, obj):
         if "product" in obj:
-            self.cpus.append({
-                "product": obj.get("product", "Unknown CPU"),
-                "vendor": obj.get("vendor", "Unknown vendor"),
-                "description": obj.get("description", ""),
-                "location": obj.get("slot", ""),
-            })
+            self.cpus.append(
+                {
+                    "product": obj.get("product", "Unknown CPU"),
+                    "vendor": obj.get("vendor", "Unknown vendor"),
+                    "description": obj.get("description", ""),
+                    "location": obj.get("slot", ""),
+                }
+            )
 
     def find_memories(self, obj):
         if "children" not in obj:
@@ -150,15 +155,17 @@ class LSHW():
             if "empty" in dimm["description"]:
                 continue
 
-            self.memories.append({
-                "slot": dimm.get("slot"),
-                "description": dimm.get("description"),
-                "id": dimm.get("id"),
-                "serial": dimm.get("serial", 'N/A'),
-                "vendor": dimm.get("vendor", 'N/A'),
-                "product": dimm.get("product", 'N/A'),
-                "size": dimm.get("size", 0) / 2 ** 20 / 1024,
-            })
+            self.memories.append(
+                {
+                    "slot": dimm.get("slot"),
+                    "description": dimm.get("description"),
+                    "id": dimm.get("id"),
+                    "serial": dimm.get("serial", "N/A"),
+                    "vendor": dimm.get("vendor", "N/A"),
+                    "product": dimm.get("product", "N/A"),
+                    "size": dimm.get("size", 0) / 2**20 / 1024,
+                }
+            )
 
     def find_gpus(self, obj):
         if "product" in obj:
