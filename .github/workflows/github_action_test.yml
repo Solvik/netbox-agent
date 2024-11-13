@@ -17,8 +17,6 @@ jobs:
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
       - name: Install tox
-        run: |
-          pip install pip
-          pip install tox
+        run: pip install tox
       - name: Run tox
         run: tox
