@@ -16,7 +16,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
-      - name: Install tox
-        run: pip install tox
+      - name: Upgrade pip and install tox
+        run: |
+          python -m pip install — upgrade pip
+          pip install tox
       - name: Run tox
         run: tox
+      - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.xml
+        fail_ci_if_error: true

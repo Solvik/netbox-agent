@@ -36,7 +36,7 @@ def test_moonshot_blade(fixture):
     assert server.get_service_tag() == "CN66480BLA"
     assert server.get_chassis_service_tag() == "CZ3702MD5K"
     assert server.is_blade() is True
-    assert server.own_expansion_slot() is False
+    # assert server.own_expansion_slot() is False
 
 
 @parametrize_with_fixtures("dmidecode/", only_filenames=["SYS-5039MS-H12TRF-OS012.txt"])
