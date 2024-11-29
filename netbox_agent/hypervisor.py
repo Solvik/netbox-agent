@@ -1,25 +1,8 @@
 import logging
-import re
-import shlex
 import subprocess
 
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
-
-
-def parse_output(command_output):
-    parsed_items = []
-    pattern = r"^\s*\d+\s+(\S+)"
-    lines = command_output.splitlines()
-
-    for line in lines:
-        _match = re.match(pattern, line)
-
-        if _match:
-            extracted_value = _match.group(1)
-            parsed_items.append(extracted_value)
-
-    return parsed_items
 
 
 class Hypervisor():
@@ -30,53 +13,59 @@ class Hypervisor():
     def get_netbox_cluster(self, name):
         cluster = nb.virtualization.clusters.get(
             name=name,
-        )   
+        )
         return cluster
 
-    def create_or_update_cluster_device(self):
+    def create_or_update_device_cluster(self):
         cluster = self.get_netbox_cluster(config.virtual.cluster_name)
-
-        if self.netbox_server.cluster:
-            if self.netbox_server.cluster.id != cluster.id:
-                self.netbox_server.cluster = cluster.id
-                self.netbox_server.save()
-        else:
-            self.netbox_server.cluster = cluster.id
+        if self.netbox_server.cluster != cluster:
+            self.netbox_server.cluster = cluster
             self.netbox_server.save()
-
         return True
 
     def get_netbox_virtual_guests(self):
         guests = nb.virtualization.virtual_machines.filter(
             device=self.netbox_server.name,
-        )   
+        )
         return guests
 
     def get_netbox_virtual_guest(self, name):
         guest = nb.virtualization.virtual_machines.get(
             name=name,
-        )   
+        )
+        return guest
+
+    def create_netbox_virtual_guest(self, name):
+        guest = nb.virtualization.virtual_machines.create(
+            name=name,
+            device=self.netbox_server.id,
+            cluster=self.netbox_server.cluster.id,
+        )
         return guest
 
     def get_virtual_guests(self):
-        output = subprocess.check_output(shlex.split(config.virtual.list_guests_cmd))
+        return subprocess.getoutput(config.virtual.list_guests_cmd).split()
 
-        return output.decode("utf-8")
-
-    def create_or_update_cluster_device_virtual_machines(self):
+    def create_or_update_device_virtual_machines(self):
         nb_guests = self.get_netbox_virtual_guests()
         guests = self.get_virtual_guests()
-        guests = parse_output(guests)
 
         for nb_guest in nb_guests:
-            if nb_guest not in guests:
+            # loop over the VMs associated to this hypervisor in Netbox
+            if nb_guest.name not in guests:
+                # remove the device property from VMs not found on the hypervisor
                 nb_guest.device = None
                 nb_guest.save()
 
         for guest in guests:
+            # loop over the VMs running in this hypervisor
             nb_guest = self.get_netbox_virtual_guest(guest)
-
-            if nb_guest and nb_guest.device != self.netbox_server:
+            if not nb_guest:
+                # add the VM to Netbox
+                nb.virtualization.virtual_machines
+                nb_guest = self.create_netbox_virtual_guest(guest)
+            if nb_guest.device != self.netbox_server:
+                # add the device property to VMs found on the hypervisor
                 nb_guest.device = self.netbox_server
                 nb_guest.save()
 
