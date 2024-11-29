@@ -6,6 +6,7 @@ from netbox_agent.location import Datacenter, Rack, Tenant
 from netbox_agent.misc import create_netbox_tags, get_device_role, get_device_type, get_device_platform
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
+from netbox_agent.hypervisor import Hypervisor
 from pprint import pprint
 import subprocess
 import logging
@@ -54,6 +55,12 @@ class ServerBase():
             slug=self.get_tenant()
         )
         return nb_tenant
+
+    def get_netbox_cluster(self, name):
+        cluster = nb.virtualization.clusters.get(
+            name=name,
+        )
+        return cluster
 
     def get_datacenter(self):
         dc = Datacenter()
@@ -383,6 +390,7 @@ class ServerBase():
         * Network infos
         * Inventory management
         * PSU management
+        * virtualization cluster device
         """
         datacenter = self.get_netbox_datacenter()
         rack = self.get_netbox_rack()
@@ -429,6 +437,12 @@ class ServerBase():
             self.power = PowerSupply(server=self)
             self.power.create_or_update_power_supply()
             self.power.report_power_consumption()
+        # update virtualization cluster and virtual machines
+        if config.register or config.update_all or config.update_hypervisor:
+            self.hypervisor = Hypervisor(server=self)
+            self.hypervisor.create_or_update_device_cluster()
+            if config.virtual.list_guests_cmd:
+                self.hypervisor.create_or_update_device_virtual_machines()
 
         expansion = nb.dcim.devices.get(serial=self.get_expansion_service_tag())
         if self.own_expansion_slot() and config.expansion_as_device:
