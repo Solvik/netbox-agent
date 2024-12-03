@@ -1,0 +1,32 @@
+name: Tests Coverage
+
+on:
+  pull_request:
+    types: [review_requested]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+        matrix:
+          python-version: ["3.12"]
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Upgrade pip and install tox
+        run: |
+          pip install --upgrade pip
+          pip install tox
+      - name: Run tox
+        run: tox
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
