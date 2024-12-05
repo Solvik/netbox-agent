@@ -1,14 +1,14 @@
-name: CI
+name: Tests Pull request 
 
 on:
-  pull_request:
-    types: [review_requested]
+  pull_request_target:
+    types: [opened, synchronize, reopened]
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
         matrix:
-          python-version: ["3.12"]
+          python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
