@@ -18,12 +18,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
-      - name: Upgrade pip and install tox
+       - name: Upgrade pip and install dependencies
         run: |
           pip install --upgrade pip
           pip install .
       - name: Run tests
-        run: tests.sh
+        run: ./tests.sh
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
