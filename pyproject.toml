@@ -40,46 +40,46 @@ tests = [
     "pytest-cov~=5.0.0",
 ]
 
-[tool.tox]
-env_list = [
-    "pytest",
-    "style",
-    "3.8",
-    "3.9",
-    "3.10",
-    "3.11",
-    "3.12",
-    "3.13",
-]
-
-[tool.tox.env.pytest]
-commands = [["bash", "tests.sh"]]
-allowlist_externals = ["bash"]
-
-[tool.tox.env.style]
-deps = ["ruff~=0.7.0"]
-commands = [["ruff", "check"]]
-allowlist_externals = ["ruff"]
-
-[tool.ruff]
-line-length = 99
-src = ["netbox_agent", "tests"]
-output-format = "grouped"
-show-fixes = true
-
-[tool.ruff.lint]
-ignore = [
-    "F841",
-    "F841",
-    "E203",
-    "E501",
-    "F401",
-    "F821",
-]
-
-[tool.ruff.format]
-quote-style = "single"
-
+#[tool.tox]
+#env_list = [
+#    "pytest",
+#    "style",
+#    "3.8",
+#    "3.9",
+#    "3.10",
+#    "3.11",
+#    "3.12",
+#    "3.13",
+#]
+#
+#[tool.tox.env.pytest]
+#commands = [["bash", "tests.sh"]]
+#allowlist_externals = ["bash"]
+#
+#[tool.tox.env.style]
+#deps = ["ruff~=0.7.0"]
+#commands = [["ruff", "check"]]
+#allowlist_externals = ["ruff"]
+#
+#[tool.ruff]
+#line-length = 99
+#src = ["netbox_agent", "tests"]
+#output-format = "grouped"
+#show-fixes = true
+#
+#[tool.ruff.lint]
+#ignore = [
+#    "F841",
+#    "F841",
+#    "E203",
+#    "E501",
+#    "F401",
+#    "F821",
+#]
+#
+#[tool.ruff.format]
+#quote-style = "single"
+#
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
@@ -87,7 +87,7 @@ testpaths = [
 python_files = [
     "*.py",
 ]
-addopts = "-vv --showlocals --cov-report term-missing --cov netbox_agent --no-cov-on-fail"
+addopts = "-vv --showlocals --cov-report term-missing --cov-report xml --cov netbox_agent --no-cov-on-fail --tb=native -x"
 
 [project.scripts]
 netbox_agent = "netbox_agent.cli:main"

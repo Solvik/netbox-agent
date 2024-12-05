@@ -21,9 +21,9 @@ jobs:
       - name: Upgrade pip and install tox
         run: |
           pip install --upgrade pip
-          pip install tox
-      - name: Run tox
-        run: tox
+          pip install .
+      - name: Run tests
+        run: tests.sh
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
