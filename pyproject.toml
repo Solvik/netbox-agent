@@ -74,7 +74,11 @@ ignore = [
     "E203",
     "E501",
     "F401",
+    "F821",
 ]
+
+[tool.ruff.format]
+quote-style = "single"
 
 [tool.pytest.ini_options]
 testpaths = [
