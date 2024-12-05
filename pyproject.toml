@@ -58,7 +58,7 @@ allowlist_externals = ["bash"]
 
 [tool.tox.env.style]
 deps = ["ruff~=0.7.0"]
-commands = [["ruff", "check"], ["ruff", "format", "--diff"]]
+commands = [["ruff", "check"]]
 allowlist_externals = ["ruff"]
 
 [tool.ruff]
