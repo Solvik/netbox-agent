@@ -34,6 +34,6 @@ cd -
 pytest
 
 cd netbox-docker
-docker-compose down
+docker compose down
 cd -
 set +x
