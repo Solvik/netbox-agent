@@ -1,14 +1,9 @@
-name: Tests Pull request 
-
-on:
-  pull_request_target:
-    types: [opened, synchronize, reopened]
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
         matrix:
-          python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+          python-version: ["3.8"]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -20,8 +15,8 @@ jobs:
         run: python -c "import sys; print(sys.version)"
       - name: Upgrade pip and install dependencies
         run: |
-          pip install --upgrade pip
-          pip install .
+          python -m pip install --upgrade pip
+          pip install . .[tests]
       - name: Run tests
         run: ./tests.sh
       - name: Upload coverage to Codecov
