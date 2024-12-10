@@ -611,11 +611,11 @@ class ServerNetwork(Network):
                 mgmt_only=True
             )
             try:
-                    nb_mgmt_ip = nb.ipam.ip_addresses.get(
+                nb_mgmt_ip = nb.ipam.ip_addresses.get(
                     interface_id=nb_mgmt_int.id
                 )
-            except:
-                pass
+            except AttributeError:
+                nb_mgmt_ip = None
 
             if nb_mgmt_ip is None:
                 logging.error(
