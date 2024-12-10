@@ -308,7 +308,7 @@ class ServerBase():
                     if not server:
                         logging.error("No server found by serial or hostname")
                         sys.exit()
-                    logging.info("Server found, keep going!")
+                    logging.warning("Server found, keep going!")
 
                 return server
             else:
@@ -515,6 +515,12 @@ class ServerBase():
         
         if server.serial == "":
             server.serial = self.get_service_tag()
+            logging.debug('Serial number is empty, setting to {}'.format(self.get_service_tag()))
+            update += 1
+        
+        if server.serial != self.get_service_tag():
+            server.serial = self.get_service_tag()
+            logging.debug('Serial number has changed, setting to {}'.format(self.get_service_tag()))
             update += 1
 
         if config.update_all or config.update_location:
