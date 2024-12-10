@@ -16,6 +16,7 @@ MANUFACTURERS = {
     'HP': HPHost,
     'HPE': HPHost,
     'Supermicro': SupermicroHost,
+    'Memorysolution GmbH': SupermicroHost,
     'Quanta Cloud Technology Inc.': QCTHost,
     'Generic': GenericHost,
     'To Be Filled By O.E.M.': HetznerHost,
