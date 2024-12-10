@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 pynetbox==7.4.0
 netaddr
 netifaces
@@ -6,3 +7,13 @@ jsonargparse
 python-slugify
 packaging
 distro
+=======
+pynetbox==7.3.4
+netaddr==1.3.0
+netifaces2==0.0.22
+pyyaml==6.0.1
+jsonargparse==4.32.0
+python-slugify==8.0.4
+packaging==23.2
+distro==1.9.0
+>>>>>>> upstream/master

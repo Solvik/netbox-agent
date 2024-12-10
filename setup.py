@@ -16,7 +16,7 @@ def get_requirements():
 
 setup(
     name='netbox_agent',
-    version='0.7.1',
+    version='1.0.0',
     description='NetBox agent for server',
     long_description=open('README.md', encoding="utf-8").read(),
     long_description_content_type='text/markdown',
@@ -34,7 +34,12 @@ setup(
         'Intended Audience :: Developers',
         'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
     ],
     entry_points={
         'console_scripts': ['netbox_agent=netbox_agent.cli:main'],

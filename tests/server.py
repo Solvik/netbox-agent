@@ -18,8 +18,8 @@ def test_init(fixture):
         'HP_SL4540_Gen8',
         'HP_BL460c_Gen9',
         'HP_DL380p_Gen8',
-        'HP_SL4540_Gen8'
-        'HP_ProLiant_BL460c_Gen10_Graphics_Exp'
+        'HP_SL4540_Gen8',
+        'HP_ProLiant_BL460c_Gen10_Graphics_Exp',
     ])
 def test_hp_service_tag(fixture):
     dmi = parse(fixture)
@@ -47,8 +47,8 @@ def test_moonshot_blade(fixture):
 def test_supermicro_blade(fixture):
     dmi = parse(fixture)
     server = SupermicroHost(dmi)
-    assert server.get_service_tag() == 'E235735X6B01665'
-    assert server.get_chassis_service_tag() == 'C9390AF40A20098'
+    assert server.get_service_tag() == 'ZM169S040205'
+    assert server.get_chassis_service_tag() == 'E235735X6B01665'
     assert server.get_chassis() == 'SYS-5039MS-H12TRF-OS012'
     assert server.is_blade() is True
 

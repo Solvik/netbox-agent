@@ -260,12 +260,16 @@ class ServerBase():
         )
         return new_blade
 
-    def _netbox_deduplicate_server(self):
+    def _netbox_deduplicate_server(self, purge):
         serial = self.get_service_tag()
         hostname = self.get_hostname()
         server = nb.dcim.devices.get(name=hostname)
         if server and server.serial != serial:
-            server.delete()
+            if purge:
+                server.delete()
+            else:
+                server.serial = serial
+                server.save()
 
     def _netbox_create_server(self, datacenter, tenant, rack):
         device_role = get_device_role(config.device.server_role)
@@ -409,8 +413,11 @@ class ServerBase():
         rack = self.get_netbox_rack()
         tenant = self.get_netbox_tenant()
 
+        if config.update_old_devices:
+            self._netbox_deduplicate_server(purge=False)
+
         if config.purge_old_devices:
-            self._netbox_deduplicate_server()
+            self._netbox_deduplicate_server(purge=True)
 
         if self.is_blade():
             chassis = nb.dcim.devices.get(
@@ -531,6 +538,19 @@ class ServerBase():
                 update += 1
             if update:
                 expansion.save()
+
+        myips = nb.ipam.ip_addresses.filter(device_id=server.id)
+        update = 0
+
+        for ip in myips:
+            if ip.assigned_object.display == "IPMI" and ip != server.oob_ip:
+                server.oob_ip = ip.id
+                update += 1
+                break
+
+        if update:
+            server.save()
+
         logging.debug('Finished updating Server!')
 
     def print_debug(self):

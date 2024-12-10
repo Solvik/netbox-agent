@@ -2,7 +2,7 @@ import logging
 import sys
 import os
 import re
-from itertools import chain
+from itertools import chain, islice
 
 import netifaces
 from netaddr import IPAddress
@@ -82,7 +82,7 @@ class Network(object):
             #
             for addr in ip6_addr:
                 addr["addr"] = addr["addr"].replace('%{}'.format(interface), '')
-                addr["netmask"] = addr["netmask"].split('/')[0]
+                addr["mask"] = addr["mask"].split('/')[0]
                 ip_addr.append(addr)
 
             mac = open('/sys/class/net/{}/address'.format(interface), 'r').read().strip()
@@ -114,7 +114,7 @@ class Network(object):
                 'ip': [
                     '{}/{}'.format(
                         x['addr'],
-                        IPAddress(x['netmask']).netmask_bits()
+                        IPAddress(x['mask']).netmask_bits()
                     ) for x in ip_addr
                 ] if ip_addr else None,  # FIXME: handle IPv6 addresses
                 'ethtool': Ethtool(interface).parse(),
@@ -423,12 +423,16 @@ class Network(object):
 
         # delete IP on netbox that are not known on this server
         if len(nb_nics):
-            netbox_ips = nb.ipam.ip_addresses.filter(
-                **{self.intf_type: [x.id for x in nb_nics]}
-            )
+            def batched(it, n):
+              while batch := tuple(islice(it, n)):
+                yield batch
 
-            netbox_ips = list(netbox_ips)
-            
+            netbox_ips = []
+            for ids in batched((x.id for x in nb_nics), 25):
+                netbox_ips += list(
+                    nb.ipam.ip_addresses.filter(**{self.intf_type: ids})
+                )
+
             all_local_ips = list(chain.from_iterable([
                 x['ip'] for x in self.nics if x['ip'] is not None
             ]))
@@ -560,15 +564,10 @@ class ServerNetwork(Network):
             return nb_server_interface
 
         switch_interface = self.lldp.get_switch_port(nb_server_interface.name)
-        try:
-                nb_switch_interface = nb.dcim.interfaces.get(
-                device_id=nb_switch.id,
-                name=switch_interface,
-            )
-        except Exception as e:
-            logging.error('There was an error retreiving the switch interface: {}'.format(e))
-            sys.exit()
-
+        nb_switch_interface = nb.dcim.interfaces.get(
+            device_id=nb_switch.id,
+            name=switch_interface,
+        )
         if nb_switch_interface is None:
             logging.error('Switch interface {} cannot be found'.format(switch_interface))
             return nb_server_interface
@@ -579,19 +578,13 @@ class ServerNetwork(Network):
         ))
         cable = nb.dcim.cables.create(
             a_terminations=[
-                {
-                    'object_id': nb_server_interface.id,
-                    'object_type':'dcim.interface'
-                }
+                {"object_type": "dcim.interface", "object_id": nb_server_interface.id},
             ],
             b_terminations=[
-                {
-                    'object_id': nb_switch_interface.id,
-                    'object_type': 'dcim.interface'
-                }
+                {"object_type": "dcim.interface", "object_id": nb_switch_interface.id},
             ],
         )
-        
+        nb_server_interface.cable = cable
         logging.info(
             'Connected interface {interface} with {switch_interface} of {switch_ip}'.format(
                 interface=nb_server_interface.name,

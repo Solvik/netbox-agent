@@ -42,8 +42,7 @@ class VirtualMachine(object):
         self.device_platform = get_device_platform(config.device.platform)
 
         self.tags = list(set(config.device.tags.split(','))) if config.device.tags else []
-        if self.tags and len(self.tags):
-            create_netbox_tags(self.tags)
+        self.nb_tags = create_netbox_tags(self.tags)
 
     def get_memory(self):
         mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')  # e.g. 4015976448
@@ -107,7 +106,7 @@ class VirtualMachine(object):
                 vcpus=vcpus,
                 memory=memory,
                 tenant=tenant.id if tenant else None,
-                tags=self.tags,
+                tags=[{'name': x} for x in self.tags],
             )
             created = True
 
@@ -120,6 +119,17 @@ class VirtualMachine(object):
                 updated += 1
             if vm.memory != memory:
                 vm.memory = memory
+                updated += 1
+
+            vm_tags = sorted(set([x.name for x in vm.tags]))
+            tags = sorted(set(self.tags))
+            if vm_tags != tags:
+                new_tags_ids = [x.id for x in self.nb_tags]
+                if not config.preserve_tags:
+                    vm.tags = new_tags_ids
+                else:
+                    vm_tags_ids = [x.id for x in vm.tags]
+                    vm.tags = sorted(set(new_tags_ids + vm_tags_ids))
                 updated += 1
 
             if vm.platform != self.device_platform:

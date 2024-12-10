@@ -1,6 +1,7 @@
 from netbox_agent.config import netbox_instance as nb
 from slugify import slugify
 from shutil import which
+import distro
 import subprocess
 import socket
 import re
@@ -32,13 +33,7 @@ def get_device_type(type):
 def get_device_platform(device_platform):
     if device_platform is None:
         try:
-            # Python 3.8+ moved linux_distribution() to distro
-            try:
-                import distro
-                linux_distribution = " ".join(distro.linux_distribution())
-            except ImportError:
-                import platform
-                linux_distribution = " ".join(platform.linux_distribution())
+            linux_distribution = "{name} {version_id} {release_codename}".format(**distro.os_release_info())
 
             if not linux_distribution:
                 return None
