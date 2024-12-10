@@ -304,7 +304,7 @@ class ServerBase():
 
                 if not server:
                     logging.info("no server found, checking again with hostname!")
-                    server = nb.dcim.devices.get(name=self.get_service_tag())
+                    server = nb.dcim.devices.get(name=self.get_hostname())
                     if not server:
                         logging.error("No server found by serial or hostname")
                         sys.exit()
