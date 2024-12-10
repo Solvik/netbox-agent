@@ -610,9 +610,13 @@ class ServerNetwork(Network):
                 device_id=nb_sw.id,
                 mgmt_only=True
             )
-            nb_mgmt_ip = nb.ipam.ip_addresses.get(
-                interface_id=nb_mgmt_int.id
-            )
+            try:
+                    nb_mgmt_ip = nb.ipam.ip_addresses.get(
+                    interface_id=nb_mgmt_int.id
+                )
+            except:
+                pass
+
             if nb_mgmt_ip is None:
                 logging.error(
                     'Switch {switch_ip} does not have IP on its management interface'.format(
