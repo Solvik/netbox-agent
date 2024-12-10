@@ -132,6 +132,8 @@ def get_by_type(data, type_id):
         if entry['DMIType'] == type_id:
             result.append(entry)
 
+    logging.info(result)
+
     return result
 
 
