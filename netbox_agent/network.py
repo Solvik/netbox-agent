@@ -611,11 +611,25 @@ class ServerNetwork(Network):
                 mgmt_only=True
             )
             try:
-                nb_mgmt_ip = nb.ipam.ip_addresses.get(
-                    interface_id=nb_mgmt_int.id
+                nb_mgmt_int = nb.dcim.interfaces.get(
+                    device_id=nb_sw.id,
+                    mgmt_only=True
                 )
+                if nb_mgmt_int and hasattr(nb_mgmt_int, 'id'):
+                    nb_mgmt_ip = nb.ipam.ip_addresses.get(
+                        interface_id=nb_mgmt_int.id
+                    )
+                else:
+                    nb_mgmt_ip = None
             except AttributeError:
                 nb_mgmt_ip = None
+
+            if nb_mgmt_ip is None:
+                logging.error(
+                    'Switch {switch_ip} does not have IP on its management interface'.format(
+                        switch_ip=switch_ip,
+                    )
+                )
 
             if nb_mgmt_ip is None:
                 logging.error(
