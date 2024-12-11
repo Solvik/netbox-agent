@@ -10,16 +10,16 @@ import urllib3
 def get_config():
     p = jsonargparse.ArgumentParser(
         default_config_files=[
-            '/etc/netbox_agent.yaml',
-            '~/.config/netbox_agent.yaml',
-            '~/.netbox_agent.yaml',
+            "/etc/netbox_agent.yaml",
+            "~/.config/netbox_agent.yaml",
+            "~/.netbox_agent.yaml",
         ],
-        prog='netbox_agent',
+        prog="netbox_agent",
         description="Netbox agent to run on your infrastructure's servers",
-        env_prefix='NETBOX_AGENT_',
-        default_env=True
+        env_prefix="NETBOX_AGENT_",
+        default_env=True,
     )
-    p.add_argument('-c', '--config', action=jsonargparse.ActionConfigFile)
+    p.add_argument("-c", "--config", action=jsonargparse.ActionConfigFile)
 
     p.add_argument('-r', '--register', action='store_true', help='Register server to Netbox')
     p.add_argument('-u', '--update-all', action='store_true', help='Update all infos in Netbox')
@@ -105,7 +105,7 @@ config = get_config()
 
 def get_netbox_instance():
     if config.netbox.url is None or config.netbox.token is None:
-        logging.error('Netbox URL and token are mandatory')
+        logging.error("Netbox URL and token are mandatory")
         sys.exit(1)
 
     nb = pynetbox.api(
