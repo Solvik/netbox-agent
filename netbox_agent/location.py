@@ -4,7 +4,7 @@ import importlib.machinery
 from netbox_agent.config import config
 
 
-class LocationBase():
+class LocationBase:
     """
     This class is used to guess the location in order to push the information
     in Netbox for a `Device`
@@ -27,7 +27,7 @@ class LocationBase():
         if self.driver_file:
             try:
                 # FIXME: Works with Python 3.3+, support older version?
-                loader = importlib.machinery.SourceFileLoader('driver_file', self.driver_file)
+                loader = importlib.machinery.SourceFileLoader("driver_file", self.driver_file)
                 self.driver = loader.load_module()
             except ImportError:
                 raise ImportError("Couldn't import {} as a module".format(self.driver_file))
@@ -35,7 +35,7 @@ class LocationBase():
             if self.driver:
                 try:
                     self.driver = importlib.import_module(
-                        'netbox_agent.drivers.{}'.format(self.driver)
+                        "netbox_agent.drivers.{}".format(self.driver)
                     )
                 except ImportError:
                     raise ImportError("Driver {} doesn't exists".format(self.driver))
@@ -43,19 +43,19 @@ class LocationBase():
     def get(self):
         if self.driver is None:
             return None
-        if not hasattr(self.driver, 'get'):
+        if not hasattr(self.driver, "get"):
             raise Exception(
                 "Your driver {} doesn't have a get() function, please fix it".format(self.driver)
             )
-        return getattr(self.driver, 'get')(self.driver_value, self.regex)
+        return getattr(self.driver, "get")(self.driver_value, self.regex)
 
 
 class Tenant(LocationBase):
     def __init__(self):
-        driver = config.tenant.driver.split(':')[0] if \
-            config.tenant.driver else None
-        driver_value = ':'.join(config.tenant.driver.split(':')[1:]) if \
-            config.tenant.driver else None
+        driver = config.tenant.driver.split(":")[0] if config.tenant.driver else None
+        driver_value = (
+            ":".join(config.tenant.driver.split(":")[1:]) if config.tenant.driver else None
+        )
         driver_file = config.tenant.driver_file
         regex = config.tenant.regex
         super().__init__(driver, driver_value, driver_file, regex)
@@ -63,10 +63,16 @@ class Tenant(LocationBase):
 
 class Datacenter(LocationBase):
     def __init__(self):
-        driver = config.datacenter_location.driver.split(':')[0] if \
-            config.datacenter_location.driver else None
-        driver_value = ':'.join(config.datacenter_location.driver.split(':')[1:]) if \
-            config.datacenter_location.driver else None
+        driver = (
+            config.datacenter_location.driver.split(":")[0]
+            if config.datacenter_location.driver
+            else None
+        )
+        driver_value = (
+            ":".join(config.datacenter_location.driver.split(":")[1:])
+            if config.datacenter_location.driver
+            else None
+        )
         driver_file = config.datacenter_location.driver_file
         regex = config.datacenter_location.regex
         super().__init__(driver, driver_value, driver_file, regex)
@@ -74,10 +80,12 @@ class Datacenter(LocationBase):
 
 class Rack(LocationBase):
     def __init__(self):
-        driver = config.rack_location.driver.split(':')[0] if \
-            config.rack_location.driver else None
-        driver_value = ':'.join(config.rack_location.driver.split(':')[1:]) if \
-            config.rack_location.driver else None
+        driver = config.rack_location.driver.split(":")[0] if config.rack_location.driver else None
+        driver_value = (
+            ":".join(config.rack_location.driver.split(":")[1:])
+            if config.rack_location.driver
+            else None
+        )
         driver_file = config.rack_location.driver_file
         regex = config.rack_location.regex
         super().__init__(driver, driver_value, driver_file, regex)
@@ -85,10 +93,12 @@ class Rack(LocationBase):
 
 class Slot(LocationBase):
     def __init__(self):
-        driver = config.slot_location.driver.split(':')[0] if \
-            config.slot_location.driver else None
-        driver_value = ':'.join(config.slot_location.driver.split(':')[1:]) if \
-            config.slot_location.driver else None
+        driver = config.slot_location.driver.split(":")[0] if config.slot_location.driver else None
+        driver_value = (
+            ":".join(config.slot_location.driver.split(":")[1:])
+            if config.slot_location.driver
+            else None
+        )
         driver_file = config.slot_location.driver_file
         regex = config.slot_location.regex
         super().__init__(driver, driver_value, driver_file, regex)
