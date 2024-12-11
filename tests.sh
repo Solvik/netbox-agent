@@ -27,13 +27,13 @@ do
     sleep 5
 done
 
-export NETBOX_AGENT__NETBOX__URL="http://$(docker-compose port netbox 8080)"
+export NETBOX_AGENT__NETBOX__URL="http://$(docker compose port netbox 8080)"
 export NETBOX_AGENT__NETBOX__TOKEN='0123456789abcdef0123456789abcdef01234567'
 
 cd -
 pytest
 
 cd netbox-docker
-docker-compose down
+docker compose down
 cd -
 set +x
