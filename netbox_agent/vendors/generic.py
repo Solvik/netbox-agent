@@ -5,7 +5,7 @@ from netbox_agent.server import ServerBase
 class GenericHost(ServerBase):
     def __init__(self, *args, **kwargs):
         super(GenericHost, self).__init__(*args, **kwargs)
-        self.manufacturer = dmidecode.get_by_type(self.dmi, 'Baseboard')[0].get('Manufacturer')
+        self.manufacturer = dmidecode.get_by_type(self.dmi, "Baseboard")[0].get("Manufacturer")
 
     def is_blade(self):
         return False

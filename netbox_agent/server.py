@@ -3,7 +3,12 @@ from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.inventory import Inventory
 from netbox_agent.location import Datacenter, Rack, Tenant
-from netbox_agent.misc import create_netbox_tags, get_device_role, get_device_type, get_device_platform
+from netbox_agent.misc import (
+    create_netbox_tags,
+    get_device_role,
+    get_device_type,
+    get_device_platform,
+)
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
 from pprint import pprint
@@ -13,34 +18,32 @@ import socket
 import sys
 
 
-class ServerBase():
+class ServerBase:
     def __init__(self, dmi=None):
         if dmi:
             self.dmi = dmi
         else:
             self.dmi = dmidecode.parse()
 
-        self.baseboard = dmidecode.get_by_type(self.dmi, 'Baseboard')
-        self.bios = dmidecode.get_by_type(self.dmi, 'BIOS')
-        self.chassis = dmidecode.get_by_type(self.dmi, 'Chassis')
-        self.system = dmidecode.get_by_type(self.dmi, 'System')
+        self.baseboard = dmidecode.get_by_type(self.dmi, "Baseboard")
+        self.bios = dmidecode.get_by_type(self.dmi, "BIOS")
+        self.chassis = dmidecode.get_by_type(self.dmi, "Chassis")
+        self.system = dmidecode.get_by_type(self.dmi, "System")
         self.device_platform = get_device_platform(config.device.platform)
 
         self.network = None
 
-        self.tags = list(set([
-            x.strip() for x in config.device.tags.split(',') if x.strip()
-        ])) if config.device.tags else []
+        self.tags = (
+            list(set([x.strip() for x in config.device.tags.split(",") if x.strip()]))
+            if config.device.tags
+            else []
+        )
         self.nb_tags = list(create_netbox_tags(self.tags))
-        config_cf = set([
-            f.strip() for f in config.device.custom_fields.split(",")
-            if f.strip()
-        ])
+        config_cf = set([f.strip() for f in config.device.custom_fields.split(",") if f.strip()])
         self.custom_fields = {}
-        self.custom_fields.update(dict([
-            (k.strip(), v.strip()) for k, v in
-            [f.split("=", 1) for f in config_cf]
-        ]))
+        self.custom_fields.update(
+            dict([(k.strip(), v.strip()) for k, v in [f.split("=", 1) for f in config_cf]])
+        )
 
     def get_tenant(self):
         tenant = Tenant()
@@ -50,9 +53,7 @@ class ServerBase():
         tenant = self.get_tenant()
         if tenant is None:
             return None
-        nb_tenant = nb.tenancy.tenants.get(
-            slug=self.get_tenant()
-        )
+        nb_tenant = nb.tenancy.tenants.get(slug=self.get_tenant())
         return nb_tenant
 
     def get_datacenter(self):
@@ -81,22 +82,22 @@ class ServerBase():
 
         update = False
         if dc and server.site and server.site.slug != nb_dc.slug:
-            logging.info('Datacenter location has changed from {} to {}, updating'.format(
-                server.site.slug,
-                nb_dc.slug,
-            ))
+            logging.info(
+                "Datacenter location has changed from {} to {}, updating".format(
+                    server.site.slug,
+                    nb_dc.slug,
+                )
+            )
             update = True
             server.site = nb_dc.id
 
-        if (
-            server.rack
-            and nb_rack
-            and server.rack.id != nb_rack.id
-        ):
-            logging.info('Rack location has changed from {} to {}, updating'.format(
-                server.rack,
-                nb_rack,
-            ))
+        if server.rack and nb_rack and server.rack.id != nb_rack.id:
+            logging.info(
+                "Rack location has changed from {} to {}, updating".format(
+                    server.rack,
+                    nb_rack,
+                )
+            )
             update = True
             server.rack = nb_rack
             if nb_rack is None:
@@ -139,24 +140,24 @@ class ServerBase():
         """
         Return the Chassis Name from dmidecode info
         """
-        return self.system[0]['Product Name'].strip()
+        return self.system[0]["Product Name"].strip()
 
     def get_service_tag(self):
         """
         Return the Service Tag from dmidecode info
         """
-        return self.system[0]['Serial Number'].strip()
+        return self.system[0]["Serial Number"].strip()
 
     def get_expansion_service_tag(self):
         """
         Return the virtual Service Tag from dmidecode info host
         with 'expansion'
         """
-        return self.system[0]['Serial Number'].strip() + " expansion"
+        return self.system[0]["Serial Number"].strip() + " expansion"
 
     def get_hostname(self):
         if config.hostname_cmd is None:
-            return '{}'.format(socket.gethostname())
+            return "{}".format(socket.gethostname())
         return subprocess.getoutput(config.hostname_cmd)
 
     def is_blade(self):
@@ -193,8 +194,7 @@ class ServerBase():
         device_type = get_device_type(self.get_chassis())
         device_role = get_device_role(config.device.chassis_role)
         serial = self.get_chassis_service_tag()
-        logging.info('Creating chassis blade (serial: {serial})'.format(
-            serial=serial))
+        logging.info("Creating chassis blade (serial: {serial})".format(serial=serial))
         new_chassis = nb.dcim.devices.create(
             name=self.get_chassis_name(),
             device_type=device_type.id,
@@ -203,7 +203,7 @@ class ServerBase():
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
-            tags=[{'name': x} for x in self.tags],
+            tags=[{"name": x} for x in self.tags],
             custom_fields=self.custom_fields,
         )
         return new_chassis
@@ -214,9 +214,10 @@ class ServerBase():
         serial = self.get_service_tag()
         hostname = self.get_hostname()
         logging.info(
-            'Creating blade (serial: {serial}) {hostname} on chassis {chassis_serial}'.format(
+            "Creating blade (serial: {serial}) {hostname} on chassis {chassis_serial}".format(
                 serial=serial, hostname=hostname, chassis_serial=chassis.serial
-            ))
+            )
+        )
         new_blade = nb.dcim.devices.create(
             name=hostname,
             serial=serial,
@@ -226,7 +227,7 @@ class ServerBase():
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
-            tags=[{'name': x} for x in self.tags],
+            tags=[{"name": x} for x in self.tags],
             custom_fields=self.custom_fields,
         )
         return new_blade
@@ -237,9 +238,10 @@ class ServerBase():
         serial = self.get_expansion_service_tag()
         hostname = self.get_hostname() + " expansion"
         logging.info(
-            'Creating expansion (serial: {serial}) {hostname} on chassis {chassis_serial}'.format(
+            "Creating expansion (serial: {serial}) {hostname} on chassis {chassis_serial}".format(
                 serial=serial, hostname=hostname, chassis_serial=chassis.serial
-            ))
+            )
+        )
         new_blade = nb.dcim.devices.create(
             name=hostname,
             serial=serial,
@@ -249,7 +251,7 @@ class ServerBase():
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
-            tags=[{'name': x} for x in self.tags],
+            tags=[{"name": x} for x in self.tags],
         )
         return new_blade
 
@@ -271,8 +273,11 @@ class ServerBase():
             raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
         serial = self.get_service_tag()
         hostname = self.get_hostname()
-        logging.info('Creating server (serial: {serial}) {hostname}'.format(
-            serial=serial, hostname=hostname))
+        logging.info(
+            "Creating server (serial: {serial}) {hostname}".format(
+                serial=serial, hostname=hostname
+            )
+        )
         new_server = nb.dcim.devices.create(
             name=hostname,
             serial=serial,
@@ -282,7 +287,7 @@ class ServerBase():
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
-            tags=[{'name': x} for x in self.tags],
+            tags=[{"name": x} for x in self.tags],
         )
         return new_server
 
@@ -294,14 +299,14 @@ class ServerBase():
 
     def _netbox_set_or_update_blade_slot(self, server, chassis, datacenter):
         # before everything check if right chassis
-        actual_device_bay = server.parent_device.device_bay \
-                if server.parent_device else None
-        actual_chassis = actual_device_bay.device \
-                if actual_device_bay else None
+        actual_device_bay = server.parent_device.device_bay if server.parent_device else None
+        actual_chassis = actual_device_bay.device if actual_device_bay else None
         slot = self.get_blade_slot()
-        if actual_chassis and \
-           actual_chassis.serial == chassis.serial and \
-           actual_device_bay.name == slot:
+        if (
+            actual_chassis
+            and actual_chassis.serial == chassis.serial
+            and actual_device_bay.name == slot
+        ):
             return
 
         real_device_bays = nb.dcim.device_bays.filter(
@@ -314,10 +319,11 @@ class ServerBase():
         )
         if real_device_bays:
             logging.info(
-                'Setting device ({serial}) new slot on {slot} '
-                '(Chassis {chassis_serial})..'.format(
+                "Setting device ({serial}) new slot on {slot} "
+                "(Chassis {chassis_serial})..".format(
                     serial=server.serial, slot=slot, chassis_serial=chassis.serial
-                ))
+                )
+            )
             # reset actual device bay if set
             if actual_device_bay:
                 # Forces the evaluation of the installed_device attribute to
@@ -331,18 +337,18 @@ class ServerBase():
             real_device_bay.installed_device = server
             real_device_bay.save()
         else:
-            logging.error('Could not find slot {slot} for chassis'.format(
-                slot=slot
-            ))
+            logging.error("Could not find slot {slot} for chassis".format(slot=slot))
 
     def _netbox_set_or_update_blade_expansion_slot(self, expansion, chassis, datacenter):
         # before everything check if right chassis
         actual_device_bay = expansion.parent_device.device_bay if expansion.parent_device else None
         actual_chassis = actual_device_bay.device if actual_device_bay else None
         slot = self.get_blade_expansion_slot()
-        if actual_chassis and \
-           actual_chassis.serial == chassis.serial and \
-           actual_device_bay.name == slot:
+        if (
+            actual_chassis
+            and actual_chassis.serial == chassis.serial
+            and actual_device_bay.name == slot
+        ):
             return
 
         real_device_bays = nb.dcim.device_bays.filter(
@@ -350,15 +356,14 @@ class ServerBase():
             name=slot,
         )
         if not real_device_bays:
-            logging.error('Could not find slot {slot} expansion for chassis'.format(
-                slot=slot
-            ))
+            logging.error("Could not find slot {slot} expansion for chassis".format(slot=slot))
             return
         logging.info(
-            'Setting device expansion ({serial}) new slot on {slot} '
-            '(Chassis {chassis_serial})..'.format(
+            "Setting device expansion ({serial}) new slot on {slot} "
+            "(Chassis {chassis_serial})..".format(
                 serial=expansion.serial, slot=slot, chassis_serial=chassis.serial
-            ))
+            )
+        )
         # reset actual device bay if set
         if actual_device_bay:
             # Forces the evaluation of the installed_device attribute to
@@ -395,9 +400,7 @@ class ServerBase():
             self._netbox_deduplicate_server(purge=True)
 
         if self.is_blade():
-            chassis = nb.dcim.devices.get(
-                serial=self.get_chassis_service_tag()
-            )
+            chassis = nb.dcim.devices.get(serial=self.get_chassis_service_tag())
             # Chassis does not exist
             if not chassis:
                 chassis = self._netbox_create_chassis(datacenter, tenant, rack)
@@ -413,13 +416,14 @@ class ServerBase():
             if not server:
                 server = self._netbox_create_server(datacenter, tenant, rack)
 
-        logging.debug('Updating Server...')
+        logging.debug("Updating Server...")
         # check network cards
         if config.register or config.update_all or config.update_network:
             self.network = ServerNetwork(server=self)
             self.network.create_or_update_netbox_network_cards()
-        update_inventory = config.inventory and (config.register or
-                config.update_all or config.update_inventory)
+        update_inventory = config.inventory and (
+            config.register or config.update_all or config.update_inventory
+        )
         # update inventory if feature is enabled
         self.inventory = Inventory(server=self)
         if update_inventory:
@@ -432,7 +436,7 @@ class ServerBase():
 
         expansion = nb.dcim.devices.get(serial=self.get_expansion_service_tag())
         if self.own_expansion_slot() and config.expansion_as_device:
-            logging.debug('Update Server expansion...')
+            logging.debug("Update Server expansion...")
             if not expansion:
                 expansion = self._netbox_create_blade_expansion(chassis, datacenter, tenant, rack)
 
@@ -481,7 +485,7 @@ class ServerBase():
 
         if expansion:
             update = 0
-            expansion_name = server.name + ' expansion'
+            expansion_name = server.name + " expansion"
             if expansion.name != expansion_name:
                 expansion.name = expansion_name
                 update += 1
@@ -502,22 +506,24 @@ class ServerBase():
         if update:
             server.save()
 
-        logging.debug('Finished updating Server!')
+        logging.debug("Finished updating Server!")
 
     def print_debug(self):
         self.network = ServerNetwork(server=self)
-        print('Datacenter:', self.get_datacenter())
-        print('Netbox Datacenter:', self.get_netbox_datacenter())
-        print('Rack:', self.get_rack())
-        print('Netbox Rack:', self.get_netbox_rack())
-        print('Is blade:', self.is_blade())
-        print('Got expansion:', self.own_expansion_slot())
-        print('Product Name:', self.get_product_name())
-        print('Platform:', self.device_platform)
-        print('Chassis:', self.get_chassis())
-        print('Chassis service tag:', self.get_chassis_service_tag())
-        print('Service tag:', self.get_service_tag())
-        print('NIC:',)
+        print("Datacenter:", self.get_datacenter())
+        print("Netbox Datacenter:", self.get_netbox_datacenter())
+        print("Rack:", self.get_rack())
+        print("Netbox Rack:", self.get_netbox_rack())
+        print("Is blade:", self.is_blade())
+        print("Got expansion:", self.own_expansion_slot())
+        print("Product Name:", self.get_product_name())
+        print("Platform:", self.device_platform)
+        print("Chassis:", self.get_chassis())
+        print("Chassis service tag:", self.get_chassis_service_tag())
+        print("Service tag:", self.get_service_tag())
+        print(
+            "NIC:",
+        )
         pprint(self.network.get_network_cards())
         pass
 
