@@ -1,3 +1,4 @@
+import sys
 from packaging import version
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import config
@@ -47,8 +48,8 @@ def run(config):
 
 
 def main():
-    return 0 if run(config) else 1
+    return run(config)
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
