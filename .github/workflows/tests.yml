@@ -23,12 +23,12 @@ jobs:
         run: pip install . .[tests]
       - name: Run tests
         run: ./tests.sh
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage.xml
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
+      #- name: Upload coverage to Codecov
+      #  uses: codecov/codecov-action@v3
+      #  with:
+      #    files: ./coverage.xml
+      #    token: ${{ secrets.CODECOV_TOKEN }}
+      #    fail_ci_if_error: true
   ruff_linter:
     runs-on: ubuntu-latest
     steps:
