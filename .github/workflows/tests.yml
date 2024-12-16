@@ -1,7 +1,7 @@
 name: Tests
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
 jobs:
   tests:
@@ -24,7 +24,9 @@ jobs:
       - name: Run tests
         run: ./tests.sh
       #- name: Upload coverage to Codecov
+      #  if: matrix.python-version == '3.13.0'
       #  uses: codecov/codecov-action@v3
+      #  continue-on-error: true
       #  with:
       #    files: ./coverage.xml
       #    token: ${{ secrets.CODECOV_TOKEN }}
