@@ -41,7 +41,7 @@ tests = [
 ]
 
 style = [
-  "ruff~=0.7.0",
+  "ruff~=0.8.3",
 ]
 
 [tool.ruff]
