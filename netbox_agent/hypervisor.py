@@ -33,13 +33,19 @@ class Hypervisor():
 
     def create_or_update_cluster_device(self):
         cluster = self.get_netbox_cluster(config.virtual.cluster_name)
-        if self.netbox_server.cluster.id != cluster.id:
-            self.netbox_server.cluster = cluster
+
+        if self.netbox_server.cluster:
+            if self.netbox_server.cluster.id != cluster.id:
+                self.netbox_server.cluster = cluster.id
+                self.netbox_server.save()
+        else:
+            self.netbox_server.cluster = cluster.id
             self.netbox_server.save()
+
         return True
 
     def get_netbox_virtual_guests(self):
-        guests = nb.virtualization.virtual_machines.get(
+        guests = nb.virtualization.virtual_machines.filter(
             device=self.netbox_server.name,
         )   
         return guests
@@ -51,21 +57,23 @@ class Hypervisor():
         return guest
 
     def get_virtual_guests(self):
-        return subprocess.getoutput(config.virtual.list_guests_cmd).split()
+        return subprocess.getoutput(config.virtual.list_guests_cmd)
 
     def create_or_update_cluster_device_virtual_machines(self):
         nb_guests = self.get_netbox_virtual_guests()
         guests = self.get_virtual_guests()
+        guests = parse_output(guests)
 
         for nb_guest in nb_guests:
             if nb_guest not in guests:
                 nb_guest.device = None
-                nb.guest.save()
+                nb_guest.save()
 
         for guest in guests:
             nb_guest = self.get_netbox_virtual_guest(guest)
-            if nb_guest.device != self.netbox_server:
+
+            if nb_guest and nb_guest.device != self.netbox_server:
                 nb_guest.device = self.netbox_server
-                nb.guest.save()
+                nb_guest.save()
 
         return True
