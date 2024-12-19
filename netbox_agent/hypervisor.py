@@ -59,7 +59,7 @@ class Hypervisor():
         return guest
 
     def get_virtual_guests(self):
-        output = subprocess.check_output(shlex.split(config.virtual.list_guest_cmd))
+        output = subprocess.check_output(shlex.split(config.virtual.list_guests_cmd))
 
         return output.decode("utf-8")
 
