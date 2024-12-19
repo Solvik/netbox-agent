@@ -1,7 +1,23 @@
-import logging
+import re
+import subprocess
 
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
+
+
+def parse_output(command_output):
+    parsed_items = []
+    pattern = r"^\s*\d+\s+(\S+)"
+    lines = command_output.splitlines()
+
+    for line in lines:
+        _match = re.match(pattern, line)
+
+        if _match:
+            extracted_value = _match.group(1)
+            parsed_items.append(extracted_value)
+
+    return parsed_items
 
 
 class Hypervisor():
