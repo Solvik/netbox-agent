@@ -1,4 +1,6 @@
+import logging
 import re
+import shlex
 import subprocess
 
 from netbox_agent.config import config
@@ -57,7 +59,9 @@ class Hypervisor():
         return guest
 
     def get_virtual_guests(self):
-        return subprocess.getoutput(config.virtual.list_guests_cmd)
+        output = subprocess.check_output(shlex.split(config.virtual.list_guest_cmd))
+
+        return output.decode("utf-8")
 
     def create_or_update_cluster_device_virtual_machines(self):
         nb_guests = self.get_netbox_virtual_guests()
