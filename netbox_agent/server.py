@@ -56,12 +56,6 @@ class ServerBase():
         )
         return nb_tenant
 
-    def get_netbox_cluster(self, name):
-        cluster = nb.virtualization.clusters.get(
-            name=name,
-        )
-        return cluster
-
     def get_datacenter(self):
         dc = Datacenter()
         return dc.get()
