@@ -7,7 +7,6 @@ from netbox_agent.location import Datacenter, Rack, Tenant
 from netbox_agent.misc import create_netbox_tags, get_device_role, get_device_type, get_device_platform
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
-from netbox_agent.hypervisor import Hypervisor
 from pprint import pprint
 import subprocess
 import logging
