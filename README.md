@@ -131,11 +131,11 @@ network:
 #   cluster_name: my_vm_cluster
 
 ## Enable hypervisor support
-#virtual:
-  enabled: false
-  hypervisor: true
-  cluster_name: my_cluster
-  list_guests_cmd: command that lists VMs names
+# virtual:
+#   enabled: false
+#   hypervisor: true
+#   cluster_name: my_cluster
+#   list_guests_cmd: command that lists VMs names
 
 # Enable datacenter location feature in Netbox
 datacenter_location:
