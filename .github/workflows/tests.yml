@@ -25,9 +25,7 @@ jobs:
       - name: Build the package
         run: python -m build
       - name: Install the built package from tar.gz
-        run: pip install dist/*.tar.gz
-      - name: Install test dependecies
-        run: pip install .[dependency-groups]
+        run: pip install "$(echo dist/*.tar.gz)"[dependency-groups]
       - name: Run tests
         run: ./tests.sh
       #- name: Upload coverage to Codecov
