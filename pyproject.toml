@@ -34,7 +34,7 @@ dependencies = [
     "distro==1.9.0",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 tests = [
     "pytest~=8.3.3",
     "pytest-cov~=5.0.0",
