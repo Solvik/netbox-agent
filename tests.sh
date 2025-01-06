@@ -32,8 +32,10 @@ export NETBOX_AGENT__NETBOX__TOKEN='0123456789abcdef0123456789abcdef01234567'
 
 cd -
 pytest
+pytest_result=$?
 
 cd netbox-docker
 docker compose down
 cd -
 set +x
+exit $pytest_result
