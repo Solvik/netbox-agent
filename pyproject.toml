@@ -74,8 +74,7 @@ addopts = "-vv --showlocals --cov-report term-missing --cov-report xml --cov net
 netbox_agent = "netbox_agent.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["netbox_agent"]
-exclude = ["*.tests", "*.tests.*", "tests.*", "tests"]
+include = ["netbox_agent*"]
 
 [project.urls]
 "Source" = "https://github.com/solvik/netbox_agent"
