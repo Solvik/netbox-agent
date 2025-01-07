@@ -26,6 +26,8 @@ jobs:
         run: python -m build
       - name: Install the built package from tar.gz
         run: pip install "$(echo dist/*.tar.gz)"[tests]
+      - name: Run netbox_agent to check that the installed package contains the required modules
+        run: netbox_agent --help
       - name: Run tests
         run: ./tests.sh
       #- name: Upload coverage to Codecov
