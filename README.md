@@ -17,6 +17,8 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 * Automatic cabling (server's interface to switch's interface) using lldp
 * Local inventory using `Inventory Item` for CPU, GPU, RAM, RAID cards, physical disks (behind raid cards)
 * PSUs creation and power consumption reporting (based on vendor's tools)
+* Associate hypervisor devices to the virtualization cluster
+* Associate virtual machines to the hypervisor device
 
 # Requirements
 
@@ -127,6 +129,13 @@ network:
 #   enabled: True
 #   # see https://netbox.company.com/virtualization/clusters/
 #   cluster_name: my_vm_cluster
+
+## Enable hypervisor support
+# virtual:
+#   enabled: false
+#   hypervisor: true
+#   cluster_name: my_cluster
+#   list_guests_cmd: command that lists VMs names
 
 # Enable datacenter location feature in Netbox
 datacenter_location:

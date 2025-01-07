@@ -28,6 +28,7 @@ def get_config():
     p.add_argument('--update-inventory', action='store_true', help='Update inventory')
     p.add_argument('--update-location', action='store_true', help='Update location')
     p.add_argument('--update-psu', action='store_true', help='Update PSU')
+    p.add_argument('--update-hypervisor', action='store_true', help='Update virtualization cluster and virtual machines')
     p.add_argument('--update-old-devices', action='store_true',
                    help='Update serial number of existing (old ?) devices having same name but different serial')
     p.add_argument('--purge-old-devices', action='store_true',
@@ -43,6 +44,9 @@ def get_config():
                    help='Disable SSL verification')
     p.add_argument('--virtual.enabled', action='store_true', help='Is a virtual machine or not')
     p.add_argument('--virtual.cluster_name', help='Cluster name of VM')
+    p.add_argument('--virtual.hypervisor', action='store_true', help='Is a hypervisor or not')
+    p.add_argument('--virtual.list_guests_cmd', default=None,
+                   help='Command to output the list of vrtualization guests in the hypervisor separated by whitespace')
     p.add_argument('--hostname_cmd', default=None,
                    help="Command to output hostname, used as Device's name in netbox")
     p.add_argument('--device.platform', default=None,
