@@ -7,8 +7,9 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
-        matrix:
-          python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13.0"]
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13.0"]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -19,8 +20,14 @@ jobs:
           cache: 'pip'
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
-      - name: Install dependencies
-        run: pip install . .[tests]
+      - name: Install build dependencies
+        run: pip install build
+      - name: Build the package
+        run: python3 -m build
+      - name: Install the built package from tar.gz
+        run: pip install "$(echo dist/*.tar.gz)"[dev]
+      - name: Run netbox_agent to check that the installed package contains the required modules
+        run: netbox_agent --help
       - name: Run tests
         run: ./tests.sh
       #- name: Upload coverage to Codecov
