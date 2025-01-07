@@ -23,9 +23,9 @@ jobs:
       - name: Install build dependencies
         run: pip install build
       - name: Build the package
-        run: python -m build
+        run: python3 -m build
       - name: Install the built package from tar.gz
-        run: pip install "$(echo dist/*.tar.gz)"[tests]
+        run: pip install "$(echo dist/*.tar.gz)"[dev]
       - name: Run netbox_agent to check that the installed package contains the required modules
         run: netbox_agent --help
       - name: Run tests
