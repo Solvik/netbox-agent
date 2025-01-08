@@ -299,3 +299,9 @@ On a personal note, I use the docker image from [netbox-community/netbox-docker]
 # docker-compose pull
 # docker-compose up
 ```
+
+For the linter and code formatting, you need to run:
+```
+ruff check
+ruff format
+```
