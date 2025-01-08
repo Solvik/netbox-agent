@@ -1,4 +1,3 @@
-import shlex
 import subprocess
 
 from netbox_agent.config import config
@@ -44,8 +43,12 @@ class Hypervisor():
         return guest
 
     def get_virtual_guests(self):
-        output = subprocess.check_output(shlex.split(config.virtual.list_guests_cmd))
-        return output.decode("utf-8").split()
+        status, output = subprocess.getstatusoutput(config.virtual.list_guests_cmd)
+
+        if status == 0:
+            return output.split()
+        else:
+            raise Exception(f"Error occurred while executing the command: {output}")
 
     def create_or_update_device_virtual_machines(self):
         nb_guests = self.get_netbox_virtual_guests()
