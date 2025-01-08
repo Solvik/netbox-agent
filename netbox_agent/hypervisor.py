@@ -4,7 +4,7 @@ from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 
 
-class Hypervisor():
+class Hypervisor:
     def __init__(self, server=None):
         self.server = server
         self.netbox_server = self.server.get_netbox_server()

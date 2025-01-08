@@ -26,14 +26,16 @@ def run(config):
 
     if config.virtual.enabled or is_vm(dmi):
         if config.virtual.hypervisor:
-            raise Exception('This host can\'t be a hypervisor because it\'s a VM')
+            raise Exception("This host can't be a hypervisor because it's a VM")
         if not config.virtual.cluster_name:
             raise Exception("virtual.cluster_name parameter is mandatory because it's a VM")
         server = VirtualMachine(dmi=dmi)
     else:
         if config.virtual.hypervisor and not config.virtual.cluster_name:
-            raise Exception('virtual.cluster_name parameter is mandatory because it\'s a hypervisor')
-        manufacturer = dmidecode.get_by_type(dmi, 'Chassis')[0].get('Manufacturer')
+            raise Exception(
+                "virtual.cluster_name parameter is mandatory because it's a hypervisor"
+            )
+        manufacturer = dmidecode.get_by_type(dmi, "Chassis")[0].get("Manufacturer")
         try:
             server = MANUFACTURERS[manufacturer](dmi=dmi)
         except KeyError:
@@ -61,5 +63,5 @@ def main():
     return run(config)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

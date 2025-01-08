@@ -204,8 +204,12 @@ class Network(object):
 
     def reset_vlan_on_interface(self, nic, interface):
         update = False
-        vlan_id = nic['vlan']
-        lldp_vlan = self.lldp.get_switch_vlan(nic['name']) if config.network.lldp and isinstance(self, ServerNetwork) else None
+        vlan_id = nic["vlan"]
+        lldp_vlan = (
+            self.lldp.get_switch_vlan(nic["name"])
+            if config.network.lldp and isinstance(self, ServerNetwork)
+            else None
+        )
         # For strange reason, we need to get the object from scratch
         # The object returned by pynetbox's save isn't always working (since pynetbox 6)
         interface = self.nb_net.interfaces.get(id=interface.id)
@@ -247,7 +251,9 @@ class Network(object):
             interface.untagged_vlan = None
         # Finally if LLDP reports a vlan-id with the pvid attribute
         elif lldp_vlan:
-            pvid_vlan = [key for (key, value) in lldp_vlan.items() if 'pvid' in value and value['pvid']]
+            pvid_vlan = [
+                key for (key, value) in lldp_vlan.items() if "pvid" in value and value["pvid"]
+            ]
             if len(pvid_vlan) > 0 and (
                 interface.mode is None
                 or interface.mode.value != self.dcim_choices["interface:mode"]["Access"]

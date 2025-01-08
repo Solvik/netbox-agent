@@ -37,8 +37,8 @@ class LLDP:
                 if "vlan-id" in path:
                     vid = value
                     vlans[interface][value] = vlans[interface].get(vid, {})
-                elif path.endswith('vlan'):
-                    vid = value.replace('vlan-', '').replace('VLAN', '')
+                elif path.endswith("vlan"):
+                    vid = value.replace("vlan-", "").replace("VLAN", "")
                     vlans[interface][vid] = vlans[interface].get(vid, {})
                 elif "pvid" in path:
                     vlans[interface][vid]["pvid"] = True
