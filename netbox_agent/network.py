@@ -418,7 +418,7 @@ class Network(object):
         # delete unknown interface
         nb_nics = list(self.get_netbox_network_cards())
         local_nics = [x["name"] for x in self.nics]
-        for nic in nb_nics:
+        for nic in list(nb_nics):
             if nic.name not in local_nics:
                 logging.info(
                     "Deleting netbox interface {name} because not present locally".format(
