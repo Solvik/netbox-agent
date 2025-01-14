@@ -44,7 +44,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Install Ruff
-        run: pip install ruff
+        run: pip install $(grep -Po '(?<=")ruff[^"]+' pyproject.toml)
       - name: Ruff linter
         run: ruff check
   ruff_formatter:
@@ -53,6 +53,6 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Install Ruff
-        run: pip install ruff
+        run: pip install $(grep -Po '(?<=")ruff[^"]+' pyproject.toml)
       - name: Ruff formatter
         run: ruff format --diff
