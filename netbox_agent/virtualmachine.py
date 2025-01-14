@@ -1,4 +1,6 @@
+import json
 import os
+import subprocess
 
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import config
@@ -47,6 +49,14 @@ class VirtualMachine(object):
     def get_vcpus(self):
         return os.cpu_count()
 
+    def get_disk(self):
+        disk_space = 0
+        disk_data = subprocess.getoutput("lshw -json -c disk")
+        for disk in json.loads(disk_data):
+            size = int(disk.get("size", 0)) / 1073741824
+            disk_space += size
+        return round(disk_space, 1)
+
     def get_netbox_vm(self):
         hostname = get_hostname(config)
         vm = nb.virtualization.virtual_machines.get(name=hostname)
@@ -85,6 +95,7 @@ class VirtualMachine(object):
 
         vcpus = self.get_vcpus()
         memory = self.get_memory()
+        disk = self.get_disk()
         tenant = self.get_netbox_tenant()
         if not vm:
             logging.debug("Creating Virtual machine..")
@@ -96,6 +107,7 @@ class VirtualMachine(object):
                 platform=self.device_platform.id,
                 vcpus=vcpus,
                 memory=memory,
+                disk=disk,
                 tenant=tenant.id if tenant else None,
                 tags=[{"name": x} for x in self.tags],
             )
@@ -110,6 +122,9 @@ class VirtualMachine(object):
                 updated += 1
             if vm.memory != memory:
                 vm.memory = memory
+                updated += 1
+            if vm.disk != disk:
+                vm.disk = disk
                 updated += 1
 
             vm_tags = sorted(set([x.name for x in vm.tags]))
