@@ -86,9 +86,10 @@ class VirtualMachine(object):
         vcpus = self.get_vcpus()
         memory = self.get_memory()
         tenant = self.get_netbox_tenant()
+        cluster = self.get_netbox_cluster(config.virtual.cluster_name)
+
         if not vm:
             logging.debug("Creating Virtual machine..")
-            cluster = self.get_netbox_cluster(config.virtual.cluster_name)
 
             vm = nb.virtualization.virtual_machines.create(
                 name=hostname,
@@ -125,6 +126,10 @@ class VirtualMachine(object):
 
             if vm.platform != self.device_platform:
                 vm.platform = self.device_platform
+                updated += 1
+
+            if vm.cluster != cluster.id:
+                vm.cluster = cluster.id
                 updated += 1
 
         if updated:
