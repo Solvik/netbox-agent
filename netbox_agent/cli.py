@@ -43,7 +43,7 @@ def run(config):
 
     if version.parse(nb.version) < version.parse("3.7"):
         print("netbox-agent is not compatible with Netbox prior to version 3.7")
-        return False
+        return 1
 
     if (
         config.register
@@ -56,7 +56,7 @@ def run(config):
         server.netbox_create_or_update(config)
     if config.debug:
         server.print_debug()
-    return True
+    return 0
 
 
 def main():
