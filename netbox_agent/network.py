@@ -146,13 +146,7 @@ class Network(object):
         return self.nics
 
     def get_netbox_network_card(self, nic):
-        if nic["mac"] is None:
-            interface = self.nb_net.interfaces.get(name=nic["name"], **self.custom_arg_id)
-        else:
-            interface = self.nb_net.interfaces.get(
-                mac_address=nic["mac"], name=nic["name"], **self.custom_arg_id
-            )
-        return interface
+        return self.nb_net.interfaces.get(name=nic["name"], **self.custom_arg_id)
 
     def get_netbox_network_cards(self):
         return self.nb_net.interfaces.filter(**self.custom_arg_id)
@@ -463,13 +457,13 @@ class Network(object):
                 interface = self.create_netbox_nic(nic)
 
             nic_update = 0
-            if nic["name"] != interface.name:
+            if nic["mac"] != getattr(interface, "mac_address", ""):
                 logging.info(
-                    "Updating interface {interface} name to: {name}".format(
-                        interface=interface, name=nic["name"]
+                    "Updating interface {interface} mac to: {mac}".format(
+                        interface=interface, mac=nic["mac"]
                     )
                 )
-                interface.name = nic["name"]
+                interface.mac_address = nic["mac"]
                 nic_update += 1
 
             ret, interface = self.reset_vlan_on_interface(nic, interface)
