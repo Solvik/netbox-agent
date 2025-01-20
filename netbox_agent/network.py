@@ -155,12 +155,10 @@ class Network(object):
         return self.nics
 
     def get_netbox_network_card(self, nic):
-        if nic["mac"] is None:
-            interface = self.nb_net.interfaces.get(name=nic["name"], **self.custom_arg_id)
+        if config.network.nic_id == "mac" and nic["mac"]:
+            interface = self.nb_net.interfaces.get(mac_address=nic["mac"], **self.custom_arg_id)
         else:
-            interface = self.nb_net.interfaces.get(
-                mac_address=nic["mac"], name=nic["name"], **self.custom_arg_id
-            )
+            interface = self.nb_net.interfaces.get(name=nic["name"], **self.custom_arg_id)
         return interface
 
     def get_netbox_network_cards(self):
@@ -419,6 +417,16 @@ class Network(object):
             netbox_ip.assigned_object_id = interface.id
             netbox_ip.save()
 
+    def _nic_identifier(self, nic):
+        if isinstance(nic, dict):
+            if config.network.nic_id == "mac":
+                return nic["mac"]
+            return nic["name"]
+        else:
+            if config.network.nic_id == "mac":
+                return nic.mac_address
+            return nic.name
+
     def create_or_update_netbox_network_cards(self):
         if config.update_all is None or config.update_network is None:
             return None
@@ -426,9 +434,9 @@ class Network(object):
 
         # delete unknown interface
         nb_nics = list(self.get_netbox_network_cards())
-        local_nics = [x["name"] for x in self.nics]
+        local_nics = [self._nic_identifier(x) for x in self.nics]
         for nic in list(nb_nics):
-            if nic.name not in local_nics:
+            if self._nic_identifier(nic) not in local_nics:
                 logging.info(
                     "Deleting netbox interface {name} because not present locally".format(
                         name=nic.name
@@ -467,7 +475,7 @@ class Network(object):
             interface = self.get_netbox_network_card(nic)
             if not interface:
                 logging.info(
-                    "Interface {mac_address} not found, creating..".format(mac_address=nic["mac"])
+                    "Interface {nic} not found, creating..".format(nic=self._nic_identifier(nic))
                 )
                 interface = self.create_netbox_nic(nic)
 
