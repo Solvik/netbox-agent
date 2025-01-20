@@ -2,6 +2,7 @@ import logging
 import os
 import re
 from itertools import chain, islice
+from pathlib import Path
 
 import netifaces
 from netaddr import IPAddress
@@ -11,6 +12,8 @@ from netbox_agent.config import netbox_instance as nb
 from netbox_agent.ethtool import Ethtool
 from netbox_agent.ipmi import IPMI
 from netbox_agent.lldp import LLDP
+
+VIRTUAL_NET_FOLDER = Path("/sys/devices/virtual/net")
 
 
 class Network(object):
@@ -106,8 +109,7 @@ class Network(object):
                     open("/sys/class/net/{}/bonding/slaves".format(interface)).read().split()
                 )
 
-            # Tun and TAP support
-            virtual = os.path.isfile("/sys/class/net/{}/tun_flags".format(interface))
+            virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
 
             nic = {
                 "name": interface,
@@ -167,9 +169,6 @@ class Network(object):
     def get_netbox_type_for_nic(self, nic):
         if self.get_network_type() == "virtual":
             return self.dcim_choices["interface:type"]["Virtual"]
-
-        if nic.get("bonding"):
-            return self.dcim_choices["interface:type"]["Link Aggregation Group (LAG)"]
 
         if nic.get("bonding"):
             return self.dcim_choices["interface:type"]["Link Aggregation Group (LAG)"]
