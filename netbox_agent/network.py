@@ -300,6 +300,9 @@ class Network(object):
         if nic["mtu"]:
             params["mtu"] = nic["mtu"]
 
+        if nic["ethtool"] and nic["ethtool"].get("link") == "no":
+            params["enabled"] = False
+
         interface = self.nb_net.interfaces.create(**params)
 
         if nic["vlan"]:
