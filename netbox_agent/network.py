@@ -489,6 +489,15 @@ class Network(object):
                 interface.name = nic["name"]
                 nic_update += 1
 
+            if nic["mac"] != interface.mac_address:
+                logging.info(
+                    "Updating interface {interface} mac to: {mac}".format(
+                        interface=interface, mac=nic["mac"]
+                    )
+                )
+                interface.mac = nic["mac"]
+                nic_update += 1
+
             ret, interface = self.reset_vlan_on_interface(nic, interface)
             nic_update += ret
 
