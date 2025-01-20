@@ -44,11 +44,13 @@ class Ethtool:
 
         output = subprocess.getoutput("ethtool {}".format(self.interface))
 
-        fields = {}
+        fields = {
+            "speed": "-",
+            "max_speed": "-",
+            "link": "-",
+            "duplex": "-",
+        }
         field = ""
-        fields["speed"] = "-"
-        fields["link"] = "-"
-        fields["duplex"] = "-"
         for line in output.split("\n")[1:]:
             line = line.rstrip()
             r = line.find(":")
@@ -63,6 +65,17 @@ class Ethtool:
                 if len(field) > 0 and field in field_map:
                     field_key = field_map[field]
                     fields[field_key] += " " + line.strip()
+
+        numbers = re.compile(r"\d+")
+        supported_speeds = [
+            int(match.group(0)) for match in numbers.finditer(fields.get("sup_link_modes", ""))
+        ]
+        if supported_speeds:
+            fields["max_speed"] = "{}Mb/s".format(max(supported_speeds))
+
+        for k in ("speed", "duplex"):
+            if fields[k].startswith("Unknown!"):
+                fields[k] = "-"
 
         return fields
 
