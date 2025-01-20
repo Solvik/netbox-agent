@@ -2,6 +2,8 @@ import re
 import subprocess
 from shutil import which
 
+from netbox_agent.config import config
+
 #  Originally from https://github.com/opencoff/useful-scripts/blob/master/linktest.py
 
 # mapping fields from ethtool output to simple names
@@ -70,9 +72,18 @@ class Ethtool:
                 return {"form_factor": r.groups()[0]}
         return {}
 
+    def parse_ethtool_mac_output(self):
+        status, output = subprocess.getstatusoutput("ethtool -P {}".format(self.interface))
+        if status == 0:
+            match = re.search(r"[0-9a-f:]{17}", output)
+            if match and match.group(0) != "00:00:00:00:00:00":
+                return {"mac_address": match.group(0)}
+        return {}
+
     def parse(self):
         if which("ethtool") is None:
             return None
         output = self._parse_ethtool_output()
         output.update(self._parse_ethtool_module_output())
+        output.update(self.parse_ethtool_mac_output())
         return output

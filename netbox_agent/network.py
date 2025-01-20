@@ -85,7 +85,14 @@ class Network(object):
                 addr["mask"] = addr["mask"].split("/")[0]
                 ip_addr.append(addr)
 
-            mac = open("/sys/class/net/{}/address".format(interface), "r").read().strip()
+            ethtool = Ethtool(interface).parse()
+            if config.network.primary_mac == "permanent" and ethtool and ethtool.get("mac_address"):
+                mac = ethtool["mac_address"]
+            else:
+                mac = open("/sys/class/net/{}/address".format(interface), "r").read().strip()
+                if mac == "00:00:00:00:00:00":
+                    mac = None
+
             mtu = int(open("/sys/class/net/{}/mtu".format(interface), "r").read().strip())
             vlan = None
             if len(interface.split(".")) > 1:
@@ -104,13 +111,13 @@ class Network(object):
 
             nic = {
                 "name": interface,
-                "mac": mac if mac != "00:00:00:00:00:00" else None,
+                "mac": mac,
                 "ip": [
                     "{}/{}".format(x["addr"], IPAddress(x["mask"]).netmask_bits()) for x in ip_addr
                 ]
                 if ip_addr
                 else None,  # FIXME: handle IPv6 addresses
-                "ethtool": Ethtool(interface).parse(),
+                "ethtool": ethtool,
                 "virtual": virtual,
                 "vlan": vlan,
                 "mtu": mtu,
