@@ -90,7 +90,11 @@ class Network(object):
                 ip_addr.append(addr)
 
             ethtool = Ethtool(interface).parse()
-            if config.network.primary_mac == "permanent" and ethtool and ethtool.get("mac_address"):
+            if (
+                config.network.primary_mac == "permanent"
+                and ethtool
+                and ethtool.get("mac_address")
+            ):
                 mac = ethtool["mac_address"]
             else:
                 mac = open("/sys/class/net/{}/address".format(interface), "r").read().strip()
@@ -287,7 +291,13 @@ class Network(object):
         for mac in macs:
             if mac not in {nb_mac.mac_address for nb_mac in nb_macs}:
                 logging.debug("Adding MAC {mac} to {nic}".format(mac=mac, nic=nic))
-                self.nb_net.mac_addresses.create({"mac_address": mac, "assigned_object_type": "dcim.interface", "assigned_object_id": nic.id})
+                self.nb_net.mac_addresses.create(
+                    {
+                        "mac_address": mac,
+                        "assigned_object_type": "dcim.interface",
+                        "assigned_object_id": nic.id,
+                    }
+                )
 
     def create_netbox_nic(self, nic, mgmt=False):
         # TODO: add Optic Vendor, PN and Serial
@@ -410,9 +420,7 @@ class Network(object):
                 logging.info(
                     "Assigning existing IP {ip} to {interface}".format(ip=ip, interface=interface)
                 )
-            elif (
-                assigned_object and assigned_object.id != interface.id
-            ):
+            elif assigned_object.id != interface.id:
                 old_interface = getattr(netbox_ip, "assigned_object", "n/a")
                 logging.info(
                     "Detected interface change for ip {ip}: old interface is "
@@ -436,13 +444,17 @@ class Network(object):
         if isinstance(nic, dict):
             if config.network.nic_id == "mac":
                 if not nic["mac"]:
-                    logging.warning("MAC not available while trying to use it as the NIC identifier")
+                    logging.warning(
+                        "MAC not available while trying to use it as the NIC identifier"
+                    )
                 return nic["mac"]
             return nic["name"]
         else:
             if config.network.nic_id == "mac":
                 if not nic.mac_address:
-                    logging.warning("MAC not available while trying to use it as the NIC identifier")
+                    logging.warning(
+                        "MAC not available while trying to use it as the NIC identifier"
+                    )
                 return nic.mac_address
             return nic.name
 
@@ -511,7 +523,6 @@ class Network(object):
                 )
                 interface.name = nic["name"]
                 nic_update += 1
-
 
             if version.parse(nb.version) >= version.parse("4.2"):
                 # Create MAC objects
