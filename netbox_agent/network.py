@@ -6,6 +6,7 @@ from pathlib import Path
 
 import netifaces
 from netaddr import IPAddress
+from packaging import version
 
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
@@ -275,6 +276,19 @@ class Network(object):
                 interface.untagged_vlan = nb_vlan.id
         return update, interface
 
+    def update_interface_macs(self, nic, macs):
+        nb_macs = list(self.nb_net.mac_addresses.filter(interface_id=nic.id))
+        # Clean
+        for nb_mac in nb_macs:
+            if nb_mac.mac_address not in macs:
+                logging.debug("Deleting extra MAC {mac} from {nic}".format(mac=nb_mac, nic=nic))
+                nb_mac.delete()
+        # Add missing
+        for mac in macs:
+            if mac not in {nb_mac.mac_address for nb_mac in nb_macs}:
+                logging.debug("Adding MAC {mac} to {nic}".format(mac=mac, nic=nic))
+                self.nb_net.mac_addresses.create({"mac_address": mac, "assigned_object_type": "dcim.interface", "assigned_object_id": nic.id})
+
     def create_netbox_nic(self, nic, mgmt=False):
         # TODO: add Optic Vendor, PN and Serial
         nic_type = self.get_netbox_type_for_nic(nic)
@@ -494,13 +508,22 @@ class Network(object):
                 interface.name = nic["name"]
                 nic_update += 1
 
-            if nic["mac"] != interface.mac_address:
+
+            if version.parse(nb.version) >= version.parse("4.2"):
+                # Create MAC objects
+                if nic["mac"]:
+                    self.update_interface_macs(interface, [nic["mac"]])
+
+            if nic["mac"] and nic["mac"] != interface.mac_address:
                 logging.info(
                     "Updating interface {interface} mac to: {mac}".format(
                         interface=interface, mac=nic["mac"]
                     )
                 )
-                interface.mac = nic["mac"]
+                if version.parse(nb.version) < version.parse("4.2"):
+                    interface.mac_address = nic["mac"]
+                else:
+                    interface.primary_mac_address = {"mac_address": nic["mac"]}
                 nic_update += 1
 
             if hasattr(interface, "mtu"):
