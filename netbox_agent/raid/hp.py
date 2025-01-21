@@ -200,7 +200,7 @@ class HPRaidController(RaidController):
             ld = self.ldrives.get(array)
             if ld is None:
                 logging.error(
-                    "Failed to find array information for physical drive {}." " Ignoring.".format(
+                    "Failed to find array information for physical drive {}. Ignoring.".format(
                         name
                     )
                 )

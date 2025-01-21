@@ -103,8 +103,9 @@ class OmreportController(RaidController):
         for pd_identifier, vd in vds.items():
             if pd_identifier not in pds:
                 logging.error(
-                    "Physical drive {} listed in virtual drive {} not "
-                    "found in drives list".format(pd_identifier, vd["vd_array"])
+                    "Physical drive {} listed in virtual drive {} not found in drives list".format(
+                        pd_identifier, vd["vd_array"]
+                    )
                 )
                 continue
             pds[pd_identifier].setdefault("custom_fields", {}).update(vd)
