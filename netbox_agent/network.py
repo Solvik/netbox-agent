@@ -95,6 +95,8 @@ class Network(object):
                 mac = open("/sys/class/net/{}/address".format(interface), "r").read().strip()
                 if mac == "00:00:00:00:00:00":
                     mac = None
+            if mac:
+                mac = mac.upper()
 
             mtu = int(open("/sys/class/net/{}/mtu".format(interface), "r").read().strip())
             vlan = None
