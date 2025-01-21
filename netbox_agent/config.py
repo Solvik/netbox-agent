@@ -124,7 +124,7 @@ def get_config():
         "--network.nic_id",
         choices=("name", "mac"),
         default="name",
-        help="What property to use as NIC identifier. Always fallback to name if choice is not available",
+        help="What property to use as NIC identifier",
     )
     p.add_argument(
         "--network.primary_mac",

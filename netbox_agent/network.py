@@ -435,10 +435,14 @@ class Network(object):
     def _nic_identifier(self, nic):
         if isinstance(nic, dict):
             if config.network.nic_id == "mac":
+                if not nic["mac"]:
+                    logging.warning("MAC not available while trying to use it as the NIC identifier")
                 return nic["mac"]
             return nic["name"]
         else:
             if config.network.nic_id == "mac":
+                if not nic.mac_address:
+                    logging.warning("MAC not available while trying to use it as the NIC identifier")
                 return nic.mac_address
             return nic.name
 
