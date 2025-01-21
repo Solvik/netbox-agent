@@ -1,5 +1,6 @@
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
+from netbox_agent.ethtool import Ethtool
 from netbox_agent.lshw import LSHW
 from netbox_agent.misc import get_vendor, is_tool
 from netbox_agent.raid.hp import HPRaid
@@ -157,7 +158,12 @@ class Inventory:
                     description="{}".format(motherboard.get("description")),
                 )
 
-    def create_netbox_interface(self, iface):
+    def create_netbox_interface(self, iface, component_type=None, component_id=None):
+        component_args = {}
+        if component_type and component_id:
+            component_args["component_type"] = component_type
+            component_args["component_id"] = component_id
+
         manufacturer = self.find_or_create_manufacturer(iface["vendor"])
         _ = nb.dcim.inventory_items.create(
             device=self.device_id,
@@ -166,7 +172,8 @@ class Inventory:
             tags=[{"name": INVENTORY_TAG["interface"]["name"]}],
             name="{}".format(iface["product"]),
             serial="{}".format(iface["serial"]),
-            description="{} {}".format(iface["description"], iface["name"]),
+            description="{}".format(iface["description"]),
+            **component_args,
         )
 
     def do_netbox_interfaces(self):
@@ -174,6 +181,13 @@ class Inventory:
             device_id=self.device_id, tag=INVENTORY_TAG["interface"]["slug"]
         )
         interfaces = self.lshw.interfaces
+
+        for iface in interfaces:
+            ethtool = Ethtool(iface["name"]).parse()
+
+            # Override interface serial number from lshw with permanent MAC address from ethtool, if available.
+            if ethtool and "mac" in ethtool and ethtool.get("mac") != "00:00:00:00:00:00":
+                iface["serial"] = ethtool["mac"]
 
         # delete interfaces that are in netbox but not locally
         # use the serial_number has the comparison element
@@ -186,10 +200,56 @@ class Inventory:
                 )
                 nb_interface.delete()
 
-        # create interfaces that are not in netbox
         for iface in interfaces:
+            # Override interface description from lshw.
+            iface["description"] = "{} {}".format(iface["description"], iface["name"])
+
+            # Try to find the network interface component id.
+            component_type = None
+            component_id = None
+            nb_interface_component = nb.dcim.interfaces.get(name=iface["name"], device_id=self.device_id)
+            if hasattr(nb_interface_component, "id"):
+                component_type = "dcim.interface"
+                component_id = nb_interface_component.id
+
             if iface.get("serial") not in [x.serial for x in nb_interfaces]:
-                self.create_netbox_interface(iface)
+                # create interfaces that are not in netbox
+                self.create_netbox_interface(iface, component_type, component_id)
+            else:
+                # update interfaces that are in netbox if necessary
+                update = False
+                nb_interface = [x for x in nb_interfaces if x.serial == iface.get("serial")][0]
+
+                if nb_interface.description != iface["description"]:
+                    logging.info(
+                        "Updating interface {} description from {} to {}".format(
+                            nb_interface.serial,
+                            nb_interface.description,
+                            iface["description"],
+                        )
+                    )
+                    nb_interface.description = iface["description"]
+                    update = True
+
+                if (
+                    nb_interface.component_type != component_type
+                    or nb_interface.component_id != component_id
+                ):
+                    logging.info(
+                        "Updating interface {} component_type/component_id from {}/{} to {}/{}".format(
+                            nb_interface.serial,
+                            nb_interface.component_type,
+                            nb_interface.component_id,
+                            component_type,
+                            component_id,
+                        )
+                    )
+                    nb_interface.component_type = component_type
+                    nb_interface.component_id = component_id
+                    update = True
+
+                if update:
+                    nb_interface.save()
 
     def create_netbox_cpus(self):
         for cpu in self.lshw.get_hw_linux("cpu"):

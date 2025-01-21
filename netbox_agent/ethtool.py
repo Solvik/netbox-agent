@@ -70,9 +70,18 @@ class Ethtool:
                 return {"form_factor": r.groups()[0]}
         return {}
 
+    def _parse_ethtool_permanent_address_output(self):
+        status, output = subprocess.getstatusoutput("ethtool -P {}".format(self.interface))
+        if status == 0:
+            prefix = "Permanent address: "
+            if output.startswith(prefix):
+                return {"mac": output.removeprefix(prefix).strip()}
+        return {}
+
     def parse(self):
         if which("ethtool") is None:
             return None
         output = self._parse_ethtool_output()
         output.update(self._parse_ethtool_module_output())
+        output.update(self._parse_ethtool_permanent_address_output())
         return output
