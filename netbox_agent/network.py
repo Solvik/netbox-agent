@@ -391,13 +391,12 @@ class Network(object):
                 netbox_ip = nb.ipam.ip_addresses.create(**query_params)
             return netbox_ip
         else:
-            ip_interface = getattr(netbox_ip, "interface", None)
             assigned_object = getattr(netbox_ip, "assigned_object", None)
-            if not ip_interface or not assigned_object:
+            if not assigned_object:
                 logging.info(
                     "Assigning existing IP {ip} to {interface}".format(ip=ip, interface=interface)
                 )
-            elif (ip_interface and ip_interface.id != interface.id) or (
+            elif (
                 assigned_object and assigned_object.id != interface.id
             ):
                 old_interface = getattr(netbox_ip, "assigned_object", "n/a")
