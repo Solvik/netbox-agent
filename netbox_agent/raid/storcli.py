@@ -34,9 +34,7 @@ def storecli(sub_command):
         ]
     )
     if not controllers:
-        logging.error(
-            "Failed to execute command '{}'. " "Ignoring data.".format(" ".join(command))
-        )
+        logging.error("Failed to execute command '{}'. Ignoring data.".format(" ".join(command)))
         return {}
     return controllers
 
@@ -131,8 +129,9 @@ class StorcliController(RaidController):
         for pd_identifier, vd in vds.items():
             if pd_identifier not in pds:
                 logging.error(
-                    "Physical drive {} listed in virtual drive {} not "
-                    "found in drives list".format(pd_identifier, vd["vd_array"])
+                    "Physical drive {} listed in virtual drive {} not found in drives list".format(
+                        pd_identifier, vd["vd_array"]
+                    )
                 )
                 continue
             pds[pd_identifier].setdefault("custom_fields", {}).update(vd)

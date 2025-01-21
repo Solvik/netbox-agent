@@ -128,8 +128,7 @@ def get_config():
     p.add_argument(
         "--process-virtual-drives",
         action="store_true",
-        help="Process virtual drives information from RAID "
-        "controllers to fill disk custom_fields",
+        help="Process virtual drives information from RAID controllers to fill disk custom_fields",
     )
     p.add_argument(
         "--force-disk-refresh", action="store_true", help="Forces disks detection reprocessing"
