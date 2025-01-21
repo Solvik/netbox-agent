@@ -482,6 +482,10 @@ class Network(object):
                 interface = self.create_netbox_nic(nic)
 
             nic_update = 0
+
+            ret, interface = self.reset_vlan_on_interface(nic, interface)
+            nic_update += ret
+
             if nic["name"] != interface.name:
                 logging.info(
                     "Updating interface {interface} name to: {name}".format(
@@ -499,9 +503,6 @@ class Network(object):
                 )
                 interface.mac = nic["mac"]
                 nic_update += 1
-
-            ret, interface = self.reset_vlan_on_interface(nic, interface)
-            nic_update += ret
 
             if hasattr(interface, "mtu"):
                 if nic["mtu"] != interface.mtu:
