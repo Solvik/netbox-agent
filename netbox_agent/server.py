@@ -436,7 +436,7 @@ class ServerBase:
             self.power.create_or_update_power_supply()
             self.power.report_power_consumption()
         # update virtualization cluster and virtual machines
-        if config.register or config.update_all or config.update_hypervisor:
+        if config.virtual.hypervisor and (config.register or config.update_all or config.update_hypervisor):
             self.hypervisor = Hypervisor(server=self)
             self.hypervisor.create_or_update_device_cluster()
             if config.virtual.list_guests_cmd:
