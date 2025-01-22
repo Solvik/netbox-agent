@@ -56,12 +56,14 @@ class Ethtool:
                 field = line[:r].strip()
                 if field not in field_map:
                     continue
-                field = field_map[field]
+                field_key = field_map[field]
                 output = line[r + 1 :].strip()
-                fields[field] = output
+                fields[field_key] = output
             else:
                 if len(field) > 0 and field in field_map:
-                    fields[field] += " " + line.strip()
+                    field_key = field_map[field]
+                    fields[field_key] += " " + line.strip()
+
         return fields
 
     def _parse_ethtool_module_output(self):
