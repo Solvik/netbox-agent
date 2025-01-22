@@ -549,6 +549,22 @@ class Network(object):
                     interface.mtu = nic["mtu"]
                     nic_update += 1
 
+            if nic["ethtool"]:
+                if (
+                    nic["ethtool"]["duplex"] != "-"
+                    and interface.duplex != nic["ethtool"]["duplex"].lower()
+                ):
+                    interface.duplex = nic["ethtool"]["duplex"].lower()
+                    nic_update += 1
+
+                if nic["ethtool"]["speed"] != "-":
+                    speed = int(
+                        nic["ethtool"]["speed"].replace("Mb/s", "000").replace("Gb/s", "000000")
+                    )
+                    if speed != interface.speed:
+                        interface.speed = speed
+                        nic_update += 1
+
             if hasattr(interface, "type"):
                 _type = self.get_netbox_type_for_nic(nic)
                 if not interface.type or _type != interface.type.value:
