@@ -449,7 +449,8 @@ class Network(object):
             if config.network.nic_id == "mac":
                 if not nic["mac"]:
                     logging.warning(
-                        "MAC not available while trying to use it as the NIC identifier"
+                        "%s: MAC not available while trying to use it as the NIC identifier",
+                        nic["name"],
                     )
                 return nic["mac"]
             return nic["name"]
@@ -457,7 +458,8 @@ class Network(object):
             if config.network.nic_id == "mac":
                 if not nic.mac_address:
                     logging.warning(
-                        "MAC not available while trying to use it as the NIC identifier"
+                        "%s: MAC not available while trying to use it as the NIC identifier",
+                        nic.name,
                     )
                 return nic.mac_address
             return nic.name
