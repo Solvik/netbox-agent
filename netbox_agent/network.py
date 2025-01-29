@@ -555,7 +555,7 @@ class Network(object):
                     interface.mtu = nic["mtu"]
                     nic_update += 1
 
-            if nic["ethtool"]:
+            if nic.get("ethtool"):
                 if (
                     nic["ethtool"]["duplex"] != "-"
                     and interface.duplex != nic["ethtool"]["duplex"].lower()
