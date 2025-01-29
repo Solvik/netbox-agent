@@ -57,6 +57,8 @@ class IPMI:
         ret["bonding"] = False
         try:
             ret["mac"] = _ipmi["MAC Address"]
+            if ret["mac"]:
+                ret["mac"] = ret["mac"].upper()
             ret["vlan"] = (
                 int(_ipmi["802.1q VLAN ID"]) if _ipmi["802.1q VLAN ID"] != "Disabled" else None
             )
