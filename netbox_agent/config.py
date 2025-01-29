@@ -121,6 +121,18 @@ def get_config():
     p.add_argument("--network.ipmi", default=True, help="Enable gathering IPMI information")
     p.add_argument("--network.lldp", help="Enable auto-cabling feature through LLDP infos")
     p.add_argument(
+        "--network.nic_id",
+        choices=("name", "mac"),
+        default="name",
+        help="What property to use as NIC identifier",
+    )
+    p.add_argument(
+        "--network.primary_mac",
+        choices=("permanent", "temp"),
+        default="temp",
+        help="Which MAC address to use as primary. Permanent requires ethtool and fallbacks to temporary",
+    )
+    p.add_argument(
         "--inventory",
         action="store_true",
         help="Enable HW inventory (CPU, Memory, RAID Cards, Disks) feature",

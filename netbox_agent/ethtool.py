@@ -2,6 +2,8 @@ import re
 import subprocess
 from shutil import which
 
+from netbox_agent.config import config
+
 #  Originally from https://github.com/opencoff/useful-scripts/blob/master/linktest.py
 
 # mapping fields from ethtool output to simple names
@@ -42,11 +44,13 @@ class Ethtool:
 
         output = subprocess.getoutput("ethtool {}".format(self.interface))
 
-        fields = {}
+        fields = {
+            "speed": "-",
+            "max_speed": "-",
+            "link": "-",
+            "duplex": "-",
+        }
         field = ""
-        fields["speed"] = "-"
-        fields["link"] = "-"
-        fields["duplex"] = "-"
         for line in output.split("\n")[1:]:
             line = line.rstrip()
             r = line.find(":")
@@ -54,12 +58,25 @@ class Ethtool:
                 field = line[:r].strip()
                 if field not in field_map:
                     continue
-                field = field_map[field]
+                field_key = field_map[field]
                 output = line[r + 1 :].strip()
-                fields[field] = output
+                fields[field_key] = output
             else:
                 if len(field) > 0 and field in field_map:
-                    fields[field] += " " + line.strip()
+                    field_key = field_map[field]
+                    fields[field_key] += " " + line.strip()
+
+        numbers = re.compile(r"\d+")
+        supported_speeds = [
+            int(match.group(0)) for match in numbers.finditer(fields.get("sup_link_modes", ""))
+        ]
+        if supported_speeds:
+            fields["max_speed"] = "{}Mb/s".format(max(supported_speeds))
+
+        for k in ("speed", "duplex"):
+            if fields[k].startswith("Unknown!"):
+                fields[k] = "-"
+
         return fields
 
     def _parse_ethtool_module_output(self):
@@ -70,9 +87,18 @@ class Ethtool:
                 return {"form_factor": r.groups()[0]}
         return {}
 
+    def parse_ethtool_mac_output(self):
+        status, output = subprocess.getstatusoutput("ethtool -P {}".format(self.interface))
+        if status == 0:
+            match = re.search(r"[0-9a-f:]{17}", output)
+            if match and match.group(0) != "00:00:00:00:00:00":
+                return {"mac_address": match.group(0)}
+        return {}
+
     def parse(self):
         if which("ethtool") is None:
             return None
         output = self._parse_ethtool_output()
         output.update(self._parse_ethtool_module_output())
+        output.update(self.parse_ethtool_mac_output())
         return output

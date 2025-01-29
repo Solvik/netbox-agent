@@ -2,15 +2,19 @@ import logging
 import os
 import re
 from itertools import chain, islice
+from pathlib import Path
 
 import netifaces
 from netaddr import IPAddress
+from packaging import version
 
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.ethtool import Ethtool
 from netbox_agent.ipmi import IPMI
 from netbox_agent.lldp import LLDP
+
+VIRTUAL_NET_FOLDER = Path("/sys/devices/virtual/net")
 
 
 class Network(object):
@@ -85,7 +89,20 @@ class Network(object):
                 addr["mask"] = addr["mask"].split("/")[0]
                 ip_addr.append(addr)
 
-            mac = open("/sys/class/net/{}/address".format(interface), "r").read().strip()
+            ethtool = Ethtool(interface).parse()
+            if (
+                config.network.primary_mac == "permanent"
+                and ethtool
+                and ethtool.get("mac_address")
+            ):
+                mac = ethtool["mac_address"]
+            else:
+                mac = open("/sys/class/net/{}/address".format(interface), "r").read().strip()
+                if mac == "00:00:00:00:00:00":
+                    mac = None
+            if mac:
+                mac = mac.upper()
+
             mtu = int(open("/sys/class/net/{}/mtu".format(interface), "r").read().strip())
             vlan = None
             if len(interface.split(".")) > 1:
@@ -99,18 +116,17 @@ class Network(object):
                     open("/sys/class/net/{}/bonding/slaves".format(interface)).read().split()
                 )
 
-            # Tun and TAP support
-            virtual = os.path.isfile("/sys/class/net/{}/tun_flags".format(interface))
+            virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
 
             nic = {
                 "name": interface,
-                "mac": mac if mac != "00:00:00:00:00:00" else None,
+                "mac": mac,
                 "ip": [
                     "{}/{}".format(x["addr"], IPAddress(x["mask"]).netmask_bits()) for x in ip_addr
                 ]
                 if ip_addr
                 else None,  # FIXME: handle IPv6 addresses
-                "ethtool": Ethtool(interface).parse(),
+                "ethtool": ethtool,
                 "virtual": virtual,
                 "vlan": vlan,
                 "mtu": mtu,
@@ -146,12 +162,10 @@ class Network(object):
         return self.nics
 
     def get_netbox_network_card(self, nic):
-        if nic["mac"] is None:
-            interface = self.nb_net.interfaces.get(name=nic["name"], **self.custom_arg_id)
+        if config.network.nic_id == "mac" and nic["mac"]:
+            interface = self.nb_net.interfaces.get(mac_address=nic["mac"], **self.custom_arg_id)
         else:
-            interface = self.nb_net.interfaces.get(
-                mac_address=nic["mac"], name=nic["name"], **self.custom_arg_id
-            )
+            interface = self.nb_net.interfaces.get(name=nic["name"], **self.custom_arg_id)
         return interface
 
     def get_netbox_network_cards(self):
@@ -164,25 +178,26 @@ class Network(object):
         if nic.get("bonding"):
             return self.dcim_choices["interface:type"]["Link Aggregation Group (LAG)"]
 
-        if nic.get("bonding"):
-            return self.dcim_choices["interface:type"]["Link Aggregation Group (LAG)"]
-
         if nic.get("virtual"):
             return self.dcim_choices["interface:type"]["Virtual"]
 
         if nic.get("ethtool") is None:
             return self.dcim_choices["interface:type"]["Other"]
 
-        if nic["ethtool"]["speed"] == "10000Mb/s":
+        max_speed = nic["ethtool"]["max_speed"]
+        if max_speed == "-":
+            max_speed = nic["ethtool"]["speed"]
+
+        if max_speed == "10000Mb/s":
             if nic["ethtool"]["port"] in ("FIBRE", "Direct Attach Copper"):
                 return self.dcim_choices["interface:type"]["SFP+ (10GE)"]
             return self.dcim_choices["interface:type"]["10GBASE-T (10GE)"]
 
-        elif nic["ethtool"]["speed"] == "25000Mb/s":
+        elif max_speed == "25000Mb/s":
             if nic["ethtool"]["port"] in ("FIBRE", "Direct Attach Copper"):
                 return self.dcim_choices["interface:type"]["SFP28 (25GE)"]
 
-        elif nic["ethtool"]["speed"] == "1000Mb/s":
+        elif max_speed == "1000Mb/s":
             if nic["ethtool"]["port"] in ("FIBRE", "Direct Attach Copper"):
                 return self.dcim_choices["interface:type"]["SFP (1GE)"]
             return self.dcim_choices["interface:type"]["1000BASE-T (1GE)"]
@@ -269,6 +284,25 @@ class Network(object):
                 interface.untagged_vlan = nb_vlan.id
         return update, interface
 
+    def update_interface_macs(self, nic, macs):
+        nb_macs = list(self.nb_net.mac_addresses.filter(interface_id=nic.id))
+        # Clean
+        for nb_mac in nb_macs:
+            if nb_mac.mac_address not in macs:
+                logging.debug("Deleting extra MAC {mac} from {nic}".format(mac=nb_mac, nic=nic))
+                nb_mac.delete()
+        # Add missing
+        for mac in macs:
+            if mac not in {nb_mac.mac_address for nb_mac in nb_macs}:
+                logging.debug("Adding MAC {mac} to {nic}".format(mac=mac, nic=nic))
+                self.nb_net.mac_addresses.create(
+                    {
+                        "mac_address": mac,
+                        "assigned_object_type": "dcim.interface",
+                        "assigned_object_id": nic.id,
+                    }
+                )
+
     def create_netbox_nic(self, nic, mgmt=False):
         # TODO: add Optic Vendor, PN and Serial
         nic_type = self.get_netbox_type_for_nic(nic)
@@ -293,6 +327,9 @@ class Network(object):
 
         if nic["mtu"]:
             params["mtu"] = nic["mtu"]
+
+        if nic["ethtool"] and nic["ethtool"].get("link") == "no":
+            params["enabled"] = False
 
         interface = self.nb_net.interfaces.create(**params)
 
@@ -382,15 +419,12 @@ class Network(object):
                 netbox_ip = nb.ipam.ip_addresses.create(**query_params)
             return netbox_ip
         else:
-            ip_interface = getattr(netbox_ip, "interface", None)
             assigned_object = getattr(netbox_ip, "assigned_object", None)
-            if not ip_interface or not assigned_object:
+            if not assigned_object:
                 logging.info(
                     "Assigning existing IP {ip} to {interface}".format(ip=ip, interface=interface)
                 )
-            elif (ip_interface and ip_interface.id != interface.id) or (
-                assigned_object and assigned_object.id != interface.id
-            ):
+            elif assigned_object.id != interface.id:
                 old_interface = getattr(netbox_ip, "assigned_object", "n/a")
                 logging.info(
                     "Detected interface change for ip {ip}: old interface is "
@@ -410,6 +444,26 @@ class Network(object):
             netbox_ip.assigned_object_id = interface.id
             netbox_ip.save()
 
+    def _nic_identifier(self, nic):
+        if isinstance(nic, dict):
+            if config.network.nic_id == "mac":
+                if not nic["mac"]:
+                    logging.warning(
+                        "%s: MAC not available while trying to use it as the NIC identifier",
+                        nic["name"],
+                    )
+                return nic["mac"]
+            return nic["name"]
+        else:
+            if config.network.nic_id == "mac":
+                if not nic.mac_address:
+                    logging.warning(
+                        "%s: MAC not available while trying to use it as the NIC identifier",
+                        nic.name,
+                    )
+                return nic.mac_address
+            return nic.name
+
     def create_or_update_netbox_network_cards(self):
         if config.update_all is None or config.update_network is None:
             return None
@@ -417,9 +471,9 @@ class Network(object):
 
         # delete unknown interface
         nb_nics = list(self.get_netbox_network_cards())
-        local_nics = [x["name"] for x in self.nics]
+        local_nics = [self._nic_identifier(x) for x in self.nics]
         for nic in list(nb_nics):
-            if nic.name not in local_nics:
+            if self._nic_identifier(nic) not in local_nics:
                 logging.info(
                     "Deleting netbox interface {name} because not present locally".format(
                         name=nic.name
@@ -458,11 +512,15 @@ class Network(object):
             interface = self.get_netbox_network_card(nic)
             if not interface:
                 logging.info(
-                    "Interface {mac_address} not found, creating..".format(mac_address=nic["mac"])
+                    "Interface {nic} not found, creating..".format(nic=self._nic_identifier(nic))
                 )
                 interface = self.create_netbox_nic(nic)
 
             nic_update = 0
+
+            ret, interface = self.reset_vlan_on_interface(nic, interface)
+            nic_update += ret
+
             if nic["name"] != interface.name:
                 logging.info(
                     "Updating interface {interface} name to: {name}".format(
@@ -472,8 +530,22 @@ class Network(object):
                 interface.name = nic["name"]
                 nic_update += 1
 
-            ret, interface = self.reset_vlan_on_interface(nic, interface)
-            nic_update += ret
+            if version.parse(nb.version) >= version.parse("4.2"):
+                # Create MAC objects
+                if nic["mac"]:
+                    self.update_interface_macs(interface, [nic["mac"]])
+
+            if nic["mac"] and nic["mac"] != interface.mac_address:
+                logging.info(
+                    "Updating interface {interface} mac to: {mac}".format(
+                        interface=interface, mac=nic["mac"]
+                    )
+                )
+                if version.parse(nb.version) < version.parse("4.2"):
+                    interface.mac_address = nic["mac"]
+                else:
+                    interface.primary_mac_address = {"mac_address": nic["mac"]}
+                nic_update += 1
 
             if hasattr(interface, "mtu"):
                 if nic["mtu"] != interface.mtu:
@@ -482,6 +554,22 @@ class Network(object):
                     )
                     interface.mtu = nic["mtu"]
                     nic_update += 1
+
+            if nic.get("ethtool"):
+                if (
+                    nic["ethtool"]["duplex"] != "-"
+                    and interface.duplex != nic["ethtool"]["duplex"].lower()
+                ):
+                    interface.duplex = nic["ethtool"]["duplex"].lower()
+                    nic_update += 1
+
+                if nic["ethtool"]["speed"] != "-":
+                    speed = int(
+                        nic["ethtool"]["speed"].replace("Mb/s", "000").replace("Gb/s", "000000")
+                    )
+                    if speed != interface.speed:
+                        interface.speed = speed
+                        nic_update += 1
 
             if hasattr(interface, "type"):
                 _type = self.get_netbox_type_for_nic(nic)
