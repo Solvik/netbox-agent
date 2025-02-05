@@ -328,7 +328,7 @@ class Network(object):
         if nic["mtu"]:
             params["mtu"] = nic["mtu"]
 
-        if nic["ethtool"] and nic["ethtool"].get("link") == "no":
+        if nic.get("ethtool") and nic["ethtool"].get("link") == "no":
             params["enabled"] = False
 
         interface = self.nb_net.interfaces.create(**params)
@@ -510,6 +510,7 @@ class Network(object):
         # update each nic
         for nic in self.nics:
             interface = self.get_netbox_network_card(nic)
+
             if not interface:
                 logging.info(
                     "Interface {nic} not found, creating..".format(nic=self._nic_identifier(nic))
@@ -555,7 +556,7 @@ class Network(object):
                     interface.mtu = nic["mtu"]
                     nic_update += 1
 
-            if nic.get("ethtool"):
+            if not isinstance(self, VirtualNetwork) and nic.get("ethtool"):
                 if (
                     nic["ethtool"]["duplex"] != "-"
                     and interface.duplex != nic["ethtool"]["duplex"].lower()
