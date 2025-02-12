@@ -125,7 +125,7 @@ class VirtualMachine(object):
                 vm.memory = memory
                 updated += 1
             if vm.disk != disk:
-                vm.disk = disk
+                vm.disk = round(disk)
                 updated += 1
 
             vm_tags = sorted(set([x.name for x in vm.tags]))
