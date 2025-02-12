@@ -94,20 +94,7 @@ class LSHW:
         )
 
     def find_storage(self, obj):
-        if "children" in obj:
-            for device in obj["children"]:
-                self.disks.append(
-                    {
-                        "logicalname": device.get("logicalname"),
-                        "product": device.get("product"),
-                        "serial": device.get("serial"),
-                        "version": device.get("version"),
-                        "size": device.get("size"),
-                        "description": device.get("description"),
-                        "type": device.get("description"),
-                    }
-                )
-        elif "driver" in obj["configuration"] and "nvme" in obj["configuration"]["driver"]:
+        if obj.get("configuration") and "driver" in obj["configuration"] and "nvme" in obj["configuration"]["driver"]:
             if not is_tool("nvme"):
                 logging.error("nvme-cli >= 1.0 does not seem to be installed")
                 return
@@ -131,6 +118,20 @@ class LSHW:
                     self.disks.append(d)
             except Exception:
                 pass
+        elif "children" in obj:
+            for device in obj["children"]:
+                if device.get("class") == "disk":
+                    self.disks.append(
+                        {
+                            "logicalname": device.get("logicalname"),
+                            "product": device.get("product"),
+                            "serial": device.get("serial"),
+                            "version": device.get("version"),
+                            "size": device.get("size"),
+                            "description": device.get("description"),
+                            "type": device.get("description"),
+                        }
+                    )
 
     def find_cpus(self, obj):
         if "product" in obj:
