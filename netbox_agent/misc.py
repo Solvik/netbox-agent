@@ -1,3 +1,4 @@
+from contextlib import suppress
 from netbox_agent.config import netbox_instance as nb
 from slugify import slugify
 from shutil import which
@@ -28,15 +29,17 @@ def get_device_type(type):
 
 def get_device_platform(device_platform):
     if device_platform is None:
-        try:
-            linux_distribution = "{name} {version_id} {release_codename}".format(
-                **distro.os_release_info()
-            )
-
-            if not linux_distribution:
-                return None
-        except (ModuleNotFoundError, NameError, AttributeError):
-            return None
+        os_release = distro.os_release_info()
+        # Only `name` is a required field in os-release
+        for template in (
+            "{name} {version_id} {release_codename}",
+            "{name} {version_id}",
+        ):
+            with suppress(KeyError):
+                linux_distribution = template.format(**os_release)
+                break
+        else:
+            linux_distribution = os_release["name"]
     else:
         linux_distribution = device_platform
 
