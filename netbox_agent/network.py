@@ -197,6 +197,12 @@ class Network(object):
             if nic["ethtool"]["port"] in ("FIBRE", "Direct Attach Copper"):
                 return self.dcim_choices["interface:type"]["SFP28 (25GE)"]
 
+        elif max_speed == "5000Mb/s":
+            return self.dcim_choices["interface:type"]["5GBASE-T (5GE)"]
+
+        elif max_speed == "2500Mb/s":
+            return self.dcim_choices["interface:type"]["2.5GBASE-T (2.5GE)"]
+
         elif max_speed == "1000Mb/s":
             if nic["ethtool"]["port"] in ("FIBRE", "Direct Attach Copper"):
                 return self.dcim_choices["interface:type"]["SFP (1GE)"]
