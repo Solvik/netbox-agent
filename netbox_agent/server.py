@@ -3,7 +3,7 @@ from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.hypervisor import Hypervisor
 from netbox_agent.inventory import Inventory
-from netbox_agent.location import Datacenter, Rack, Tenant
+from netbox_agent.location import Datacenter, Rack, Position, Tenant
 from netbox_agent.misc import (
     create_netbox_tags,
     get_device_role,
@@ -123,6 +123,10 @@ class ServerBase:
         rack = Rack()
         return rack.get()
 
+    def get_position(self):
+        position = Position()
+        return position.get()
+
     def get_netbox_rack(self):
         rack = self.get_rack()
         datacenter = self.get_netbox_datacenter()
@@ -136,6 +140,17 @@ class ServerBase:
             name=rack,
             site_id=datacenter.id,
         )
+    def get_netbox_position(self):
+        position = self.get_position()
+        logging.debug("Get_position: {position}".format(position=position))
+        datacenter = self.get_netbox_datacenter()
+        if not position:
+            return None
+        if position and not datacenter:
+            logging.error("Can't get position if no datacenter is configured or found")
+            sys.exit(1)
+
+        return position
 
     def get_product_name(self):
         """
@@ -191,7 +206,7 @@ class ServerBase:
     def get_expansion_product(self):
         raise NotImplementedError
 
-    def _netbox_create_chassis(self, datacenter, tenant, rack):
+    def _netbox_create_chassis(self, datacenter, tenant, rack, position):
         device_type = get_device_type(self.get_chassis())
         device_role = get_device_role(config.device.chassis_role)
         serial = self.get_chassis_service_tag()
@@ -204,12 +219,13 @@ class ServerBase:
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
+            position=position.id if position else None,
             tags=[{"name": x} for x in self.tags],
             custom_fields=self.custom_fields,
         )
         return new_chassis
 
-    def _netbox_create_blade(self, chassis, datacenter, tenant, rack):
+    def _netbox_create_blade(self, chassis, datacenter, tenant, rack, position):
         device_role = get_device_role(config.device.blade_role)
         device_type = get_device_type(self.get_product_name())
         serial = self.get_service_tag()
@@ -267,7 +283,7 @@ class ServerBase:
                 server.serial = serial
                 server.save()
 
-    def _netbox_create_server(self, datacenter, tenant, rack):
+    def _netbox_create_server(self, datacenter, tenant, rack, position):
         device_role = get_device_role(config.device.server_role)
         device_type = get_device_type(self.get_product_name())
         if not device_type:
@@ -288,6 +304,8 @@ class ServerBase:
             site=datacenter.id if datacenter else None,
             tenant=tenant.id if tenant else None,
             rack=rack.id if rack else None,
+            position=position if position else None,
+            face=face if face else "front",
             tags=[{"name": x} for x in self.tags],
         )
         return new_server
@@ -393,6 +411,7 @@ class ServerBase:
         datacenter = self.get_netbox_datacenter()
         rack = self.get_netbox_rack()
         tenant = self.get_netbox_tenant()
+        position = self.get_netbox_position()
 
         if config.update_old_devices:
             self._netbox_deduplicate_server(purge=False)
@@ -404,18 +423,18 @@ class ServerBase:
             chassis = nb.dcim.devices.get(serial=self.get_chassis_service_tag())
             # Chassis does not exist
             if not chassis:
-                chassis = self._netbox_create_chassis(datacenter, tenant, rack)
+                chassis = self._netbox_create_chassis(datacenter, tenant, rack, position)
 
             server = nb.dcim.devices.get(serial=self.get_service_tag())
             if not server:
-                server = self._netbox_create_blade(chassis, datacenter, tenant, rack)
+                server = self._netbox_create_blade(chassis, datacenter, tenant, rack, position)
 
             # Set slot for blade
             self._netbox_set_or_update_blade_slot(server, chassis, datacenter)
         else:
             server = nb.dcim.devices.get(serial=self.get_service_tag())
             if not server:
-                server = self._netbox_create_server(datacenter, tenant, rack)
+                server = self._netbox_create_server(datacenter, tenant, rack, position)
 
         logging.debug("Updating Server...")
         # check network cards
@@ -522,9 +541,11 @@ class ServerBase:
         print("Datacenter:", self.get_datacenter())
         print("Netbox Datacenter:", self.get_netbox_datacenter())
         print("Rack:", self.get_rack())
-        print("Netbox Rack:", self.get_netbox_rack())
+        print("Position:", self.get_position())
         print("Is blade:", self.is_blade())
         print("Got expansion:", self.own_expansion_slot())
+        print("Netbox Rack:", self.get_netbox_rack())
+        print("Netbox Position:", self.get_netbox_position())
         print("Product Name:", self.get_product_name())
         print("Platform:", self.device_platform)
         print("Chassis:", self.get_chassis())
