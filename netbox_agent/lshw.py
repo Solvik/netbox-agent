@@ -82,6 +82,9 @@ class LSHW:
                         unkn_intfs.append(j)
 
         unkn_name = "unknown{}".format(len(unkn_intfs))
+        if len(obj.get("serial", "").split(":")) == 20:
+            # Infiniband GUID, extract MAC
+            obj["serial"] = obj["serial"][:17]
         self.interfaces.append(
             {
                 "name": obj.get("logicalname", unkn_name),
