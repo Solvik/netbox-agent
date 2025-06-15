@@ -279,7 +279,8 @@ class ServerBase:
         device_type = get_device_type(self.get_product_name())
         if not device_type:
             if config.device.autocreate_device_type:
-                
+                device_type_create = _netbox_create_device_type()
+                device_type = get_device_type(self.get_product_name())
             else:
                 raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
         serial = self.get_service_tag()
