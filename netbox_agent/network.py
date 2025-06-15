@@ -659,7 +659,7 @@ class ServerNetwork(Network):
                     switch_ip, nb_switch.id
                 )
             )
-        except KeyError, AttributeError:
+        except (KeyError, AttributeError):
             logging.error(
                 "Switch IP {} is found but not associated to a Netbox Switch Device".format(
                     switch_ip
