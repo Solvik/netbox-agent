@@ -147,6 +147,7 @@ class ServerBase:
         """
         Return the Manufacturer from dmidecode info, and create it if needed
         """
+        print(self.system[0])
         manufacturer = Inventory.find_or_create_manufacturer(self.system[0]["Manufacturer"].strip())
         return manufacturer
 
