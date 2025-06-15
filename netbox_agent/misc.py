@@ -1,9 +1,11 @@
 from contextlib import suppress
+from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from slugify import slugify
 from shutil import which
 import distro
 import subprocess
+import logging
 import socket
 import re
 
@@ -23,7 +25,12 @@ def get_device_role(role):
 def get_device_type(type):
     device_type = nb.dcim.device_types.get(model=type)
     if device_type is None:
-        raise Exception('DeviceType "{}" does not exist, please create it'.format(type))
+        if config.device.autocreate_device_type:
+            logging.info(
+                'DeviceType "{}" does not yet exist, it will be created'.format(type)
+            )
+        else:
+            raise Exception('DeviceType "{}" does not exist, please create it, or set device.autocreate_device_type to true'.format(type))
     return device_type
 
 

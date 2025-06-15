@@ -90,6 +90,7 @@ def get_config():
         "--device.chassis_role", default=r"Server Chassis", help="role to use for a chassis"
     )
     p.add_argument("--device.server_role", default=r"Server", help="role to use for a server")
+    p.add_argument("--device.autocreate_device_type", default=True, help="Define whether a device type should be create when it doesnt exist.")
     p.add_argument("--tenant.driver", help="tenant driver, ie cmd, file")
     p.add_argument("--tenant.driver_file", help="tenant driver custom driver file path")
     p.add_argument("--tenant.regex", help="tenant regex to extract Netbox tenant slug")
