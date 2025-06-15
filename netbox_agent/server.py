@@ -281,6 +281,7 @@ class ServerBase:
             "Creating device type {model}.".format(
                 model=model
             )
+        )
         new_device_type = nb.dcim.devices.create(
             manufacturer = netbox.dcim.manufacturers.get(name=manufacturer).id,
             model = model
