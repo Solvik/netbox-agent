@@ -225,7 +225,7 @@ class ServerBase:
             )
         )
         new_device_type = nb.dcim.devices.create(
-            manufacturer = netbox.dcim.manufacturers.get(name=manufacturer).id,
+            manufacturer = nb.dcim.manufacturers.get(name=manufacturer).id,
             model = model
             )
         return new_device_type
