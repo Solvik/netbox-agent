@@ -143,6 +143,13 @@ class ServerBase:
         """
         return self.system[0]["Product Name"].strip()
 
+    def get_manufacturer(self):
+        """
+        Return the Manufacturer from dmidecode info, and create it if needed
+        """
+        manufacturer = Inventory.find_or_create_manufacturer(self.system[0]["Manufacturer"].strip())
+        return manufacturer
+
     def get_service_tag(self):
         """
         Return the Service Tag from dmidecode info
@@ -271,7 +278,10 @@ class ServerBase:
         device_role = get_device_role(config.device.server_role)
         device_type = get_device_type(self.get_product_name())
         if not device_type:
-            raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
+            if config.device.autocreate_device_type:
+                
+            else:
+                raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
         serial = self.get_service_tag()
         hostname = self.get_hostname()
         logging.info(
@@ -291,6 +301,15 @@ class ServerBase:
             tags=[{"name": x} for x in self.tags],
         )
         return new_server
+
+    def _netbox_create_device_type(self):
+        manufacturer = self.get_manufacturer()
+        model = self.get_product_name()
+        new_device_type = nb.dcim.devices.create(
+            manufacturer = netbox.dcim.manufacturers.get(name=manufacturer).id,
+            model = model
+            )
+        return new_device_type
 
     def get_netbox_server(self, expansion=False):
         if expansion is False:
