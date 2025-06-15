@@ -274,6 +274,19 @@ class ServerBase:
                 server.serial = serial
                 server.save()
 
+    def _netbox_create_device_type(self):
+        manufacturer = self.get_manufacturer()
+        model = self.get_product_name()
+        logging.info(
+            "Creating device type {model}.".format(
+                model=model
+            )
+        new_device_type = nb.dcim.devices.create(
+            manufacturer = netbox.dcim.manufacturers.get(name=manufacturer).id,
+            model = model
+            )
+        return new_device_type
+
     def _netbox_create_server(self, datacenter, tenant, rack):
         device_role = get_device_role(config.device.server_role)
         device_type = get_device_type(self.get_product_name())
@@ -302,15 +315,6 @@ class ServerBase:
             tags=[{"name": x} for x in self.tags],
         )
         return new_server
-
-    def _netbox_create_device_type(self):
-        manufacturer = self.get_manufacturer()
-        model = self.get_product_name()
-        new_device_type = nb.dcim.devices.create(
-            manufacturer = netbox.dcim.manufacturers.get(name=manufacturer).id,
-            model = model
-            )
-        return new_device_type
 
     def get_netbox_server(self, expansion=False):
         if expansion is False:
