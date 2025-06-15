@@ -13,11 +13,11 @@ from netbox_agent.misc import (
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
 from pprint import pprint
+from slugify import slugify
 import subprocess
 import logging
 import socket
 import sys
-
 
 class ServerBase:
     def __init__(self, dmi=None):
@@ -224,9 +224,10 @@ class ServerBase:
                 model=model
             )
         )
-        new_device_type = nb.dcim.devices.create(
+        new_device_type = nb.dcim.device_types.create(
             manufacturer = nb.dcim.manufacturers.get(name=manufacturer).id,
-            model = model
+            model = model,
+            slug=slugify(model)
             )
         return new_device_type
 
