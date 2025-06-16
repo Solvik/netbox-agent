@@ -552,7 +552,7 @@ class Network(object):
                         interface=interface, vrf=config.network.vrf
                     )
                 )
-                vrf = get_vrf_id(config.network.vrf)
+                vrf = self.get_vrf_id(config.network.vrf)
                 interface.vrf = vrf
                 nic_update += 1
 
