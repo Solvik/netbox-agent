@@ -551,7 +551,7 @@ class Network(object):
                 if version.parse(nb.version) < version.parse("4.2"):
                     interface.mac_address = nic["mac"]
                 else:
-                    interface.primary_mac_address = {"mac_address": nic["mac"]}
+                    interface.primary_mac_address = {"mac_address": nic["mac"], "assigned_object_id": interface.id}
                 nic_update += 1
 
             if hasattr(interface, "mtu"):
