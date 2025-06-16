@@ -223,6 +223,13 @@ class Network(object):
             )
         return vlan
 
+    def get_vrf_id(self, vrf_name):
+        vrf = nb.ipam.vrfs.get(name=vrf_name, **self.custom_arg_id)
+        if vrf:
+            return vrf.id
+        else: 
+            return None
+
     def reset_vlan_on_interface(self, nic, interface):
         update = False
         vlan_id = nic["vlan"]
@@ -541,6 +548,16 @@ class Network(object):
                 # Create MAC objects
                 if nic["mac"]:
                     self.update_interface_macs(interface, [nic["mac"]])
+
+            if config.network.vrf and config.network.vrf != str(interface.vrf):
+                logging.info(
+                    "Updating interface {interface} VRF to: {vrf}".format(
+                        interface=interface, vrf=config.network.vrf
+                    )
+                )
+                vrf = self.get_vrf_id(config.network.vrf)
+                interface.vrf = vrf
+                nic_update += 1
 
             if nic["mac"] and nic["mac"] != interface.mac_address:
                 logging.info(
