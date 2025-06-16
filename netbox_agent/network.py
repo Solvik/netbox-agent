@@ -549,7 +549,7 @@ class Network(object):
                 if nic["mac"]:
                     self.update_interface_macs(interface, [nic["mac"]])
 
-            if config.network.vrf and config.network.vrf != interface.vrf:
+            if config.network.vrf and config.network.vrf != str(interface.vrf):
                 logging.info(
                     "Updating interface {interface} VRF to: {vrf}".format(
                         interface=interface, vrf=config.network.vrf
