@@ -223,7 +223,7 @@ class Network(object):
             )
         return vlan
 
-    def get_vrf_id(sef, vrf_name):
+    def get_vrf_id(self, vrf_name):
         vrf_id = self.nb.ipam.vrfs.get(name=vrf_name, **self.custom_arg_id).id
         return vrf_id
 
