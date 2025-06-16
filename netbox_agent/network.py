@@ -224,7 +224,7 @@ class Network(object):
         return vlan
 
     def get_vrf_id(self, vrf_name):
-        vrf_id = self.nb.ipam.vrfs.get(name=vrf_name, **self.custom_arg_id).id
+        vrf_id = nb.ipam.vrfs.get(name=vrf_name, **self.custom_arg_id).id
         return vrf_id
 
     def reset_vlan_on_interface(self, nic, interface):
