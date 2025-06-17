@@ -16,6 +16,20 @@ from netbox_agent.lldp import LLDP
 
 VIRTUAL_NET_FOLDER = Path("/sys/devices/virtual/net")
 
+def _execute_brctl_cmd(interface_name):
+    if not is_tool("brctl"):
+        logging.error(
+            "Brctl does not seem to be present on your system. Add it your path or "
+            "check the compatibility of this project with your distro."
+        )
+        sys.exit(1)
+    return _subprocess.check_output(
+        [
+            "brctl",
+            interface_name
+        ],
+        stderr=_subprocess.PIPE,
+    )
 
 class Network(object):
     def __init__(self, server, *args, **kwargs):
@@ -115,6 +129,12 @@ class Network(object):
                 bonding_slaves = (
                     open("/sys/class/net/{}/bonding/slaves".format(interface)).read().split()
                 )
+
+            bridging = False
+            bridge_parent = []
+            outputbrctl = _execute_brctl_cmd(interface)
+            print("Running brctl")
+            print(outputbrctl)
 
             virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
 
