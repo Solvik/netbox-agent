@@ -152,6 +152,7 @@ class Network(object):
                 bridge_parents = brctl[headers[-1]]
 
             virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
+            parent = None
             if virtual:
                 parent = _execute_basename_cmd(interface)
                 if not parent:
