@@ -194,19 +194,16 @@ class Network(object):
         bridged_nics = (x for x in self.nics if x["bridged"])
         for nic in bridged_nics:
             bridged_int = self.get_netbox_network_card(nic)
-            logging.debug("Setting bridg parent interface for {name}".format(name=bridged_int.name))
+            logging.debug("Setting bridge interface and properties for {name}".format(name=bridged_int.name))
             bridged_int.type = { "value": "bridge", "label": "Bridge"}
-            for parent_num, parent_int in enumerate(
+            for parent_int in (
                 self.get_netbox_network_card(parent_bridge_nic)
                 for parent_bridge_nic in self.nics
                 if parent_bridge_nic["name"] in nic["bridge_parents"]
             ):
-                if parent_num == 0:
-                    # First parent, set the parent interface
-                    bridged_int.parent = parent_int
                 logging.debug(
                     "Setting interface {parent} as a parent of bridge {name}".format(
-                        name=bridged_int.name, master=parent_int.name
+                        name=bridged_int.name, parent=parent_int.name
                     )
                 )
                 parent_int.bridge = bridged_int
