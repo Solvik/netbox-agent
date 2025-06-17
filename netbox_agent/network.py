@@ -143,11 +143,11 @@ class Network(object):
                 # Interface is a bridge
                 bridging = True
                 for spec_line in lineparse_output[1:]:
-                  cleaned_spec_line = spec_line.replace("\t\t\t\t\t\t\t", "\t\t\t\t\t\t")
-                  cleaned_spec_line = cleaned_spec_line.replace("\t\t", "\t").split("\t")
-                  for col, val in enumerate(cleaned_spec_line):
-                    if val:
-                      brctl[headers[col]].append(val)
+                    cleaned_spec_line = spec_line.replace("\t\t\t\t\t\t\t", "\t\t\t\t\t\t")
+                    cleaned_spec_line = cleaned_spec_line.replace("\t\t", "\t").split("\t")
+                    for col, val in enumerate(cleaned_spec_line):
+                        if val:
+                            brctl[headers[col]].append(val)
 
                 bridge_parents = brctl[headers[-1]]
 
