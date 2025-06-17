@@ -31,7 +31,10 @@ def _execute_brctl_cmd(interface_name):
             )
 
 def _execute_basename_cmd(interface_name):
-    parent_int = os.path.basename(glob.glob("/sys/class/net/" + str(interface_name) + "/lower_*")).split("_")[1]
+    parent_int = None
+    parent_list = glob.glob("/sys/class/net/" + str(interface_name) + "/lower_*")
+    if len(parent_list)>0:
+        parent_int = os.path.basename(parent_list[0]).split("_")[1]
     return parent_int
 
 class Network(object):
@@ -649,7 +652,9 @@ class Network(object):
                 logging.info(
                     "Interface parent is wrong, updating to: {parent}".format(parent=nic["parent"])
                 )
-                int_parent = self.get_netbox_network_card(nic["parent"])
+                nic_parent = { self.get_netbox_network_card(parent_bridge_nic) for parent_bridge_nic in self.nics 
+                               if parent_bridge_nic["name"] in nic["bridge_parents"] } [0]
+                int_parent = self.get_netbox_network_card(nic_parent)
                 interface.parent = {"name": int_parent.name, "id": int_parent.id}
                 nic_update += 1
 
