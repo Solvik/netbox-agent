@@ -1,10 +1,13 @@
 import logging
 import os
 import re
+import glob
+import sys 
 from itertools import chain, islice
 from pathlib import Path
 
 import netifaces
+import subprocess
 from netaddr import IPAddress
 from packaging import version
 
@@ -13,9 +16,27 @@ from netbox_agent.config import netbox_instance as nb
 from netbox_agent.ethtool import Ethtool
 from netbox_agent.ipmi import IPMI
 from netbox_agent.lldp import LLDP
+from netbox_agent.misc import is_tool
 
 VIRTUAL_NET_FOLDER = Path("/sys/devices/virtual/net")
 
+def _execute_brctl_cmd(interface_name):
+    if not is_tool("brctl"):
+        logging.error(
+            "Brctl does not seem to be present on your system. Add it your path or "
+            "check the compatibility of this project with your distro."
+        )
+        sys.exit(1)
+    return subprocess.getoutput(
+            "brctl show " + str(interface_name)
+            )
+
+def _execute_basename_cmd(interface_name):
+    parent_int = None
+    parent_list = glob.glob("/sys/class/net/" + str(interface_name) + "/lower_*")
+    if len(parent_list)>0:
+        parent_int = os.path.basename(parent_list[0]).split("_")[1]
+    return parent_int
 
 class Network(object):
     def __init__(self, server, *args, **kwargs):
@@ -108,16 +129,41 @@ class Network(object):
             if len(interface.split(".")) > 1:
                 vlan = int(interface.split(".")[1])
 
+            virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
+
             bonding = False
             bonding_slaves = []
             if os.path.isdir("/sys/class/net/{}/bonding".format(interface)):
                 bonding = True
+                virtual = False
                 bonding_slaves = (
                     open("/sys/class/net/{}/bonding/slaves".format(interface)).read().split()
                 )
 
-            virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
+            bridging = False
+            bridge_parents = []
+            outputbrctl = _execute_brctl_cmd(interface)
+            lineparse_output = outputbrctl.splitlines()
+            if len(lineparse_output)>1:
+                headers = lineparse_output[0].replace("\t\t", "\t").split("\t")
+                brctl = dict((key, []) for key in headers)
+                # Interface is a bridge
+                bridging = True
+                virtual = False
+                for spec_line in lineparse_output[1:]:
+                    cleaned_spec_line = spec_line.replace("\t\t\t\t\t\t\t", "\t\t\t\t\t\t")
+                    cleaned_spec_line = cleaned_spec_line.replace("\t\t", "\t").split("\t")
+                    for col, val in enumerate(cleaned_spec_line):
+                        if val:
+                            brctl[headers[col]].append(val)
 
+                bridge_parents = brctl[headers[-1]]
+
+            parent = None
+            if virtual:
+                parent = _execute_basename_cmd(interface)
+                if not parent:
+                    parent = None
             nic = {
                 "name": interface,
                 "mac": mac,
@@ -132,6 +178,9 @@ class Network(object):
                 "mtu": mtu,
                 "bonding": bonding,
                 "bonding_slaves": bonding_slaves,
+                "parent": parent,
+                "bridged": bridging,
+                "bridge_parents": bridge_parents
             }
             nics.append(nic)
         return nics
@@ -158,6 +207,30 @@ class Network(object):
             return False
         return True
 
+    def _set_bridged_interfaces(self):
+        bridged_nics = (x for x in self.nics if x["bridged"])
+        for nic in bridged_nics:
+            bridged_int = self.get_netbox_network_card(nic)
+            logging.debug("Setting bridge interface and properties for {name}".format(name=bridged_int.name))
+            bridged_int.type = "bridge"
+            for parent_int in (
+                self.get_netbox_network_card(parent_bridge_nic)
+                for parent_bridge_nic in self.nics
+                if parent_bridge_nic["name"] in nic["bridge_parents"]
+            ):
+                logging.debug(
+                    "Setting interface {parent} as a bridge to {name}".format(
+                        name=bridged_int.name, parent=parent_int.name
+                    )
+                )
+                parent_int.bridge = bridged_int
+                parent_int.save()
+            bridged_int.bridge = {"name": parent_int.name, "id": parent_int.id} 
+            bridged_int.save()
+        else:
+            return False
+        return True
+
     def get_network_cards(self):
         return self.nics
 
@@ -180,6 +253,9 @@ class Network(object):
 
         if nic.get("virtual"):
             return self.dcim_choices["interface:type"]["Virtual"]
+
+        if nic.get("bridge"):
+            return self.dcim_choices["interface:type"]["Bridge"]
 
         if nic.get("ethtool") is None:
             return self.dcim_choices["interface:type"]["Other"]
@@ -373,10 +449,11 @@ class Network(object):
                     switch_ip, switch_interface, interface
                 )
                 if nic_update:
+                    logging.debug("Saving changes to interface {interface}".format(interface=interface))
                     interface.save()
         return interface
 
-    def create_or_update_netbox_ip_on_interface(self, ip, interface):
+    def create_or_update_netbox_ip_on_interface(self, ip, interface, vrf):
         """
         Two behaviors:
         - Anycast IP
@@ -399,6 +476,8 @@ class Network(object):
                 "status": "active",
                 "assigned_object_type": self.assigned_object_type,
                 "assigned_object_id": interface.id,
+                "vrf": vrf,
+                "status": config.network.status,
             }
 
             netbox_ip = nb.ipam.ip_addresses.create(**query_params)
@@ -417,6 +496,8 @@ class Network(object):
                 logging.info("Assigning existing Anycast IP {} to interface".format(ip))
                 netbox_ip = unassigned_anycast_ip[0]
                 netbox_ip.interface = interface
+                netbox_ip.vrf = vrf
+                netbox_ip.status = config.network.status
                 netbox_ip.save()
             # or if everything is assigned to other servers
             elif not len(assigned_anycast_ip):
@@ -428,6 +509,8 @@ class Network(object):
                     "tenant": self.tenant.id if self.tenant else None,
                     "assigned_object_type": self.assigned_object_type,
                     "assigned_object_id": interface.id,
+                    "vrf": vrf,
+                    "status": config.network.status,
                 }
                 netbox_ip = nb.ipam.ip_addresses.create(**query_params)
             return netbox_ip
@@ -455,6 +538,8 @@ class Network(object):
 
             netbox_ip.assigned_object_type = self.assigned_object_type
             netbox_ip.assigned_object_id = interface.id
+            netbox_ip.vrf = vrf
+            netbox_ip.status = config.network.status
             netbox_ip.save()
 
     def _nic_identifier(self, nic):
@@ -520,7 +605,8 @@ class Network(object):
                     netbox_ip.assigned_object_id = None
                     netbox_ip.save()
 
-        # update each nic
+        # create each nic
+        interfaces = []
         for nic in self.nics:
             interface = self.get_netbox_network_card(nic)
 
@@ -529,7 +615,11 @@ class Network(object):
                     "Interface {nic} not found, creating..".format(nic=self._nic_identifier(nic))
                 )
                 interface = self.create_netbox_nic(nic)
+            interfaces.append(interface)
 
+        #restart loop once everything has been create for updates
+        for index, nic in enumerate(self.nics):
+            interface = interfaces[index]
             nic_update = 0
 
             ret, interface = self.reset_vlan_on_interface(nic, interface)
@@ -549,6 +639,7 @@ class Network(object):
                 if nic["mac"]:
                     self.update_interface_macs(interface, [nic["mac"]])
 
+            vrf = None
             if config.network.vrf and config.network.vrf != str(interface.vrf):
                 logging.info(
                     "Updating interface {interface} VRF to: {vrf}".format(
@@ -577,6 +668,19 @@ class Network(object):
                         "Interface mtu is wrong, updating to: {mtu}".format(mtu=nic["mtu"])
                     )
                     interface.mtu = nic["mtu"]
+                    nic_update += 1
+
+            if hasattr(interface, "virtual"):
+                if nic["virtual"] and nic["parent"] and nic["parent"] != interface.parent:
+                    logging.info(
+                        "Interface parent is wrong, updating to: {parent}".format(parent=nic["parent"])
+                    )
+                    for parent_nic in self.nics :
+                        if parent_nic["name"] in nic["parent"]:
+                            nic_parent = self.get_netbox_network_card(parent_nic)
+                            break
+                    int_parent = self.get_netbox_network_card(nic_parent)
+                    interface.parent = {"name": int_parent.name, "id": int_parent.id}
                     nic_update += 1
 
             if not isinstance(self, VirtualNetwork) and nic.get("ethtool"):
@@ -624,11 +728,12 @@ class Network(object):
             if nic["ip"]:
                 # sync local IPs
                 for ip in nic["ip"]:
-                    self.create_or_update_netbox_ip_on_interface(ip, interface)
+                    self.create_or_update_netbox_ip_on_interface(ip, interface, vrf)
             if nic_update > 0:
                 interface.save()
 
         self._set_bonding_interfaces()
+        self._set_bridged_interfaces()
         logging.debug("Finished updating NIC!")
 
 
