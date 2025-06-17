@@ -31,7 +31,7 @@ def _execute_brctl_cmd(interface_name):
 
 def _execute_basename_cmd(interface_name):
     return subprocess.getoutput(
-            'echo $(basename $(readlink /sys/class/net/' + str(interface_name) + '/lower_*))'
+            ['echo', '$(basename $(readlink /sys/class/net/' + str(interface_name) + '/lower_*))']
             )
 
 class Network(object):
@@ -218,7 +218,7 @@ class Network(object):
                 )
                 parent_int.bridge = bridged_int
                 parent_int.save()
-            bridged_int.bridge = parent_int
+            bridged_int.bridge = {"name": parent_int.name, "id": parent_int.id} 
             bridged_int.save()
         else:
             return False
@@ -649,7 +649,7 @@ class Network(object):
                 logging.info(
                     "Interface parent is wrong, updating to: {parent}".format(parent=nic["parent"])
                 )
-                int_parent = get_netbox_network_card(nic["parent"])
+                int_parent = self.get_netbox_network_card(nic["parent"])
                 interface.parent = {"name": int_parent.name, "id": int_parent.id}
                 nic_update += 1
 
