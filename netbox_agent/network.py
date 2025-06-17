@@ -31,7 +31,7 @@ def _execute_brctl_cmd(interface_name):
 
 def _execute_basename_cmd(interface_name):
     return subprocess.getoutput(
-            "echo $(basename $(readlink /sys/class/net/"+ str(interface_name) + "/lower_*))"
+            'echo $(basename $(readlink /sys/class/net/' + str(interface_name) + '/lower_*))'
             )
 
 class Network(object):
@@ -212,12 +212,13 @@ class Network(object):
                 if parent_bridge_nic["name"] in nic["bridge_parents"]
             ):
                 logging.debug(
-                    "Setting interface {parent} as a parent of bridge {name}".format(
+                    "Setting interface {parent} as a bridge to {name}".format(
                         name=bridged_int.name, parent=parent_int.name
                     )
                 )
                 parent_int.bridge = bridged_int
                 parent_int.save()
+            bridged_int.bridge = parent_int
             bridged_int.save()
         else:
             return False
@@ -644,14 +645,13 @@ class Network(object):
                     interface.mtu = nic["mtu"]
                     nic_update += 1
 
-            if hasattr(interface, "parent") and interface.parent is not None:
-                if nic["parent"] != interface.parent:
-                    logging.info(
-                        "Interface parent is wrong, updating to: {parent}".format(parent=nic["parent"])
-                    )
-                    int_parent = get_netbox_network_card(interface.parent)
-                    interface.parent = {"name": int_parent.name, "id": int_parent.id}
-                    nic_update += 1
+            if nic["parent"] and nic["parent"] != interface.parent:
+                logging.info(
+                    "Interface parent is wrong, updating to: {parent}".format(parent=nic["parent"])
+                )
+                int_parent = get_netbox_network_card(nic["parent"])
+                interface.parent = {"name": int_parent.name, "id": int_parent.id}
+                nic_update += 1
 
             if not isinstance(self, VirtualNetwork) and nic.get("ethtool"):
                 if (
