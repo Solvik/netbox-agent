@@ -31,7 +31,7 @@ def _execute_brctl_cmd(interface_name):
 
 def _execute_basename_cmd(interface_name):
     return subprocess.getoutput(
-            "echo $(basename $(readlink /sys/class/net/"+ str(interface_name) + "/lower_*))
+            "echo $(basename $(readlink /sys/class/net/"+ str(interface_name) + "/lower_*))"
             )
 
 class Network(object):
@@ -138,18 +138,18 @@ class Network(object):
             outputbrctl = _execute_brctl_cmd(interface)
             lineparse_output = outputbrctl.splitlines()
             if len(lineparse_output)>1:
-              headers = lineparse_output[0].replace("\t\t", "\t").split("\t")
-              brctl = dict((key, []) for key in headers)
-              # Interface is a bridge
-              bridging = True
-              for spec_line in lineparse_output[1:]:
-                cleaned_spec_line = spec_line.replace("\t\t\t\t\t\t\t", "\t\t\t\t\t\t")
-                cleaned_spec_line = cleaned_spec_line.replace("\t\t", "\t").split("\t")
-                for col, val in enumerate(cleaned_spec_line):
-                  if val:
-                    brctl[headers[col]].append(val)
+                headers = lineparse_output[0].replace("\t\t", "\t").split("\t")
+                brctl = dict((key, []) for key in headers)
+                # Interface is a bridge
+                bridging = True
+                for spec_line in lineparse_output[1:]:
+                  cleaned_spec_line = spec_line.replace("\t\t\t\t\t\t\t", "\t\t\t\t\t\t")
+                  cleaned_spec_line = cleaned_spec_line.replace("\t\t", "\t").split("\t")
+                  for col, val in enumerate(cleaned_spec_line):
+                    if val:
+                      brctl[headers[col]].append(val)
 
-              bridge_parents = brctl[headers[-1]]
+                bridge_parents = brctl[headers[-1]]
 
             virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
                 if virtual:
