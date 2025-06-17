@@ -29,6 +29,11 @@ def _execute_brctl_cmd(interface_name):
             "brctl show " + str(interface_name)
             )
 
+def _execute_basename_cmd(interface_name):
+    return subprocess.getoutput(
+            "echo $(basename $(readlink /sys/class/net/"+ str(interface_name) + "/lower_*))
+            )
+
 class Network(object):
     def __init__(self, server, *args, **kwargs):
         self.nics = []
@@ -147,7 +152,10 @@ class Network(object):
               bridge_parents = brctl[headers[-1]]
 
             virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
-
+                if virtual:
+                    parent = _execute_basename_cmd(interface)
+                    if not parent:
+                        parent = None
             nic = {
                 "name": interface,
                 "mac": mac,
@@ -162,6 +170,7 @@ class Network(object):
                 "mtu": mtu,
                 "bonding": bonding,
                 "bonding_slaves": bonding_slaves,
+                "parent": parent,
                 "bridged": bridging,
                 "bridge_parents": bridge_parents
             }
@@ -195,7 +204,7 @@ class Network(object):
         for nic in bridged_nics:
             bridged_int = self.get_netbox_network_card(nic)
             logging.debug("Setting bridge interface and properties for {name}".format(name=bridged_int.name))
-            bridged_int.type = { "value": "bridge", "label": "Bridge"}
+            bridged_int.type = "bridge"
             for parent_int in (
                 self.get_netbox_network_card(parent_bridge_nic)
                 for parent_bridge_nic in self.nics
@@ -632,6 +641,15 @@ class Network(object):
                         "Interface mtu is wrong, updating to: {mtu}".format(mtu=nic["mtu"])
                     )
                     interface.mtu = nic["mtu"]
+                    nic_update += 1
+
+            if hasattr(interface, "parent") and interface.parent is not None:
+                if nic["parent"] != interface.parent:
+                    logging.info(
+                        "Interface parent is wrong, updating to: {parent}".format(parent=nic["parent"])
+                    )
+                    int_parent = get_netbox_network_card(interface.parent)
+                    interface.parent = {"name": int_parent.name, "id": int_parent.id}
                     nic_update += 1
 
             if not isinstance(self, VirtualNetwork) and nic.get("ethtool"):
