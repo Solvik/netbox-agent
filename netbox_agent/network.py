@@ -152,10 +152,10 @@ class Network(object):
                 bridge_parents = brctl[headers[-1]]
 
             virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
-                if virtual:
-                    parent = _execute_basename_cmd(interface)
-                    if not parent:
-                        parent = None
+            if virtual:
+                parent = _execute_basename_cmd(interface)
+                if not parent:
+                    parent = None
             nic = {
                 "name": interface,
                 "mac": mac,
