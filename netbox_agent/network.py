@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import glob
 from itertools import chain, islice
 from pathlib import Path
 
@@ -30,9 +31,8 @@ def _execute_brctl_cmd(interface_name):
             )
 
 def _execute_basename_cmd(interface_name):
-    return subprocess.getoutput(
-            ['echo', '$(basename $(readlink /sys/class/net/' + str(interface_name) + '/lower_*))']
-            )
+    parent_int = os.path.basename(glob.glob("/sys/class/net/" + str(interface_name) + "/lower_*")).split("_")[1]
+    return parent_int
 
 class Network(object):
     def __init__(self, server, *args, **kwargs):
