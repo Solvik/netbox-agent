@@ -13,6 +13,7 @@ from netbox_agent.config import netbox_instance as nb
 from netbox_agent.ethtool import Ethtool
 from netbox_agent.ipmi import IPMI
 from netbox_agent.lldp import LLDP
+from netbox_agent.misc import is_tool
 
 VIRTUAL_NET_FOLDER = Path("/sys/devices/virtual/net")
 
