@@ -652,8 +652,10 @@ class Network(object):
                 logging.info(
                     "Interface parent is wrong, updating to: {parent}".format(parent=nic["parent"])
                 )
-                nic_parent = { self.get_netbox_network_card(parent_bridge_nic) for parent_bridge_nic in self.nics 
-                               if parent_bridge_nic["name"] in nic["bridge_parents"] } [0]
+                for parent_nic in self.nics :
+                    if parent_nic["name"] in nic["parent"]
+                        nic_parent = self.get_netbox_network_card(parent_nic)
+                        break
                 int_parent = self.get_netbox_network_card(nic_parent)
                 interface.parent = {"name": int_parent.name, "id": int_parent.id}
                 nic_update += 1
