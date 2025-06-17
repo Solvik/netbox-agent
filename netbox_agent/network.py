@@ -26,12 +26,8 @@ def _execute_brctl_cmd(interface_name):
         )
         sys.exit(1)
     return subprocess.getoutput(
-        [
-            "brctl",
-            interface_name
-        ],
-        stderr=_subprocess.PIPE,
-    )
+            "brctl show " + str(interface_name)
+            )
 
 class Network(object):
     def __init__(self, server, *args, **kwargs):
@@ -133,10 +129,22 @@ class Network(object):
                 )
 
             bridging = False
-            bridge_parent = []
+            bridge_parents = []
             outputbrctl = _execute_brctl_cmd(interface)
-            print("Running brctl")
-            print(outputbrctl)
+            lineparse_output = outputbrctl.splitlines()
+            if len(lineparse_output)>1:
+              headers = lineparse_output[0].replace("\t\t", "\t").split("\t")
+              brctl = dict((key, []) for key in headers)
+              # Interface is a bridge
+              bridging = True
+              for spec_line in lineparse_output[1:]:
+                cleaned_spec_line = spec_line.replace("\t\t\t\t\t\t\t", "\t\t\t\t\t\t")
+                cleaned_spec_line = cleaned_spec_line.replace("\t\t", "\t").split("\t")
+                for col, val in enumerate(cleaned_spec_line):
+                  if val:
+                    brctl[headers[col]].append(val)
+
+              bridge_parents = brctl[headers[-1]]
 
             virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
 
@@ -154,6 +162,8 @@ class Network(object):
                 "mtu": mtu,
                 "bonding": bonding,
                 "bonding_slaves": bonding_slaves,
+                "bridged": bridging,
+                "bridge_parents": bridge_parents
             }
             nics.append(nic)
         return nics
@@ -176,6 +186,32 @@ class Network(object):
                     )
                     slave_int.lag = bond_int
                     slave_int.save()
+        else:
+            return False
+        return True
+
+    def _set_bridged_interfaces(self):
+        bridged_nics = (x for x in self.nics if x["bridged"])
+        for nic in bridged_nics:
+            bridged_int = self.get_netbox_network_card(nic)
+            logging.debug("Setting bridg parent interface for {name}".format(name=bridged_int.name))
+            bridged_int.type = { "value": "bridge", "label": "Bridge"}
+            for parent_num, parent_int in enumerate(
+                self.get_netbox_network_card(parent_bridge_nic)
+                for parent_bridge_nic in self.nics
+                if parent_bridge_nic["name"] in nic["bridge_parents"]
+            ):
+                if parent_num == 0:
+                    # First parent, set the parent interface
+                    bridged_int.parent = parent_int
+                logging.debug(
+                    "Setting interface {parent} as a parent of bridge {name}".format(
+                        name=bridged_int.name, master=parent_int.name
+                    )
+                )
+                parent_int.bridge = bridged_int
+                parent_int.save()
+            bridged_int.save()
         else:
             return False
         return True
@@ -651,6 +687,7 @@ class Network(object):
                 interface.save()
 
         self._set_bonding_interfaces()
+        self._set_bridged_interfaces()
         logging.debug("Finished updating NIC!")
 
 
