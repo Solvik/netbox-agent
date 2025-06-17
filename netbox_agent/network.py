@@ -5,6 +5,7 @@ from itertools import chain, islice
 from pathlib import Path
 
 import netifaces
+import subprocess
 from netaddr import IPAddress
 from packaging import version
 
@@ -24,7 +25,7 @@ def _execute_brctl_cmd(interface_name):
             "check the compatibility of this project with your distro."
         )
         sys.exit(1)
-    return _subprocess.check_output(
+    return subprocess.getoutput(
         [
             "brctl",
             interface_name
