@@ -136,6 +136,8 @@ class Network(object):
                     open("/sys/class/net/{}/bonding/slaves".format(interface)).read().split()
                 )
 
+            virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
+
             bridging = False
             bridge_parents = []
             outputbrctl = _execute_brctl_cmd(interface)
@@ -145,6 +147,7 @@ class Network(object):
                 brctl = dict((key, []) for key in headers)
                 # Interface is a bridge
                 bridging = True
+                virtual = False
                 for spec_line in lineparse_output[1:]:
                     cleaned_spec_line = spec_line.replace("\t\t\t\t\t\t\t", "\t\t\t\t\t\t")
                     cleaned_spec_line = cleaned_spec_line.replace("\t\t", "\t").split("\t")
@@ -154,7 +157,6 @@ class Network(object):
 
                 bridge_parents = brctl[headers[-1]]
 
-            virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
             parent = None
             if virtual:
                 parent = _execute_basename_cmd(interface)
@@ -648,12 +650,12 @@ class Network(object):
                     interface.mtu = nic["mtu"]
                     nic_update += 1
 
-            if nic["parent"] and nic["parent"] != interface.parent:
+            if nic["virtual"] and nic["parent"] and nic["parent"] != interface.parent:
                 logging.info(
                     "Interface parent is wrong, updating to: {parent}".format(parent=nic["parent"])
                 )
                 for parent_nic in self.nics :
-                    if parent_nic["name"] in nic["parent"]
+                    if parent_nic["name"] in nic["parent"]:
                         nic_parent = self.get_netbox_network_card(parent_nic)
                         break
                 int_parent = self.get_netbox_network_card(nic_parent)
