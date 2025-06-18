@@ -600,7 +600,7 @@ class Network(object):
                     netbox_ip.assigned_object_id = None
                     netbox_ip.save()
 
-        # update each nic
+        # create each nic
         for nic in self.nics:
             interface = self.get_netbox_network_card(nic)
 
@@ -610,6 +610,8 @@ class Network(object):
                 )
                 interface = self.create_netbox_nic(nic)
 
+        #restart loop once everything has been create for updates
+        for nic in self.nics:
             nic_update = 0
 
             ret, interface = self.reset_vlan_on_interface(nic, interface)
@@ -666,6 +668,8 @@ class Network(object):
                 )
                 for parent_nic in self.nics :
                     if parent_nic["name"] in nic["parent"]:
+                        print(parent_nic.name)
+                        print(parent_nic)
                         nic_parent = self.get_netbox_network_card(parent_nic)
                         break
                 int_parent = self.get_netbox_network_card(nic_parent)
