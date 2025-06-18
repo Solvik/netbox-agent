@@ -129,15 +129,16 @@ class Network(object):
             if len(interface.split(".")) > 1:
                 vlan = int(interface.split(".")[1])
 
+            virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
+
             bonding = False
             bonding_slaves = []
             if os.path.isdir("/sys/class/net/{}/bonding".format(interface)):
                 bonding = True
+                virtual = False
                 bonding_slaves = (
                     open("/sys/class/net/{}/bonding/slaves".format(interface)).read().split()
                 )
-
-            virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
 
             bridging = False
             bridge_parents = []
@@ -252,6 +253,9 @@ class Network(object):
 
         if nic.get("virtual"):
             return self.dcim_choices["interface:type"]["Virtual"]
+
+        if nic.get("bridge"):
+            return self.dcim_choices["interface:type"]["Bridge"]
 
         if nic.get("ethtool") is None:
             return self.dcim_choices["interface:type"]["Other"]
@@ -445,6 +449,7 @@ class Network(object):
                     switch_ip, switch_interface, interface
                 )
                 if nic_update:
+                    logging.debug("Saving changes to interface {interface}".format(interface=interface))
                     interface.save()
         return interface
 
@@ -601,6 +606,7 @@ class Network(object):
                     netbox_ip.save()
 
         # create each nic
+        interfaces = []
         for nic in self.nics:
             interface = self.get_netbox_network_card(nic)
 
@@ -609,9 +615,10 @@ class Network(object):
                     "Interface {nic} not found, creating..".format(nic=self._nic_identifier(nic))
                 )
                 interface = self.create_netbox_nic(nic)
+            interfaces.append(interface)
 
         #restart loop once everything has been create for updates
-        for nic in self.nics:
+        for interface in interfaces:
             nic_update = 0
 
             ret, interface = self.reset_vlan_on_interface(nic, interface)
@@ -668,8 +675,6 @@ class Network(object):
                 )
                 for parent_nic in self.nics :
                     if parent_nic["name"] in nic["parent"]:
-                        print(parent_nic.name)
-                        print(parent_nic)
                         nic_parent = self.get_netbox_network_card(parent_nic)
                         break
                 int_parent = self.get_netbox_network_card(nic_parent)
