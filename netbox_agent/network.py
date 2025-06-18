@@ -478,7 +478,7 @@ class Network(object):
                 "assigned_object_id": interface.id,
                 "vrf": vrf,
                 "status": config.network.status,
-                "dns_name": get_fqdn(),
+                "dns_name": get_fqdn(config),
             }
 
             netbox_ip = nb.ipam.ip_addresses.create(**query_params)
@@ -498,7 +498,7 @@ class Network(object):
                 netbox_ip = unassigned_anycast_ip[0]
                 netbox_ip.interface = interface
                 netbox_ip.vrf = vrf
-                netbox_ip.dns_name = get_fqdn()
+                netbox_ip.dns_name = get_fqdn(config)
                 netbox_ip.status = config.network.status
                 netbox_ip.save()
             # or if everything is assigned to other servers
@@ -513,7 +513,7 @@ class Network(object):
                     "assigned_object_id": interface.id,
                     "vrf": vrf,
                     "status": config.network.status,
-                    "dns_name": get_fqdn,
+                    "dns_name": get_fqdn(config),
                 }
                 netbox_ip = nb.ipam.ip_addresses.create(**query_params)
             return netbox_ip
@@ -542,7 +542,7 @@ class Network(object):
             netbox_ip.assigned_object_type = self.assigned_object_type
             netbox_ip.assigned_object_id = interface.id
             netbox_ip.vrf = vrf
-            netbox_ip.dns_name = get_fqdn()
+            netbox_ip.dns_name = get_fqdn(config)
             netbox_ip.status = config.network.status
             netbox_ip.save()
 
