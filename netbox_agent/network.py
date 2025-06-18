@@ -618,7 +618,8 @@ class Network(object):
             interfaces.append(interface)
 
         #restart loop once everything has been create for updates
-        for interface in interfaces:
+        for index, nic in enumerate(self.nics):
+            interface = interfaces[index]
             nic_update = 0
 
             ret, interface = self.reset_vlan_on_interface(nic, interface)
