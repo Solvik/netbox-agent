@@ -208,9 +208,6 @@ class Network(object):
         return True
 
     def _set_bridged_interfaces(self):
-        for runner in self.nics:
-            print(runner["name"])
-            print(runner["bridged"])
         bridged_nics = (x for x in self.nics if x["bridged"])
         for nic in bridged_nics:
             bridged_int = self.get_netbox_network_card(nic)
