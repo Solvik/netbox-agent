@@ -542,6 +542,7 @@ class Network(object):
             netbox_ip.assigned_object_type = self.assigned_object_type
             netbox_ip.assigned_object_id = interface.id
             netbox_ip.vrf = vrf
+            netbox_ip.dns_name = get_fqdn()
             netbox_ip.status = config.network.status
             netbox_ip.save()
 
