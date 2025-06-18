@@ -70,6 +70,11 @@ def get_config():
         help="Command to output hostname, used as Device's name in netbox",
     )
     p.add_argument(
+        "--fqdn_cmd",
+        default=None,
+        help="Command to output fully qualified domain name, used as Device's DNS name in netbox",
+    )
+    p.add_argument(
         "--device.platform",
         default=None,
         help="Override device platform. Here we use OS distribution.",
