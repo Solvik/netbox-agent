@@ -90,7 +90,7 @@ def get_hostname(config):
 
 def get_fqdn(config):
     if config.fqdn_cmd is None:
-        return "{}".format(socket.socket.getfqdn())
+        return "{}".format(socket.getfqdn())
     return subprocess.getoutput(config.fqdn_cmd)
 
 def create_netbox_tags(tags):
