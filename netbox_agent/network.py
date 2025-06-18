@@ -498,6 +498,7 @@ class Network(object):
                 netbox_ip = unassigned_anycast_ip[0]
                 netbox_ip.interface = interface
                 netbox_ip.vrf = vrf
+                netbox_ip.dns_name = get_fqdn()
                 netbox_ip.status = config.network.status
                 netbox_ip.save()
             # or if everything is assigned to other servers
