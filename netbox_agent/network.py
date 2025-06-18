@@ -447,7 +447,7 @@ class Network(object):
                     interface.save()
         return interface
 
-    def create_or_update_netbox_ip_on_interface(self, ip, interface):
+    def create_or_update_netbox_ip_on_interface(self, ip, interface, vrf):
         """
         Two behaviors:
         - Anycast IP
@@ -470,6 +470,7 @@ class Network(object):
                 "status": "active",
                 "assigned_object_type": self.assigned_object_type,
                 "assigned_object_id": interface.id,
+                "vrf": vrf,
             }
 
             netbox_ip = nb.ipam.ip_addresses.create(**query_params)
@@ -488,6 +489,7 @@ class Network(object):
                 logging.info("Assigning existing Anycast IP {} to interface".format(ip))
                 netbox_ip = unassigned_anycast_ip[0]
                 netbox_ip.interface = interface
+                netbox_ip.vrf = vrf
                 netbox_ip.save()
             # or if everything is assigned to other servers
             elif not len(assigned_anycast_ip):
@@ -499,6 +501,7 @@ class Network(object):
                     "tenant": self.tenant.id if self.tenant else None,
                     "assigned_object_type": self.assigned_object_type,
                     "assigned_object_id": interface.id,
+                    "vrf": vrf,
                 }
                 netbox_ip = nb.ipam.ip_addresses.create(**query_params)
             return netbox_ip
@@ -526,6 +529,7 @@ class Network(object):
 
             netbox_ip.assigned_object_type = self.assigned_object_type
             netbox_ip.assigned_object_id = interface.id
+            netbox_ip.vrf = vrf
             netbox_ip.save()
 
     def _nic_identifier(self, nic):
@@ -620,6 +624,7 @@ class Network(object):
                 if nic["mac"]:
                     self.update_interface_macs(interface, [nic["mac"]])
 
+            vrf = None
             if config.network.vrf and config.network.vrf != str(interface.vrf):
                 logging.info(
                     "Updating interface {interface} VRF to: {vrf}".format(
@@ -707,7 +712,7 @@ class Network(object):
             if nic["ip"]:
                 # sync local IPs
                 for ip in nic["ip"]:
-                    self.create_or_update_netbox_ip_on_interface(ip, interface)
+                    self.create_or_update_netbox_ip_on_interface(ip, interface, vrf)
             if nic_update > 0:
                 interface.save()
 
