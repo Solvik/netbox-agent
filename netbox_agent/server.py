@@ -568,9 +568,22 @@ class ServerBase:
         myips = nb.ipam.ip_addresses.filter(device_id=server.id)
         update = 0
 
+        # Deal with IPMI
         for ip in myips:
             if ip.assigned_object.display == "IPMI" and ip != server.oob_ip:
                 server.oob_ip = ip.id
+                update += 1
+                break
+        # Deal with iPV4
+        for ip in myips:
+            if ip.family.value == 4 and ip != server.primary_ip4:
+                server.primary_ip4 = ip.id
+                update += 1
+                break
+        # Deal with iPV6
+        for ip in myips:
+            if ip.family.value == 6 and ip != server.primary_ip6:
+                server.primary_ip6 = ip.id
                 update += 1
                 break
 
