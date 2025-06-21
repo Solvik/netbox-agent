@@ -675,7 +675,7 @@ class Network(object):
                     interface.mtu = nic["mtu"]
                     nic_update += 1
 
-            if hasattr(interface, "virtual"):
+            try:
                 if nic["virtual"] and nic["parent"] and nic["parent"] != interface.parent:
                     logging.info(
                         "Interface parent is wrong, updating to: {parent}".format(parent=nic["parent"])
@@ -687,6 +687,8 @@ class Network(object):
                     int_parent = self.get_netbox_network_card(nic_parent)
                     interface.parent = {"name": int_parent.name, "id": int_parent.id}
                     nic_update += 1
+            except:
+                print("Failed to set parent interface {parent} for {nic}".format(parent=nic["parent"],nic=nic['name']))
 
             if not isinstance(self, VirtualNetwork) and nic.get("ethtool"):
                 if (
