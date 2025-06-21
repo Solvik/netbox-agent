@@ -688,7 +688,7 @@ class Network(object):
                     interface.parent = {"name": int_parent.name, "id": int_parent.id}
                     nic_update += 1
             except:
-                print("Failed to set parent interface {parent} for {nic}".format(parent=nic["parent"],nic=nic['name']))
+                print("Failed to set parent interface for {nic}".format(nic=nic['name']))
 
             if not isinstance(self, VirtualNetwork) and nic.get("ethtool"):
                 if (
