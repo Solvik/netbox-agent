@@ -575,15 +575,19 @@ class ServerBase:
                 update += 1
                 break
         # Deal with iPV4
-        for ip in myips:
+        myip4s = nb.ipam.ip_addresses.filter(device_id=server.id)
+        for ip in myip4s:
+            print(ip.family.value)
+            print(ip.assigned_object.display)
             if ip.assigned_object.display != "IPMI" and ip.family.value == 4 and ip != server.primary_ip4:
-                server.primary_ip4 = {ip.id}
+                server.primary_ip4 = ip.id
                 update += 1
                 break
         # Deal with iPV6
-        for ip in myips:
+        myip6s = nb.ipam.ip_addresses.filter(device_id=server.id)
+        for ip in myip6s:
             if ip.assigned_object.display != "IPMI" and ip.family.value == 6 and ip != server.primary_ip6:
-                server.primary_ip6 = {ip.id}
+                server.primary_ip6 = ip.id
                 update += 1
                 break
 
