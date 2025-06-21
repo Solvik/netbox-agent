@@ -664,7 +664,7 @@ class Network(object):
                     interface.mac_address = nic["mac"]
                 else:
                     nb_macs = list(self.nb_net.mac_addresses.filter(interface_id=interface.id))
-                    interface.primary_mac_address = {"assigned_object_id": nb_macs[0].id}
+                    interface.primary_mac_address = {"mac_address": nic["mac"], "id": nb_macs[0].id}
                 nic_update += 1
 
             if hasattr(interface, "mtu"):
