@@ -576,14 +576,14 @@ class ServerBase:
                 break
         # Deal with iPV4
         for ip in myips:
-            if ip.family.value == 4 and ip != server.primary_ip4:
-                server.primary_ip4 = ip.id
+            if ip.assigned_object.display != "IPMI" and ip.family.value == 4 and ip != server.primary_ip4:
+                server.primary_ip4 = {ip.id}
                 update += 1
                 break
         # Deal with iPV6
         for ip in myips:
-            if ip.family.value == 6 and ip != server.primary_ip6:
-                server.primary_ip6 = ip.id
+            if ip.assigned_object.display != "IPMI" and ip.family.value == 6 and ip != server.primary_ip6:
+                server.primary_ip6 = {ip.id}
                 update += 1
                 break
 
