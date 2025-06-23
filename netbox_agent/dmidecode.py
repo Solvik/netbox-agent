@@ -62,7 +62,8 @@ for type_id, type_str in _type2str.items():
 
 def parse(output=None):
     """
-    parse the full output of the dmidecode
+    parse the full output of the dmidecode on normal systems, 
+    or cat /proc/cpuinfo for raspberry pi
     command and return a dic containing the parsed information
     """
     if output:
@@ -149,6 +150,13 @@ def _execute_cmd():
         stderr=_subprocess.PIPE,
     )
 
+def _execute_cmd_pi():
+    return _subprocess.check_output([
+        "cat",
+        "/proc/cpuinfo"
+    ],
+        stderr=_subprocess.PIPE,
+    )
 
 def _parse(buffer):
     output_data = {}
