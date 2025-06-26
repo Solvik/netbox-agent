@@ -163,7 +163,13 @@ class Network(object):
 
     def get_netbox_network_card(self, nic):
         if config.network.nic_id == "mac" and nic["mac"]:
+            # First try to find by MAC address
             interface = self.nb_net.interfaces.get(mac_address=nic["mac"], **self.custom_arg_id)
+            if interface:
+                return interface
+            # If not found by MAC, try by name (in case interface exists but doesn't have MAC)
+            interface = self.nb_net.interfaces.get(name=nic["name"], **self.custom_arg_id)
+            return interface
         else:
             interface = self.nb_net.interfaces.get(name=nic["name"], **self.custom_arg_id)
         return interface
@@ -467,6 +473,8 @@ class Network(object):
                         "%s: MAC not available while trying to use it as the NIC identifier",
                         nic.name,
                     )
+                    # Fall back to name when MAC is not available
+                    return nic.name
                 return nic.mac_address
             return nic.name
 
@@ -478,8 +486,15 @@ class Network(object):
         # delete unknown interface
         nb_nics = list(self.get_netbox_network_cards())
         local_nics = [self._nic_identifier(x) for x in self.nics]
+        local_nic_names = [x["name"] for x in self.nics]  # Also track names for fallback comparison
         for nic in list(nb_nics):
-            if self._nic_identifier(nic) not in local_nics:
+            nic_identifier = self._nic_identifier(nic)
+            if nic_identifier not in local_nics:
+                # If nic_id is "mac" and the interface doesn't have a MAC, also check by name
+                if (config.network.nic_id == "mac" and 
+                    not nic.mac_address and 
+                    nic.name in local_nic_names):
+                    continue  # Interface exists by name, don't delete it
                 logging.info(
                     "Deleting netbox interface {name} because not present locally".format(
                         name=nic.name
