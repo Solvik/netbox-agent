@@ -3,6 +3,7 @@ import subprocess
 import logging
 import json
 import sys
+import re
 
 
 class LSHW:
@@ -26,7 +27,11 @@ class LSHW:
         self.power = []
         self.disks = []
         self.gpus = []
-        self.vendor = self.hw_info["vendor"]
+        if hasattr(self.hw_info, "vendor"): 
+            vendor = self.hw_info["vendor"]
+        else:
+            vendor = "Not Specified"
+        self.vendor = vendor
         self.product = self.hw_info["product"]
         self.chassis_serial = self.hw_info["serial"]
         self.motherboard_serial = self.hw_info["children"][0].get("serial", "No S/N")
@@ -94,20 +99,10 @@ class LSHW:
         )
 
     def find_storage(self, obj):
-        if "children" in obj:
-            for device in obj["children"]:
-                self.disks.append(
-                    {
-                        "logicalname": device.get("logicalname"),
-                        "product": device.get("product"),
-                        "serial": device.get("serial"),
-                        "version": device.get("version"),
-                        "size": device.get("size"),
-                        "description": device.get("description"),
-                        "type": device.get("description"),
-                    }
-                )
-        elif "driver" in obj["configuration"] and "nvme" in obj["configuration"]["driver"]:
+        if "driver" in obj["configuration"] and "nvme" in obj["configuration"]["driver"]:
+            print("found NVME device")
+            print("found NVME device")
+
             if not is_tool("nvme"):
                 logging.error("nvme-cli >= 1.0 does not seem to be installed")
                 return
@@ -131,22 +126,88 @@ class LSHW:
                     self.disks.append(d)
             except Exception:
                 pass
+        elif "children" in obj:
+            for device in obj["children"]:
+                self.disks.append(
+                    {
+                        "logicalname": device.get("logicalname"),
+                        "product": device.get("product"),
+                        "serial": device.get("serial"),
+                        "version": device.get("version"),
+                        "size": device.get("size"),
+                        "description": device.get("description"),
+                        "type": device.get("description"),
+                    }
+                )
 
     def find_cpus(self, obj):
         if "product" in obj:
-            self.cpus.append(
-                {
-                    "product": obj.get("product", "Unknown CPU"),
-                    "vendor": obj.get("vendor", "Unknown vendor"),
-                    "description": obj.get("description", ""),
-                    "location": obj.get("slot", ""),
-                }
-            )
+            if (bool(re.search(r'cpu\:\d', obj.get("id"))) and obj.get("product") == "cpu"):
+                # First trey to get more information with lscpu
+                vendor_name = "Unknown vendor"
+                cpu_name = "Unknown CPU"
+                description_detail = ""
+                if not is_tool("lscpu"):
+                    logging.error("lscpu does not seem to be installed")
+                try:
+                    lscpu = json.loads(
+                        subprocess.check_output(["lscpu", "-J"], encoding="utf8")
+                    )
+                    for device in lscpu["lscpu"]:
+                        if device["field"] == "Vendor ID:":
+                            vendor_name = device["data"]
+                        if device["field"] == "Model name:":
+                            cpu_name = device["data"]
+                        if device["field"] == "Architecture:":
+                            description_detail = description_detail + "Architecture: " +  device["data"] + " "
+                        if device["field"] == "Flags:":
+                            description_detail = description_detail + "Flags: " + device["data"]
+                except Exception:
+                    pass
+
+                # In this case each CPU core is counted as a separate entity; overwrite cputoappend entity
+                temp_cpu_name = obj.get("product", cpu_name)
+                temp_description = obj.get("description", description_detail),
+                if temp_cpu_name == "cpu" and cpu_name != "Unknown CPU":
+                    # cpu this is the default name, dont use it if better data is available
+                    temp_cpu_name = cpu_name
+                if temp_description[0] == "CPU" and description_detail != "":
+                    # CPU this is the default description, dont use it if better data is available
+                    temp_description = description_detail
+                self.cpus = [ {
+                        "product": temp_cpu_name + " (" + str(int(obj.get("id").split(":")[1])+1) + " Core, " + str(obj.get("size")/1000000) + " MHz)",
+                        "vendor": obj.get("vendor", vendor_name),
+                        "description": temp_description,
+                        "location": obj.get("slot", ""),
+                    }]
+            else:
+                self.cpus.append(
+                    {
+                        "product": obj.get("product", "Unknown CPU"),
+                        "vendor": obj.get("vendor", "Unknown vendor"),
+                        "description": obj.get("description", ""),
+                        "location": obj.get("slot", ""),
+                    }
+                )
 
     def find_memories(self, obj):
         if "children" not in obj:
-            # print("not a DIMM memory.")
-            return
+            if obj.get("description") ==  "System memory":
+                self.memories.append(
+                {
+                    # This is probably embedded memory as for a Raspberry pi
+                    "slot": obj.get("slot", "Integrated Memory"),
+                    "description": obj.get("description"),
+                    "id": obj.get("id"),
+                    "serial": obj.get("serial", "N/A"),
+                    "vendor": obj.get("vendor", "N/A"),
+                    "product": obj.get("product", "N/A"),
+                    "size": obj.get("size", 0) / 2**20 / 1024,
+                })
+                return
+            else:
+                # print("not a DIMM memory or integrated memory.")
+                return
 
         for dimm in obj["children"]:
             if "empty" in dimm["description"]:

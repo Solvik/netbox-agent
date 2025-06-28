@@ -63,7 +63,7 @@ for type_id, type_str in _type2str.items():
 def parse(output=None):
     """
     parse the full output of the dmidecode on normal systems, 
-    or cat /proc/cpuinfo for raspberry pi
+    or raspinfo for raspberry pi
     command and return a dic containing the parsed information
     """
     if output:
@@ -72,7 +72,14 @@ def parse(output=None):
         buffer = _execute_cmd()
     if isinstance(buffer, bytes):
         buffer = buffer.decode("utf-8")
-    _data = _parse(buffer)
+    if buffer.splitlines()[1] == "# No SMBIOS nor DMI entry point found, sorry.":
+        logging.info(
+            "Dmidecode does not seem to be finding information on your system. "
+            "Using raspinfo instead."
+        )
+        _data = _rpi_parse(buffer)
+    else:
+        _data = _parse(buffer)
     return _data
 
 
@@ -152,8 +159,46 @@ def _execute_cmd():
 
 def _execute_cmd_pi():
     return _subprocess.check_output([
+        "raspinfo",
+    ],
+        stderr=_subprocess.PIPE,
+    )
+
+def _execute_cmd_os_pi():
+    return _subprocess.check_output([
         "cat",
-        "/proc/cpuinfo"
+        "/etc/os-release",
+        "|", 
+        "head",
+        "-4",
+    ],
+        stderr=_subprocess.PIPE, shell=True
+    )
+
+def _execute_cmd_serial_pi():
+    output_var = str( _subprocess.check_output([
+        "cat",
+        "/proc/cpuinfo",
+    ],
+        stderr=_subprocess.PIPE
+    ), 'utf-8' )
+    return output_var.splitlines()[-3:]
+
+def _execute_cmd_ram_pi():
+    return _subprocess.check_output([
+        "cat",
+        "/proc/meminfo", 
+        "|",
+        "head",
+        "-1"
+    ],
+        stderr=_subprocess.PIPE, shell=True
+    )
+
+def _execute_cmd_bios_pi():
+    return _subprocess.check_output([
+        "vcgencmd",
+        "version", 
     ],
         stderr=_subprocess.PIPE,
     )
@@ -226,6 +271,57 @@ def _parse(buffer):
                 in_block_list = ""
 
                 continue
+
+    if not output_data:
+        raise ParseError("Unable to parse 'dmidecode' output")
+
+    return output_data
+
+def _rpi_parse(buffer):
+    # 0   BIOS
+    # 1   System
+    # 2   Baseboard
+    # 3   Chassis
+
+    handles = [ 
+        "0x001A",
+        "0x0001",
+        "0x0000",
+        "0x001D",
+    ]
+
+    names = [ 
+        "BIOS",
+        "System",
+        "Baseboard", 
+        "Chassis",
+    ]
+
+    output_data = {}
+
+    for index,cur_name in enumerate(names):
+        output_data[handles[index]]= {}
+        output_data[handles[index]]["DMIType"] = int(index)
+        output_data[handles[index]]["DMISize"] = int(28)
+        output_data[handles[index]]["DMIName"] = names[index]
+
+    # Define BIOS info
+    output_data[handles[0]][names[0]] = _execute_cmd_bios_pi()
+    output_data[handles[0]]["Version"] = str(_execute_cmd_bios_pi(),"utf-8").splitlines()[-1].split(" ")[1].strip()
+
+    # Define System info
+    serial_data = _execute_cmd_serial_pi()
+    revision_number = serial_data[0].split(":")[1].strip()
+    serial_number = serial_data[1].split(":")[1].strip()
+    model = serial_data[2].split(":")[1].strip()
+    output_data[handles[1]]["Product Name"] = model
+    output_data[handles[1]]["Serial Number"] = serial_number
+    output_data[handles[1]]["Manufacturer"] = "Raspberry Pi Foundation"
+
+
+    # Define Chassis INfo
+    output_data[handles[3]]["Manufacturer"] = "Raspberry Pi Foundation"
+
 
     if not output_data:
         raise ParseError("Unable to parse 'dmidecode' output")

@@ -18,6 +18,7 @@ import subprocess
 import logging
 import socket
 import sys
+import re
 
 class ServerBase:
     def __init__(self, dmi=None):
