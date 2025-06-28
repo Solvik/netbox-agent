@@ -100,9 +100,6 @@ class LSHW:
 
     def find_storage(self, obj):
         if "driver" in obj["configuration"] and "nvme" in obj["configuration"]["driver"]:
-            print("found NVME device")
-            print("found NVME device")
-
             if not is_tool("nvme"):
                 logging.error("nvme-cli >= 1.0 does not seem to be installed")
                 return
