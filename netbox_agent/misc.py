@@ -88,6 +88,10 @@ def get_hostname(config):
         return "{}".format(socket.gethostname())
     return subprocess.getoutput(config.hostname_cmd)
 
+def get_fqdn(config):
+    if config.fqdn_cmd is None:
+        return "{}".format(socket.getfqdn())
+    return subprocess.getoutput(config.fqdn_cmd)
 
 def create_netbox_tags(tags):
     ret = []
