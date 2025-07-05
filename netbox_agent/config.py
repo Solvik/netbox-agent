@@ -70,6 +70,11 @@ def get_config():
         help="Command to output hostname, used as Device's name in netbox",
     )
     p.add_argument(
+        "--fqdn_cmd",
+        default=None,
+        help="Command to output fully qualified domain name, used as Device's DNS name in netbox",
+    )
+    p.add_argument(
         "--device.platform",
         default=None,
         help="Override device platform. Here we use OS distribution.",
@@ -90,6 +95,7 @@ def get_config():
         "--device.chassis_role", default=r"Server Chassis", help="role to use for a chassis"
     )
     p.add_argument("--device.server_role", default=r"Server", help="role to use for a server")
+    p.add_argument("--device.autocreate_device_type", default=True, help="Define whether a device type should be create when it doesnt exist.")
     p.add_argument("--tenant.driver", help="tenant driver, ie cmd, file")
     p.add_argument("--tenant.driver_file", help="tenant driver custom driver file path")
     p.add_argument("--tenant.regex", help="tenant regex to extract Netbox tenant slug")
@@ -126,6 +132,8 @@ def get_config():
         default="name",
         help="What property to use as NIC identifier",
     )
+    p.add_argument("--network.vrf", default=None, help="Set VRF for network interfaces")
+    p.add_argument("--network.status", default="Active", help="Set the status for IP Addresses")
     p.add_argument(
         "--network.primary_mac",
         choices=("permanent", "temp"),

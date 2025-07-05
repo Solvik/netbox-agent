@@ -79,7 +79,7 @@ class PowerSupply:
                 nb_psu.save()
 
         for psu in psus:
-            if psu["name"] not in [x.name for x in nb_psus]:
+            if (psu["name"] not in [x.name for x in nb_psus]) and ( psu["name"] not in "__all__") :
                 logging.info("Creating PSU {name} ({description}), {maximum_draw}W".format(**psu))
                 nb_psu = nb.dcim.power_ports.create(**psu)
 

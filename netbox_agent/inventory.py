@@ -159,12 +159,14 @@ class Inventory:
 
     def create_netbox_interface(self, iface):
         manufacturer = self.find_or_create_manufacturer(iface["vendor"])
+        # Netbox name character limit is 64 characters
+        char_limit = 64
         _ = nb.dcim.inventory_items.create(
             device=self.device_id,
             manufacturer=manufacturer.id,
             discovered=True,
             tags=[{"name": INVENTORY_TAG["interface"]["name"]}],
-            name="{}".format(iface["product"]),
+            name="{}".format((iface["product"][:char_limit-3] + '..') if (len(iface["product"]) > char_limit) else iface["product"]),
             serial="{}".format(iface["serial"]),
             description="{} {}".format(iface["description"], iface["name"]),
         )
