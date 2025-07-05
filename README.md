@@ -25,7 +25,7 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 - Netbox >= 3.7
 - Python >= 3.8
 - [pynetbox](https://github.com/digitalocean/pynetbox/)
-- [python3-netaddr](https://github.com/drkjam/netaddr)
+- [python3-netaddr](https://github.com/netaddr/netaddr)
 - [python3-netifaces](https://github.com/al45tair/netifaces)
 - [jsonargparse](https://github.com/omni-us/jsonargparse/)
 
