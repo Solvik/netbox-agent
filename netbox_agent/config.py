@@ -128,6 +128,7 @@ def get_config():
         help="What property to use as NIC identifier",
     )
     p.add_argument("--network.vrf", default=None, help="Set VRF for network interfaces")
+    p.add_argument("--network.status", default="Active", help="Set the status for IP Addresses")
     p.add_argument(
         "--network.primary_mac",
         choices=("permanent", "temp"),
