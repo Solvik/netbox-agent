@@ -43,6 +43,10 @@ rack_location:
 #
 # driver: "file:/tmp/datacenter"
 # regex: "(.*)"
+#position_location:
+# driver: 'cmd:lldpctl -f keyvalue'
+# match SysName: G1-8-U24-S1-E1
+# regex: 'lldp.eno[0-3].port.descr=[GEFH][0-9]-[0-9]-U([0-9]+)[-E0-9]+'
 
 # Some servers dont report the slot, since most people put it in the hostname
 # here's a way to extract it and maintain correct slot location in Netbox
