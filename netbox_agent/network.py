@@ -121,6 +121,8 @@ class Network(object):
 
             def is_valid_mac_address(mac):
                 # Function to check if a MAC address is valid
+                if mac is None:
+                    return False
                 return len(mac.split(':')) == 6 and all(len(part) == 2 and part.isalnum() for part in mac.split(':'))
 
             nic = {
