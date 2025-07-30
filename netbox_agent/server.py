@@ -4,16 +4,7 @@ from netbox_agent.config import netbox_instance as nb
 from netbox_agent.hypervisor import Hypervisor
 from netbox_agent.inventory import Inventory
 from netbox_agent.location import Datacenter, Rack, Tenant
-<<<<<<< HEAD
 from netbox_agent.misc import create_netbox_tags, get_device_role, get_device_type, get_device_platform, verify_serial
-=======
-from netbox_agent.misc import (
-    create_netbox_tags,
-    get_device_role,
-    get_device_type,
-    get_device_platform,
-)
->>>>>>> upstream/master
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
 from pprint import pprint
@@ -145,28 +136,20 @@ class ServerBase:
         """
         Return the Chassis Name from dmidecode info
         """
-<<<<<<< HEAD
 
         if self.system[0]['Product Name'].strip() == ' ' or self.system[0]['Product Name'].strip() == '':
             return 'Generic Server'
 
         return self.system[0]['Product Name'].strip()
-=======
-        return self.system[0]["Product Name"].strip()
->>>>>>> upstream/master
 
     def get_service_tag(self):
         """
         Return the Service Tag from dmidecode info
         """
-<<<<<<< HEAD
         if verify_serial(self.system[0]['Serial Number'].strip()):
             return self.system[0]['Serial Number'].strip()
         
         return self.get_hostname()
-=======
-        return self.system[0]["Serial Number"].strip()
->>>>>>> upstream/master
 
     def get_expansion_service_tag(self):
         """

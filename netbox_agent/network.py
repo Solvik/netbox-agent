@@ -124,7 +124,6 @@ class Network(object):
                 return len(mac.split(':')) == 6 and all(len(part) == 2 and part.isalnum() for part in mac.split(':'))
 
             nic = {
-<<<<<<< HEAD
                 'name': interface,
                 'mac': mac if is_valid_mac_address(mac) and mac != '00:00:00:00:00:00' else None,
                 'ip': [
@@ -139,21 +138,6 @@ class Network(object):
                 'mtu': mtu,
                 'bonding': bonding,
                 'bonding_slaves': bonding_slaves,
-=======
-                "name": interface,
-                "mac": mac,
-                "ip": [
-                    "{}/{}".format(x["addr"], IPAddress(x["mask"]).netmask_bits()) for x in ip_addr
-                ]
-                if ip_addr
-                else None,  # FIXME: handle IPv6 addresses
-                "ethtool": ethtool,
-                "virtual": virtual,
-                "vlan": vlan,
-                "mtu": mtu,
-                "bonding": bonding,
-                "bonding_slaves": bonding_slaves,
->>>>>>> upstream/master
             }
             nics.append(nic)
         return nics
@@ -187,16 +171,12 @@ class Network(object):
         if config.network.nic_id == "mac" and nic["mac"]:
             interface = self.nb_net.interfaces.get(mac_address=nic["mac"], **self.custom_arg_id)
         else:
-<<<<<<< HEAD
             interface = self.nb_net.interfaces.get(
                 #mac_address=nic['mac'],
                 name=nic['name'],
                 **self.custom_arg_id
             )
         
-=======
-            interface = self.nb_net.interfaces.get(name=nic["name"], **self.custom_arg_id)
->>>>>>> upstream/master
         return interface
 
     def get_netbox_network_cards(self):
@@ -256,17 +236,12 @@ class Network(object):
 
     def reset_vlan_on_interface(self, nic, interface):
         update = False
-<<<<<<< HEAD
-        vlan_id = nic['vlan']
-        lldp_vlan = self.lldp.get_switch_vlan(nic['name']) if config.network.lldp and isinstance(self, ServerNetwork) else None
-=======
         vlan_id = nic["vlan"]
         lldp_vlan = (
             self.lldp.get_switch_vlan(nic["name"])
             if config.network.lldp and isinstance(self, ServerNetwork)
             else None
         )
->>>>>>> upstream/master
         # For strange reason, we need to get the object from scratch
         # The object returned by pynetbox's save isn't always working (since pynetbox 6)
         interface = self.nb_net.interfaces.get(id=interface.id)
@@ -308,13 +283,9 @@ class Network(object):
             interface.untagged_vlan = None
         # Finally if LLDP reports a vlan-id with the pvid attribute
         elif lldp_vlan:
-<<<<<<< HEAD
-            pvid_vlan = [key for (key, value) in lldp_vlan.items() if 'pvid' in value and value['pvid']]
-=======
             pvid_vlan = [
                 key for (key, value) in lldp_vlan.items() if "pvid" in value and value["pvid"]
             ]
->>>>>>> upstream/master
             if len(pvid_vlan) > 0 and (
                 interface.mode is None
                 or interface.mode.value != self.dcim_choices["interface:mode"]["Access"]
@@ -421,13 +392,7 @@ class Network(object):
         * If IP doesn't exist, create it
         * If IP exists and isn't assigned, take it
         * If IP exists and interface is wrong, change interface
-<<<<<<< HEAD
-        '''
-
-        
-=======
         """
->>>>>>> upstream/master
         netbox_ips = nb.ipam.ip_addresses.filter(
             address=ip,
         )
@@ -472,24 +437,12 @@ class Network(object):
                 netbox_ip = nb.ipam.ip_addresses.create(**query_params)
             return netbox_ip
         else:
-<<<<<<< HEAD
-            
-            ip_interface = getattr(netbox_ip, 'interface', None)
-            assigned_object = getattr(netbox_ip, 'assigned_object', None)
-            if not ip_interface or not assigned_object:
-                logging.info('Assigning existing IP {ip} to {interface}'.format(
-                    ip=ip, interface=interface))
-            elif (ip_interface and ip_interface.id != interface.id) or \
-                 (assigned_object and assigned_object_id != interface.id):
-
-=======
             assigned_object = getattr(netbox_ip, "assigned_object", None)
             if not assigned_object:
                 logging.info(
                     "Assigning existing IP {ip} to {interface}".format(ip=ip, interface=interface)
                 )
             elif assigned_object.id != interface.id:
->>>>>>> upstream/master
                 old_interface = getattr(netbox_ip, "assigned_object", "n/a")
                 logging.info(
                     "Detected interface change for ip {ip}: old interface is "
@@ -536,16 +489,6 @@ class Network(object):
 
         # delete unknown interface
         nb_nics = list(self.get_netbox_network_cards())
-<<<<<<< HEAD
-        local_nics = [x['name'] for x in self.nics]
-        for nic in nb_nics:
-            if nic.name not in local_nics:
-                logging.info('Deleting netbox interface {name} because not present locally '.format(
-                    name=nic.name
-                ))
-                #nb_nics.remove(nic)
-                #nic.delete()
-=======
         local_nics = [self._nic_identifier(x) for x in self.nics]
         for nic in list(nb_nics):
             if self._nic_identifier(nic) not in local_nics:
@@ -556,7 +499,6 @@ class Network(object):
                 )
                 nb_nics.remove(nic)
                 nic.delete()
->>>>>>> upstream/master
 
         # delete IP on netbox that are not known on this server
         if len(nb_nics):
@@ -594,7 +536,6 @@ class Network(object):
                 interface = self.create_netbox_nic(nic)
 
             nic_update = 0
-<<<<<<< HEAD
             if nic['name'] != interface.name:
                 logging.info('Updating interface {interface} name to: {name}'.format(
                     interface=interface, name=nic['name']))
@@ -607,9 +548,6 @@ class Network(object):
                 interface.mac_address = nic['mac']
                 nic_update += 1
             
-=======
-
->>>>>>> upstream/master
             ret, interface = self.reset_vlan_on_interface(nic, interface)
             nic_update += ret
 
@@ -797,7 +735,6 @@ class ServerNetwork(Network):
         else:
             nb_sw_int = nb_server_interface.cable.b_terminations[0]
             nb_sw = nb_sw_int.device
-<<<<<<< HEAD
             nb_mgmt_int = nb.dcim.interfaces.get(
                 device_id=nb_sw.id,
                 mgmt_only=True
@@ -823,10 +760,6 @@ class ServerNetwork(Network):
                     )
                 )
 
-=======
-            nb_mgmt_int = nb.dcim.interfaces.get(device_id=nb_sw.id, mgmt_only=True)
-            nb_mgmt_ip = nb.ipam.ip_addresses.get(interface_id=nb_mgmt_int.id)
->>>>>>> upstream/master
             if nb_mgmt_ip is None:
                 logging.error(
                     "Switch {switch_ip} does not have IP on its management interface".format(
