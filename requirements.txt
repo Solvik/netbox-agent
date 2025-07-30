@@ -1,8 +1,13 @@
-pynetbox==7.3.4
+pynetbox==7.4.1
 netaddr==1.3.0
 netifaces2==0.0.22
+<<<<<<< HEAD
 pyyaml==6.0.1
 jsonargparse==4.40.1
+=======
+pyyaml==6.0.2
+jsonargparse==4.36.0
+>>>>>>> upstream/master
 python-slugify==8.0.4
-packaging==23.2
+packaging==24.2
 distro==1.9.0

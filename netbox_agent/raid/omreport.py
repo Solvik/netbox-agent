@@ -13,30 +13,24 @@ class OmreportControllerError(Exception):
 def omreport(sub_command):
     command = ["omreport"]
     command.extend(sub_command.split())
-    p = subprocess.Popen(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT
-    )
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p.wait()
     stdout = p.stdout.read().decode("utf-8")
     if p.returncode != 0:
-        mesg = "Failed to execute command '{}':\n{}".format(
-            " ".join(command), stdout
-        )
+        mesg = "Failed to execute command '{}':\n{}".format(" ".join(command), stdout)
         raise OmreportControllerError(mesg)
 
     res = {}
-    section_re = re.compile('^[A-Z]')
+    section_re = re.compile("^[A-Z]")
     current_section = None
     current_obj = None
 
-    for line in stdout.split('\n'):
-        if ': ' in line:
-            attr, value = line.split(': ', 1)
+    for line in stdout.split("\n"):
+        if ": " in line:
+            attr, value = line.split(": ", 1)
             attr = attr.strip()
             value = value.strip()
-            if attr == 'ID':
+            if attr == "ID":
                 obj = {}
                 res.setdefault(current_section, []).append(obj)
                 current_obj = obj
@@ -52,60 +46,55 @@ class OmreportController(RaidController):
         self.controller_index = controller_index
 
     def get_product_name(self):
-        return self.data['Name']
+        return self.data["Name"]
 
     def get_manufacturer(self):
         return None
 
     def get_serial_number(self):
-        return self.data.get('DeviceSerialNumber')
+        return self.data.get("DeviceSerialNumber")
 
     def get_firmware_version(self):
-        return self.data.get('Firmware Version')
+        return self.data.get("Firmware Version")
 
     def _get_physical_disks(self):
         pds = {}
-        res = omreport('storage pdisk controller={}'.format(
-            self.controller_index
-        ))
+        res = omreport("storage pdisk controller={}".format(self.controller_index))
         for pdisk in [d for d in list(res.values())[0]]:
-            disk_id = pdisk['ID']
-            size = re.sub('B .*$', 'B', pdisk['Capacity'])
+            disk_id = pdisk["ID"]
+            size = re.sub("B .*$", "B", pdisk["Capacity"])
             pds[disk_id] = {
-                'Vendor': get_vendor(pdisk['Vendor ID']),
-                'Model': pdisk['Product ID'],
-                'SN': pdisk['Serial No.'],
-                'Size': size,
-                'Type': pdisk['Media'],
-                '_src': self.__class__.__name__,
+                "Vendor": get_vendor(pdisk["Vendor ID"]),
+                "Model": pdisk["Product ID"],
+                "SN": pdisk["Serial No."],
+                "Size": size,
+                "Type": pdisk["Media"],
+                "_src": self.__class__.__name__,
             }
         return pds
 
     def _get_virtual_drives_map(self):
         pds = {}
-        res = omreport('storage vdisk controller={}'.format(
-            self.controller_index
-        ))
+        res = omreport("storage vdisk controller={}".format(self.controller_index))
         for vdisk in [d for d in list(res.values())[0]]:
-            vdisk_id = vdisk['ID']
-            device = vdisk['Device Name']
+            vdisk_id = vdisk["ID"]
+            device = vdisk["Device Name"]
             mount_points = get_mount_points()
-            mp = mount_points.get(device, 'n/a')
-            size = re.sub('B .*$', 'B', vdisk['Size'])
+            mp = mount_points.get(device, "n/a")
+            size = re.sub("B .*$", "B", vdisk["Size"])
             vd = {
-                'vd_array': vdisk_id,
-                'vd_size': size,
-                'vd_consistency': vdisk['State'],
-                'vd_raid_type': vdisk['Layout'],
-                'vd_device': vdisk['Device Name'],
-                'mount_point': ', '.join(sorted(mp)),
+                "vd_array": vdisk_id,
+                "vd_size": size,
+                "vd_consistency": vdisk["State"],
+                "vd_raid_type": vdisk["Layout"],
+                "vd_device": vdisk["Device Name"],
+                "mount_point": ", ".join(sorted(mp)),
             }
             drives_res = omreport(
-                'storage pdisk controller={} vdisk={}'.format(
-                    self.controller_index, vdisk_id
-            ))
+                "storage pdisk controller={} vdisk={}".format(self.controller_index, vdisk_id)
+            )
             for pdisk in [d for d in list(drives_res.values())[0]]:
-                pds[pdisk['ID']] = vd
+                pds[pdisk["ID"]] = vd
         return pds
 
     def get_physical_disks(self):
@@ -114,27 +103,24 @@ class OmreportController(RaidController):
         for pd_identifier, vd in vds.items():
             if pd_identifier not in pds:
                 logging.error(
-                    'Physical drive {} listed in virtual drive {} not '
-                    'found in drives list'.format(
-                      pd_identifier, vd['vd_array']
+                    "Physical drive {} listed in virtual drive {} not found in drives list".format(
+                        pd_identifier, vd["vd_array"]
                     )
                 )
                 continue
-            pds[pd_identifier].setdefault('custom_fields', {}).update(vd)
-            pds[pd_identifier]['custom_fields']['pd_identifier'] = pd_identifier
+            pds[pd_identifier].setdefault("custom_fields", {}).update(vd)
+            pds[pd_identifier]["custom_fields"]["pd_identifier"] = pd_identifier
         return list(pds.values())
 
 
 class OmreportRaid(Raid):
     def __init__(self):
         self.controllers = []
-        res = omreport('storage controller')
+        res = omreport("storage controller")
 
-        for controller in res['Controller']:
-            ctrl_index = controller['ID']
-            self.controllers.append(
-                OmreportController(ctrl_index, controller)
-            )
+        for controller in res["Controller"]:
+            ctrl_index = controller["ID"]
+            self.controllers.append(OmreportController(ctrl_index, controller))
 
     def get_controllers(self):
         return self.controllers

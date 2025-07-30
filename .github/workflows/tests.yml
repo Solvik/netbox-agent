@@ -1,0 +1,58 @@
+name: Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Install build dependencies
+        run: pip install build
+      - name: Build the package
+        run: python3 -m build
+      - name: Install the built package from tar.gz
+        run: pip install "$(echo dist/*.tar.gz)"[dev]
+      - name: Run netbox_agent to check that the installed package contains the required modules
+        run: netbox_agent --help
+      - name: Run tests
+        run: ./tests.sh
+      #- name: Upload coverage to Codecov
+      #  if: matrix.python-version == '3.13.0'
+      #  uses: codecov/codecov-action@v3
+      #  continue-on-error: true
+      #  with:
+      #    files: ./coverage.xml
+      #    token: ${{ secrets.CODECOV_TOKEN }}
+      #    fail_ci_if_error: true
+  ruff_linter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Install Ruff
+        run: pip install $(grep -Po '(?<=")ruff[^"]+' pyproject.toml)
+      - name: Ruff linter
+        run: ruff check
+  ruff_formatter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Install Ruff
+        run: pip install $(grep -Po '(?<=")ruff[^"]+' pyproject.toml)
+      - name: Ruff formatter
+        run: ruff format --diff

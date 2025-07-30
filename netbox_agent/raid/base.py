@@ -1,5 +1,4 @@
-class RaidController():
-
+class RaidController:
     def get_product_name(self):
         raise NotImplementedError
 
@@ -19,6 +18,6 @@ class RaidController():
         return False
 
 
-class Raid():
+class Raid:
     def get_controllers(self):
         raise NotImplementedError

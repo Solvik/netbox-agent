@@ -4,7 +4,7 @@ import subprocess
 from netaddr import IPNetwork
 
 
-class IPMI():
+class IPMI:
     """
     Parse IPMI output
     ie:
@@ -55,28 +55,30 @@ class IPMI():
             return _ipmi
 
         for line in self.output.splitlines():
-            key = line.split(':')[0].strip()
-            if key not in ['802.1q VLAN ID', 'IP Address', 'Subnet Mask', 'MAC Address']:
+            key = line.split(":")[0].strip()
+            if key not in ["802.1q VLAN ID", "IP Address", "Subnet Mask", "MAC Address"]:
                 continue
-            value = ':'.join(line.split(':')[1:]).strip()
+            value = ":".join(line.split(":")[1:]).strip()
             _ipmi[key] = value
 
         ret = {}
-        ret['name'] = 'IPMI'
+        ret["name"] = "IPMI"
         ret["mtu"] = 1500
-        ret['bonding'] = False
-        ret['mac'] = _ipmi['MAC Address']
-        if 'vlan' not in _ipmi:
-            ret['vlan'] = None
+        ret["bonding"] = False
+        try:
+            ret["mac"] = _ipmi["MAC Address"]
+            if ret["mac"]:
+                ret["mac"] = ret["mac"].upper()
+            ret["vlan"] = (
+                int(_ipmi["802.1q VLAN ID"]) if _ipmi["802.1q VLAN ID"] != "Disabled" else None
+            )
+            ip = _ipmi["IP Address"]
+            netmask = _ipmi["Subnet Mask"]
+        except KeyError as e:
+            logging.error("IPMI decoding failed, missing: %s", e.args[0])
+            return {}
+        address = str(IPNetwork("{}/{}".format(ip, netmask)))
 
-        if '802.1q VLAN ID' in _ipmi:
-            ret['vlan'] = int(_ipmi['802.1q VLAN ID']) \
-                if _ipmi['802.1q VLAN ID'] != 'Disabled' else None
-            
-        ip = _ipmi['IP Address']
-        netmask = _ipmi['Subnet Mask']
-        address = str(IPNetwork('{}/{}'.format(ip, netmask)))
-
-        ret['ip'] = [address]
-        ret['ipmi'] = True
+        ret["ip"] = [address]
+        ret["ipmi"] = True
         return ret

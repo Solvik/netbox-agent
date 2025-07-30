@@ -17,13 +17,15 @@ The goal is to generate an existing infrastructure on Netbox and have the abilit
 * Automatic cabling (server's interface to switch's interface) using lldp
 * Local inventory using `Inventory Item` for CPU, GPU, RAM, RAID cards, physical disks (behind raid cards)
 * PSUs creation and power consumption reporting (based on vendor's tools)
+* Associate hypervisor devices to the virtualization cluster
+* Associate virtual machines to the hypervisor device
 
 # Requirements
 
 - Netbox >= 3.7
 - Python >= 3.8
 - [pynetbox](https://github.com/digitalocean/pynetbox/)
-- [python3-netaddr](https://github.com/drkjam/netaddr)
+- [python3-netaddr](https://github.com/netaddr/netaddr)
 - [python3-netifaces](https://github.com/al45tair/netifaces)
 - [jsonargparse](https://github.com/omni-us/jsonargparse/)
 
@@ -127,6 +129,13 @@ network:
 #   enabled: True
 #   # see https://netbox.company.com/virtualization/clusters/
 #   cluster_name: my_vm_cluster
+
+## Enable hypervisor support
+# virtual:
+#   enabled: false
+#   hypervisor: true
+#   cluster_name: my_cluster
+#   list_guests_cmd: command that lists VMs names
 
 # Enable datacenter location feature in Netbox
 datacenter_location:
@@ -289,4 +298,10 @@ On a personal note, I use the docker image from [netbox-community/netbox-docker]
 # cd netbox-docker
 # docker-compose pull
 # docker-compose up
+```
+
+For the linter and code formatting, you need to run:
+```
+ruff check
+ruff format
 ```

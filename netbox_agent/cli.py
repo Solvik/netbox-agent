@@ -1,3 +1,4 @@
+import sys
 from packaging import version
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import config
@@ -29,32 +30,43 @@ def run(config):
     dmi = dmidecode.parse()
 
     if config.virtual.enabled or is_vm(dmi):
+        if config.virtual.hypervisor:
+            raise Exception("This host can't be a hypervisor because it's a VM")
         if not config.virtual.cluster_name:
-            raise Exception('virtual.cluster_name parameter is mandatory because it\'s a VM')
+            raise Exception("virtual.cluster_name parameter is mandatory because it's a VM")
         server = VirtualMachine(dmi=dmi)
     else:
-        manufacturer = dmidecode.get_by_type(dmi, 'Chassis')[0].get('Manufacturer')
-        logging.info("Found manufacturer: %s" % manufacturer)
+        if config.virtual.hypervisor and not config.virtual.cluster_name:
+            raise Exception(
+                "virtual.cluster_name parameter is mandatory because it's a hypervisor"
+            )
+        manufacturer = dmidecode.get_by_type(dmi, "Chassis")[0].get("Manufacturer")
         try:
             server = MANUFACTURERS[manufacturer](dmi=dmi)
         except KeyError:
             server = GenericHost(dmi=dmi)
 
-    if version.parse(nb.version) < version.parse('3.7'):
-        print('netbox-agent is not compatible with Netbox prior to version 3.7')
-        return False
+    if version.parse(nb.version) < version.parse("3.7"):
+        print("netbox-agent is not compatible with Netbox prior to version 3.7")
+        return 1
 
-    if config.register or config.update_all or config.update_network or \
-       config.update_location or config.update_inventory or config.update_psu:
+    if (
+        config.register
+        or config.update_all
+        or config.update_network
+        or config.update_location
+        or config.update_inventory
+        or config.update_psu
+    ):
         server.netbox_create_or_update(config)
     if config.debug:
         server.print_debug()
-    return True
+    return 0
 
 
 def main():
     return run(config)
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    sys.exit(main())

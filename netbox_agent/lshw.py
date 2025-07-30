@@ -5,10 +5,10 @@ import json
 import sys
 
 
-class LSHW():
+class LSHW:
     def __init__(self):
-        if not is_tool('lshw'):
-            logging.error('lshw does not seem to be installed')
+        if not is_tool("lshw"):
+            logging.error("lshw does not seem to be installed")
             sys.exit(1)
 
         data = subprocess.getoutput(
@@ -69,9 +69,9 @@ class LSHW():
             return self.gpus
         if hwclass == "network":
             return self.interfaces
-        if hwclass == 'storage':
+        if hwclass == "storage":
             return self.disks
-        if hwclass == 'memory':
+        if hwclass == "memory":
             return self.memories
 
     def find_network(self, obj):
@@ -88,16 +88,18 @@ class LSHW():
                 for j in i["name"]:
                     if j.startswith("unknown"):
                         unkn_intfs.append(j)
-                        
+
         unkn_name = "unknown{}".format(len(unkn_intfs))
-        self.interfaces.append({
-            "name": obj.get("logicalname", unkn_name),
-            "macaddress": obj.get("serial", ""),
-            "serial": obj.get("serial", ""),
-            "product": obj.get("product", "Unknown NIC"),
-            "vendor": obj.get("vendor", "Unknown"),
-            "description": obj.get("description", ""),
-        })
+        self.interfaces.append(
+            {
+                "name": obj.get("logicalname", unkn_name),
+                "macaddress": obj.get("serial", ""),
+                "serial": obj.get("serial", ""),
+                "product": obj.get("product", "Unknown NIC"),
+                "vendor": obj.get("vendor", "Unknown"),
+                "description": obj.get("description", ""),
+            }
+        )
 
     def find_storage(self, obj):
         if "children" in obj:
@@ -146,12 +148,14 @@ class LSHW():
 
     def find_cpus(self, obj):
         if "product" in obj:
-            self.cpus.append({
-                "product": obj.get("product", "Unknown CPU"),
-                "vendor": obj.get("vendor", "Unknown vendor"),
-                "description": obj.get("description", ""),
-                "location": obj.get("slot", ""),
-            })
+            self.cpus.append(
+                {
+                    "product": obj.get("product", "Unknown CPU"),
+                    "vendor": obj.get("vendor", "Unknown vendor"),
+                    "description": obj.get("description", ""),
+                    "location": obj.get("slot", ""),
+                }
+            )
 
     def find_memories(self, obj):
         if "children" not in obj:
@@ -162,15 +166,17 @@ class LSHW():
             if "empty" in dimm["description"]:
                 continue
 
-            self.memories.append({
-                "slot": dimm.get("slot"),
-                "description": dimm.get("description"),
-                "id": dimm.get("id"),
-                "serial": dimm.get("serial", 'N/A'),
-                "vendor": dimm.get("vendor", 'N/A'),
-                "product": dimm.get("product", 'N/A'),
-                "size": dimm.get("size", 0) / 2 ** 20 / 1024,
-            })
+            self.memories.append(
+                {
+                    "slot": dimm.get("slot"),
+                    "description": dimm.get("description"),
+                    "id": dimm.get("id"),
+                    "serial": dimm.get("serial", "N/A"),
+                    "vendor": dimm.get("vendor", "N/A"),
+                    "product": dimm.get("product", "N/A"),
+                    "size": dimm.get("size", 0) / 2**20 / 1024,
+                }
+            )
 
     def find_gpus(self, obj):
         if "product" in obj:

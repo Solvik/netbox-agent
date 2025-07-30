@@ -1,5 +1,11 @@
+import json
 import os
+<<<<<<< HEAD
 from pprint import pprint
+=======
+import subprocess
+
+>>>>>>> upstream/master
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
@@ -7,28 +13,23 @@ from netbox_agent.location import Tenant
 from netbox_agent.logging import logging  # NOQA
 from netbox_agent.misc import create_netbox_tags, get_hostname, get_device_platform
 from netbox_agent.network import VirtualNetwork
+from pprint import pprint
 
 
 def is_vm(dmi):
-    bios = dmidecode.get_by_type(dmi, 'BIOS')[0]
-    system = dmidecode.get_by_type(dmi, 'System')[0]
+    bios = dmidecode.get_by_type(dmi, "BIOS")[0]
+    system = dmidecode.get_by_type(dmi, "System")[0]
 
     return (
-        (
-            'Hyper-V' in bios['Version'] or
-            'Xen' in bios['Version'] or
-            'Google Compute Engine' in system['Product Name']
-        ) or
-        (
-            (
-                'Amazon EC2' in system['Manufacturer'] and
-                not system['Product Name'].endswith('.metal')
-            ) or
-            'RHEV Hypervisor' in system['Product Name'] or
-            'QEMU' in system['Manufacturer'] or
-            'VirtualBox' in bios['Version'] or
-            'VMware' in system['Manufacturer']
-        )
+        "Hyper-V" in bios["Version"]
+        or "Xen" in bios["Version"]
+        or "Google Compute Engine" in system["Product Name"]
+    ) or (
+        ("Amazon EC2" in system["Manufacturer"] and not system["Product Name"].endswith(".metal"))
+        or "RHEV Hypervisor" in system["Product Name"]
+        or "QEMU" in system["Manufacturer"]
+        or "VirtualBox" in bios["Version"]
+        or "VMware" in system["Manufacturer"]
     )
 
 
@@ -41,22 +42,28 @@ class VirtualMachine(object):
         self.network = None
         self.device_platform = get_device_platform(config.device.platform)
 
-        self.tags = list(set(config.device.tags.split(','))) if config.device.tags else []
+        self.tags = list(set(config.device.tags.split(","))) if config.device.tags else []
         self.nb_tags = create_netbox_tags(self.tags)
 
     def get_memory(self):
-        mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')  # e.g. 4015976448
-        mem_gib = mem_bytes / (1024.**2)  # e.g. 3.74
+        mem_bytes = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")  # e.g. 4015976448
+        mem_gib = mem_bytes / (1024.0**2)  # e.g. 3.74
         return int(mem_gib)
 
     def get_vcpus(self):
         return os.cpu_count()
 
+    def get_disk(self):
+        disk_space = 0
+        disk_data = subprocess.getoutput("lshw -json -c disk")
+        for disk in json.loads(disk_data):
+            size = int(disk.get("size", 0)) / 1073741824
+            disk_space += size
+        return round(disk_space, 1)
+
     def get_netbox_vm(self):
         hostname = get_hostname(config)
-        vm = nb.virtualization.virtual_machines.get(
-            name=hostname
-        )
+        vm = nb.virtualization.virtual_machines.get(name=hostname)
         return vm
 
     def get_netbox_cluster(self, name):
@@ -79,13 +86,11 @@ class VirtualMachine(object):
         tenant = self.get_tenant()
         if tenant is None:
             return None
-        nb_tenant = nb.tenancy.tenants.get(
-            slug=self.get_tenant()
-        )
+        nb_tenant = nb.tenancy.tenants.get(slug=self.get_tenant())
         return nb_tenant
 
     def netbox_create_or_update(self, config):
-        logging.debug('It\'s a virtual machine')
+        logging.debug("It's a virtual machine")
         created = False
         updated = 0
 
@@ -94,10 +99,12 @@ class VirtualMachine(object):
 
         vcpus = self.get_vcpus()
         memory = self.get_memory()
+        disk = self.get_disk()
         tenant = self.get_netbox_tenant()
+        cluster = self.get_netbox_cluster(config.virtual.cluster_name)
+
         if not vm:
-            logging.debug('Creating Virtual machine..')
-            cluster = self.get_netbox_cluster(config.virtual.cluster_name)
+            logging.debug("Creating Virtual machine..")
 
             vm = nb.virtualization.virtual_machines.create(
                 name=hostname,
@@ -105,8 +112,9 @@ class VirtualMachine(object):
                 platform=self.device_platform.id,
                 vcpus=vcpus,
                 memory=memory,
+                disk=disk,
                 tenant=tenant.id if tenant else None,
-                tags=[{'name': x} for x in self.tags],
+                tags=[{"name": x} for x in self.tags],
             )
             created = True
 
@@ -119,6 +127,9 @@ class VirtualMachine(object):
                 updated += 1
             if vm.memory != memory:
                 vm.memory = memory
+                updated += 1
+            if vm.disk != disk:
+                vm.disk = disk
                 updated += 1
 
             vm_tags = sorted(set([x.name for x in vm.tags]))
@@ -136,16 +147,31 @@ class VirtualMachine(object):
                 vm.platform = self.device_platform
                 updated += 1
 
+            if vm.cluster != cluster.id:
+                vm.cluster = cluster.id
+                updated += 1
+
         if updated:
             vm.save()
 
     def print_debug(self):
         self.network = VirtualNetwork(server=self)
+<<<<<<< HEAD
         print('Cluster:', self.get_netbox_cluster(config.virtual.cluster_name))
         print('Platform:', self.device_platform)
         print('VM:', self.get_netbox_vm())
         print('vCPU:', self.get_vcpus())
         print('Memory:', f"{self.get_memory()} MB")
         print('NIC:',)
+=======
+        print("Cluster:", self.get_netbox_cluster(config.virtual.cluster_name))
+        print("Platform:", self.device_platform)
+        print("VM:", self.get_netbox_vm())
+        print("vCPU:", self.get_vcpus())
+        print("Memory:", f"{self.get_memory()} MB")
+        print(
+            "NIC:",
+        )
+>>>>>>> upstream/master
         pprint(self.network.get_network_cards())
         pass

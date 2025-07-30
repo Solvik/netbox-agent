@@ -13,8 +13,9 @@ class HPHost(ServerBase):
 
     def is_blade(self):
         blade = self.product.startswith("ProLiant BL")
-        blade |= self.product.startswith("ProLiant m") and \
-            self.product.endswith("Server Cartridge")
+        blade |= self.product.startswith("ProLiant m") and self.product.endswith(
+            "Server Cartridge"
+        )
         return blade
 
     def _find_rack_locator(self):
@@ -72,11 +73,13 @@ class HPHost(ServerBase):
         """
         Expansion slot are always the compute bay number + 1
         """
-        if self.is_blade() and self.own_gpu_expansion_slot() or \
-                self.own_disk_expansion_slot() or True:
-            return 'Bay {}'.format(
-                str(int(self.hp_rack_locator['Server Bay'].strip()) + 1)
-            )
+        if (
+            self.is_blade()
+            and self.own_gpu_expansion_slot()
+            or self.own_disk_expansion_slot()
+            or True
+        ):
+            return "Bay {}".format(str(int(self.hp_rack_locator["Server Bay"].strip()) + 1))
         return None
 
     def get_expansion_product(self):
@@ -102,7 +105,7 @@ class HPHost(ServerBase):
         Indicates if the device hosts a GPU expansion card based
         on the product name
         """
-        return self.get_product_name().endswith('Graphics Exp')
+        return self.get_product_name().endswith("Graphics Exp")
 
     def own_disk_expansion_slot(self):
         """

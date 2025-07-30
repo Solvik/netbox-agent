@@ -1,0 +1,7 @@
+lldp.eth0.vlan.vlan-id=300
+lldp.eth0.vlan.pvid=yes
+lldp.eth0.vlan=VLAN300
+
+# PVID is optional
+lldp.eth1.vlan.vlan-id=300
+lldp.eth1.vlan=VLAN300

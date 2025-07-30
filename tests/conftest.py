@@ -14,14 +14,15 @@ def get_fixture_paths(path):
     return fixture_paths
 
 
-def parametrize_with_fixtures(path, base_path='tests/fixtures',
-                              argname='fixture', only_filenames=None):
+def parametrize_with_fixtures(
+    path, base_path="tests/fixtures", argname="fixture", only_filenames=None
+):
     path = os.path.join(base_path, path)
     fixture_paths = get_fixture_paths(path)
     argvalues = []
     for path in fixture_paths:
-        with open(path, 'r') as f:
-            content = ''.join(f.readlines())
+        with open(path, "r") as f:
+            content = "".join(f.readlines())
         filename = os.path.basename(path)
         if only_filenames and filename not in only_filenames:
             continue
@@ -30,4 +31,5 @@ def parametrize_with_fixtures(path, base_path='tests/fixtures',
 
     def _decorator(test_function):
         return pytest.mark.parametrize(argname, argvalues)(test_function)
+
     return _decorator
