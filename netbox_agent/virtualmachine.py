@@ -1,11 +1,7 @@
 import json
 import os
-<<<<<<< HEAD
-from pprint import pprint
-=======
 import subprocess
 
->>>>>>> upstream/master
 import netbox_agent.dmidecode as dmidecode
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
@@ -156,14 +152,6 @@ class VirtualMachine(object):
 
     def print_debug(self):
         self.network = VirtualNetwork(server=self)
-<<<<<<< HEAD
-        print('Cluster:', self.get_netbox_cluster(config.virtual.cluster_name))
-        print('Platform:', self.device_platform)
-        print('VM:', self.get_netbox_vm())
-        print('vCPU:', self.get_vcpus())
-        print('Memory:', f"{self.get_memory()} MB")
-        print('NIC:',)
-=======
         print("Cluster:", self.get_netbox_cluster(config.virtual.cluster_name))
         print("Platform:", self.device_platform)
         print("VM:", self.get_netbox_vm())
@@ -172,6 +160,5 @@ class VirtualMachine(object):
         print(
             "NIC:",
         )
->>>>>>> upstream/master
         pprint(self.network.get_network_cards())
         pass
