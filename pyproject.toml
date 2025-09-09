@@ -37,7 +37,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest~=8.3.3",
-    "pytest-cov~=5.0.0",
+    "pytest-cov~=7.0.0",
 ]
 
 style = [
