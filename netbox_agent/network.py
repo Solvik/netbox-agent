@@ -294,12 +294,12 @@ class Network(object):
         nb_macs = list(self.nb_net.mac_addresses.filter(interface_id=nic.id))
         # Clean
         for nb_mac in nb_macs:
-            if nb_mac.mac_address not in macs:
+            if nb_mac.mac_address.lower() not in macs:
                 logging.debug("Deleting extra MAC {mac} from {nic}".format(mac=nb_mac, nic=nic))
                 nb_mac.delete()
         # Add missing
         for mac in macs:
-            if mac not in {nb_mac.mac_address for nb_mac in nb_macs}:
+            if mac not in {nb_mac.mac_address.lower() for nb_mac in nb_macs}:
                 logging.debug("Adding MAC {mac} to {nic}".format(mac=mac, nic=nic))
                 self.nb_net.mac_addresses.create(
                     {
@@ -542,7 +542,7 @@ class Network(object):
                 if nic["mac"]:
                     self.update_interface_macs(interface, [nic["mac"]])
 
-            if nic["mac"] and nic["mac"] != interface.mac_address:
+            if nic["mac"] and nic["mac"] != interface.mac_address.lower():
                 logging.info(
                     "Updating interface {interface} mac to: {mac}".format(
                         interface=interface, mac=nic["mac"]
@@ -551,7 +551,12 @@ class Network(object):
                 if version.parse(nb.version) < version.parse("4.2"):
                     interface.mac_address = nic["mac"]
                 else:
-                    interface.primary_mac_address = {"mac_address": nic["mac"]}
+                    interface.primary_mac_address = {
+                        "mac_address": nic["mac"],
+                        "interface": {
+                            "id": interface.id,
+                        },
+                    }
                 nic_update += 1
 
             if hasattr(interface, "mtu"):
