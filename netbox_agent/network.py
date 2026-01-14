@@ -549,9 +549,17 @@ class Network(object):
                     )
                 )
                 if version.parse(nb.version) < version.parse("4.2"):
+                    # Pre Netbox 4.2
                     interface.mac_address = nic["mac"]
                 else:
-                    interface.primary_mac_address = {"mac_address": nic["mac"]}
+                    # NetBox 4.2+: find/create the mac for specific interface
+                    macs = list(
+                        nb.dcim.mac_addresses.filter(mac_address=nic["mac"], interface_id=interface.id))
+                    if macs:
+                        mac_obj = macs[0]
+                    else:
+                        mac_obj = nb.dcim.mac_addresses.create({"mac_address": nic["mac"], "interface": interface.id})
+                    interface.primary_mac_address = mac_obj.id
                 nic_update += 1
 
             if hasattr(interface, "mtu"):
