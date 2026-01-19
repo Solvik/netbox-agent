@@ -45,6 +45,8 @@ def run(config):
         print("netbox-agent is not compatible with Netbox prior to version 3.7")
         return 1
 
+    if config.debug:
+        server.print_debug()
     if (
         config.register
         or config.update_all
@@ -54,8 +56,6 @@ def run(config):
         or config.update_psu
     ):
         server.netbox_create_or_update(config)
-    if config.debug:
-        server.print_debug()
     return 0
 
 

@@ -51,3 +51,8 @@ rack_location:
 #   regex: '.*-(\d+)'
 
 inventory: true
+
+# Enable debug mode to print detailed device information
+# This is useful for troubleshooting before registration or updates
+# Same as using the --debug or -d command line flag
+# debug: true
