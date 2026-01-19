@@ -85,6 +85,29 @@ INFO:root:Create new IP 42.42.42.43/24 on enp1s0f1
 INFO:root:Creating Disk Samsung SSD 850 S2RBNX0K101698D
 ```
 
+## Debug Mode
+
+The `--debug` flag prints detailed information about the device before attempting to create or update it in Netbox. This is useful for troubleshooting issues or verifying what data will be sent to Netbox.
+
+```
+# netbox_agent -c /etc/netbox_agent.yaml --debug --register
+Datacenter: dc-1
+Netbox Datacenter: dc-1
+Rack: rack-01
+Netbox Rack: rack-01
+Is blade: False
+Got expansion: False
+Product Name: ProLiant DL380 Gen10
+Platform: x86-64
+Chassis: Default string
+Chassis service tag: 2M25XX0020
+Service tag: 2M25XX0020
+NIC:
+[{'name': 'eno1', 'mac': 'a8:1e:84:f2:9e:69', ...}, ...]
+INFO:root:Creating chassis blade (serial: QTFCQ574502EF)
+...
+```
+
 # Configuration
 
 ```
