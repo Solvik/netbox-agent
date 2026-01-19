@@ -17,6 +17,8 @@ class PowerSupply:
 
     def get_power_supply(self):
         power_supply = []
+        seen_psus = set()
+
         for psu in dmidecode.get_by_type(self.server.dmi, PSU_DMI_TYPE):
             if "Present" not in psu["Status"] or psu["Status"] == "Not Present":
                 continue
@@ -36,6 +38,20 @@ class PowerSupply:
                 continue
             if sn == "":
                 sn = "N/A"
+
+            # Create a unique key based on all PSU attributes to detect duplicates
+            psu_key = (sn, desc, max_power)
+
+            # Skip duplicate PSUs (same serial, description, and max power)
+            if psu_key in seen_psus:
+                logging.debug(
+                    "Skipping duplicate PSU: name={}, description={}, max_power={}W".format(
+                        sn, desc, max_power
+                    )
+                )
+                continue
+
+            seen_psus.add(psu_key)
             power_supply.append(
                 {
                     "name": sn,
