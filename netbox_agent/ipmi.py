@@ -55,6 +55,7 @@ class IPMI:
         ret["name"] = "IPMI"
         ret["mtu"] = 1500
         ret["bonding"] = False
+        ret["bridged"] = False
         try:
             ret["mac"] = _ipmi["MAC Address"]
             if ret["mac"]:

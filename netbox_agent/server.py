@@ -13,11 +13,12 @@ from netbox_agent.misc import (
 from netbox_agent.network import ServerNetwork
 from netbox_agent.power import PowerSupply
 from pprint import pprint
+from slugify import slugify
 import subprocess
 import logging
 import socket
 import sys
-
+import re
 
 class ServerBase:
     def __init__(self, dmi=None):
@@ -119,6 +120,24 @@ class ServerBase:
             update = True
         return update
 
+    def find_or_create_manufacturer(self, name):
+        if name is None:
+            return None
+
+        manufacturer = nb.dcim.manufacturers.get(
+            name=name,
+        )
+        if not manufacturer:
+            logging.info("Creating missing manufacturer {name}".format(name=name))
+            manufacturer = nb.dcim.manufacturers.create(
+                name=name,
+                slug=re.sub("[^A-Za-z0-9]+", "-", name).lower(),
+            )
+
+            logging.info("Creating missing manufacturer {name}".format(name=name))
+
+        return manufacturer
+
     def get_rack(self):
         rack = Rack()
         return rack.get()
@@ -142,6 +161,13 @@ class ServerBase:
         Return the Chassis Name from dmidecode info
         """
         return self.system[0]["Product Name"].strip()
+
+    def get_manufacturer(self):
+        """
+        Return the Manufacturer from dmidecode info, and create it if needed
+        """
+        manufacturer = self.find_or_create_manufacturer(self.system[0]["Manufacturer"].strip())
+        return manufacturer
 
     def get_service_tag(self):
         """
@@ -191,8 +217,29 @@ class ServerBase:
     def get_expansion_product(self):
         raise NotImplementedError
 
+    def _netbox_create_device_type(self):
+        manufacturer = self.get_manufacturer()
+        model = self.get_product_name()
+        logging.info(
+            "Creating device type {model}.".format(
+                model=model
+            )
+        )
+        new_device_type = nb.dcim.device_types.create(
+            manufacturer = nb.dcim.manufacturers.get(name=manufacturer).id,
+            model = model,
+            slug=slugify(model)
+            )
+        return new_device_type
+
     def _netbox_create_chassis(self, datacenter, tenant, rack):
         device_type = get_device_type(self.get_chassis())
+        if not device_type:
+            if config.device.autocreate_device_type:
+                device_type_create = self._netbox_create_device_type()
+                device_type = get_device_type(self.get_chassis())
+            else:
+                raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
         device_role = get_device_role(config.device.chassis_role)
         serial = self.get_chassis_service_tag()
         logging.info("Creating chassis blade (serial: {serial})".format(serial=serial))
@@ -212,6 +259,12 @@ class ServerBase:
     def _netbox_create_blade(self, chassis, datacenter, tenant, rack):
         device_role = get_device_role(config.device.blade_role)
         device_type = get_device_type(self.get_product_name())
+        if not device_type:
+            if config.device.autocreate_device_type:
+                device_type_create = self._netbox_create_device_type()
+                device_type = get_device_type(self.get_product_name())
+            else:
+                raise Exception('Blade "{}" type doesn\'t exist'.format(self.get_product_name()))
         serial = self.get_service_tag()
         hostname = self.get_hostname()
         logging.info(
@@ -236,6 +289,12 @@ class ServerBase:
     def _netbox_create_blade_expansion(self, chassis, datacenter, tenant, rack):
         device_role = get_device_role(config.device.blade_role)
         device_type = get_device_type(self.get_expansion_product())
+        if not device_type:
+            if config.device.autocreate_device_type:
+                device_type_create = self._netbox_create_device_type()
+                device_type = get_device_type(self.get_expansion_product())
+            else:
+                raise Exception('Blade expansion type"{}" doesn\'t exist'.format(self.get_expansion_product()))
         serial = self.get_expansion_service_tag()
         hostname = self.get_hostname() + " expansion"
         logging.info(
@@ -271,7 +330,11 @@ class ServerBase:
         device_role = get_device_role(config.device.server_role)
         device_type = get_device_type(self.get_product_name())
         if not device_type:
-            raise Exception('Chassis "{}" doesn\'t exist'.format(self.get_chassis()))
+            if config.device.autocreate_device_type:
+                device_type_create = self._netbox_create_device_type()
+                device_type = get_device_type(self.get_product_name())
+            else:
+                raise Exception('Server type "{}" doesn\'t exist'.format(self.get_chassis()))
         serial = self.get_service_tag()
         hostname = self.get_hostname()
         logging.info(
@@ -506,9 +569,26 @@ class ServerBase:
         myips = nb.ipam.ip_addresses.filter(device_id=server.id)
         update = 0
 
+        # Deal with IPMI
         for ip in myips:
             if ip.assigned_object.display == "IPMI" and ip != server.oob_ip:
                 server.oob_ip = ip.id
+                update += 1
+                break
+        # Deal with iPV4
+        myip4s = nb.ipam.ip_addresses.filter(device_id=server.id)
+        for ip in myip4s:
+            print(ip.family.value)
+            print(ip.assigned_object.display)
+            if ip.assigned_object.display != "IPMI" and ip.family.value == 4 and ip != server.primary_ip4:
+                server.primary_ip4 = ip.id
+                update += 1
+                break
+        # Deal with iPV6
+        myip6s = nb.ipam.ip_addresses.filter(device_id=server.id)
+        for ip in myip6s:
+            if ip.assigned_object.display != "IPMI" and ip.family.value == 6 and ip != server.primary_ip6:
+                server.primary_ip6 = ip.id
                 update += 1
                 break
 

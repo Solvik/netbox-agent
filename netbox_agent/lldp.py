@@ -62,7 +62,12 @@ class LLDP:
             return None
         if self.data["lldp"][interface]["port"].get("ifname"):
             return self.data["lldp"][interface]["port"]["ifname"]
-        return self.data["lldp"][interface]["port"]["descr"]
+        if self.data["lldp"][interface]["port"].get("local"):
+            return self.data["lldp"][interface]["port"]["local"]
+        if self.data["lldp"][interface]["port"].get("descr"):  
+            return self.data["lldp"][interface]["port"]["descr"]
+        return None
+
 
     def get_switch_vlan(self, interface):
         # lldp.eth0.vlan.vlan-id=296
