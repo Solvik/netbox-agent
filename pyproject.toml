@@ -30,7 +30,7 @@ dependencies = [
     "pyyaml==6.0.2",
     "jsonargparse==4.36.0",
     "python-slugify==8.0.4",
-    "packaging==24.2",
+    "packaging==26.0",
     "distro==1.9.0",
 ]
 
