@@ -25,6 +25,10 @@ class PowerSupply:
                 max_power = int(psu.get("Max Power Capacity").split()[0])
             except ValueError:
                 max_power = None
+
+            if max_power is not None and max_power < 1:
+                max_power = None
+
             desc = "{} - {}".format(
                 psu.get("Manufacturer", "No Manufacturer").strip(),
                 psu.get("Name", "No name").strip(),
