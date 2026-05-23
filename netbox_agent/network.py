@@ -551,7 +551,16 @@ class Network(object):
                 if version.parse(nb.version) < version.parse("4.2"):
                     interface.mac_address = nic["mac"]
                 else:
-                    interface.primary_mac_address = {"mac_address": nic["mac"]}
+                    # Resolve the MAC object scoped to THIS interface so the
+                    # lookup is unambiguous when the same MAC string exists on
+                    # multiple interfaces (e.g. vlan/vxlan stacks, bonds, ipmi).
+                    nb_mac_obj = self.nb_net.mac_addresses.get(
+                        interface_id=interface.id, mac_address=nic["mac"]
+                    )
+                    if nb_mac_obj:
+                        interface.primary_mac_address = nb_mac_obj.id
+                    else:
+                        interface.primary_mac_address = {"mac_address": nic["mac"]}
                 nic_update += 1
 
             if hasattr(interface, "mtu"):
