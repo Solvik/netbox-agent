@@ -11,6 +11,7 @@ from packaging import version
 from netbox_agent.config import config
 from netbox_agent.config import netbox_instance as nb
 from netbox_agent.ethtool import Ethtool
+from netbox_agent.ifconfig import Ifconfig
 from netbox_agent.ipmi import IPMI
 from netbox_agent.lldp import LLDP
 
@@ -46,13 +47,69 @@ class Network(object):
     def get_network_type():
         return NotImplementedError
 
+    def _use_sysfs(self):
+        """Whether Linux sysfs (/sys/class/net) is available.
+
+        When it isn't (e.g. *BSD), interface facts come from ``ifconfig`` instead.
+        """
+        return os.path.isdir("/sys/class/net")
+
+    def _ifconfig_interfaces(self):
+        """Lazily parse ``ifconfig -a`` once, for the non-sysfs (BSD) code path."""
+        if not hasattr(self, "_ifconfig_cache"):
+            self._ifconfig_cache = Ifconfig().interfaces
+        return self._ifconfig_cache
+
+    def _interface_names(self):
+        if self._use_sysfs():
+            # ignore if it's not a link (ie: bonding_masters etc)
+            return [
+                i
+                for i in os.listdir("/sys/class/net/")
+                if os.path.islink("/sys/class/net/{}".format(i))
+            ]
+        return list(self._ifconfig_interfaces().keys())
+
+    def _interface_mac(self, interface, ethtool):
+        if config.network.primary_mac == "permanent" and ethtool and ethtool.get("mac_address"):
+            mac = ethtool["mac_address"]
+        elif self._use_sysfs():
+            mac = open("/sys/class/net/{}/address".format(interface), "r").read().strip()
+            if mac == "00:00:00:00:00:00":
+                mac = None
+        else:
+            mac = self._ifconfig_interfaces().get(interface, {}).get("mac")
+            if mac == "00:00:00:00:00:00":
+                mac = None
+        if mac:
+            mac = mac.upper()
+        return mac
+
+    def _interface_mtu(self, interface):
+        if self._use_sysfs():
+            return int(open("/sys/class/net/{}/mtu".format(interface), "r").read().strip())
+        return self._ifconfig_interfaces().get(interface, {}).get("mtu")
+
+    def _interface_bonding(self, interface):
+        if self._use_sysfs() and os.path.isdir("/sys/class/net/{}/bonding".format(interface)):
+            slaves = open("/sys/class/net/{}/bonding/slaves".format(interface)).read().split()
+            return True, slaves
+        return False, []
+
+    def _interface_virtual(self, interface):
+        if self._use_sysfs():
+            return Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
+        # No sysfs (e.g. *BSD): fall back to a name-based heuristic for the common
+        # virtual interface types.
+        return bool(
+            re.match(
+                r"^(lo|tun|tap|bridge|vlan|gif|gre|epair|pflog|pfsync|enc|ipfw)\d*$", interface
+            )
+        )
+
     def scan(self):
         nics = []
-        for interface in os.listdir("/sys/class/net/"):
-            # ignore if it's not a link (ie: bonding_masters etc)
-            if not os.path.islink("/sys/class/net/{}".format(interface)):
-                continue
-
+        for interface in self._interface_names():
             if config.network.ignore_interfaces and re.match(
                 config.network.ignore_interfaces, interface
             ):
@@ -90,33 +147,15 @@ class Network(object):
                 ip_addr.append(addr)
 
             ethtool = Ethtool(interface).parse()
-            if (
-                config.network.primary_mac == "permanent"
-                and ethtool
-                and ethtool.get("mac_address")
-            ):
-                mac = ethtool["mac_address"]
-            else:
-                mac = open("/sys/class/net/{}/address".format(interface), "r").read().strip()
-                if mac == "00:00:00:00:00:00":
-                    mac = None
-            if mac:
-                mac = mac.upper()
+            mac = self._interface_mac(interface, ethtool)
+            mtu = self._interface_mtu(interface)
 
-            mtu = int(open("/sys/class/net/{}/mtu".format(interface), "r").read().strip())
             vlan = None
             if len(interface.split(".")) > 1:
                 vlan = int(interface.split(".")[1])
 
-            bonding = False
-            bonding_slaves = []
-            if os.path.isdir("/sys/class/net/{}/bonding".format(interface)):
-                bonding = True
-                bonding_slaves = (
-                    open("/sys/class/net/{}/bonding/slaves".format(interface)).read().split()
-                )
-
-            virtual = Path(f"/sys/class/net/{interface}").resolve().parent == VIRTUAL_NET_FOLDER
+            bonding, bonding_slaves = self._interface_bonding(interface)
+            virtual = self._interface_virtual(interface)
 
             nic = {
                 "name": interface,
@@ -555,7 +594,7 @@ class Network(object):
                 nic_update += 1
 
             if hasattr(interface, "mtu"):
-                if nic["mtu"] != interface.mtu:
+                if nic["mtu"] and nic["mtu"] != interface.mtu:
                     logging.info(
                         "Interface mtu is wrong, updating to: {mtu}".format(mtu=nic["mtu"])
                     )
