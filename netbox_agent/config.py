@@ -133,6 +133,23 @@ def get_config():
         help="Which MAC address to use as primary. Permanent requires ethtool and fallbacks to temporary",
     )
     p.add_argument(
+        "--network.vip_carp",
+        action="store_true",
+        help="Detect CARP virtual IPs (addresses carrying a vhid in ifconfig, *BSD) "
+        "and set the NetBox CARP role so peers share the address",
+    )
+    p.add_argument(
+        "--network.vip_tunnel",
+        action="store_true",
+        help="Detect VIPs on IP-tunnel interfaces (a /32 or /128 on IPIP/SIT/GRE) "
+        "and set the NetBox VIP role",
+    )
+    p.add_argument(
+        "--network.vip_loopback",
+        action="store_true",
+        help="Detect non-localhost loopback addresses as VIPs and set the NetBox VIP role",
+    )
+    p.add_argument(
         "--inventory",
         action="store_true",
         help="Enable HW inventory (CPU, Memory, RAID Cards, Disks) feature",

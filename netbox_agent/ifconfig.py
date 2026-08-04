@@ -17,6 +17,8 @@ class Ifconfig:
         if output is None:
             output = subprocess.getoutput("ifconfig -a")
         self.output = output
+        # Bare addresses that carry a CARP `vhid` (i.e. CARP virtual IPs).
+        self.carp_addresses = set()
         self.interfaces = self.parse()
 
     def parse(self):
@@ -41,4 +43,10 @@ class Ifconfig:
             ether = re.match(r"\s+ether ([0-9a-fA-F:]{17})\b", line)
             if ether:
                 interfaces[current]["mac"] = ether.group(1)
+                continue
+            # An inet/inet6 line carrying a `vhid` is a CARP virtual IP, e.g.
+            #   "\tinet 10.0.6.1 netmask 0xffffff00 broadcast 10.0.6.255 vhid 10"
+            vip = re.match(r"\s+inet6? (\S+).*\bvhid \d+", line)
+            if vip:
+                self.carp_addresses.add(vip.group(1).split("%")[0].split("/")[0])
         return interfaces

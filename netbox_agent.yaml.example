@@ -9,6 +9,12 @@ network:
   ignore_ips: (127\.0\.0\..*)
   # enable auto-cabling
   lldp: true
+  # Optional virtual-IP (VIP) detection. All default off; when enabled, matching
+  # addresses get a NetBox IP role so hosts sharing a VIP each keep their own
+  # record instead of stealing it.
+  # vip_carp: true      # CARP VIPs (addresses with a vhid in ifconfig, *BSD)
+  # vip_tunnel: true    # /32 or /128 on an IP tunnel (IPIP/SIT/GRE), e.g. LVS-TUN
+  # vip_loopback: true  # non-localhost addresses on a loopback interface
 
 #
 # You can use these to change the roles.

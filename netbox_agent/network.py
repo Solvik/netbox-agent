@@ -54,10 +54,10 @@ class Network(object):
         """
         return os.path.isdir("/sys/class/net")
 
-    def _ifconfig_interfaces(self):
+    def _ifconfig(self):
         """Lazily parse ``ifconfig -a`` once, for the non-sysfs (BSD) code path."""
         if not hasattr(self, "_ifconfig_cache"):
-            self._ifconfig_cache = Ifconfig().interfaces
+            self._ifconfig_cache = Ifconfig()
         return self._ifconfig_cache
 
     def _interface_names(self):
@@ -68,7 +68,7 @@ class Network(object):
                 for i in os.listdir("/sys/class/net/")
                 if os.path.islink("/sys/class/net/{}".format(i))
             ]
-        return list(self._ifconfig_interfaces().keys())
+        return list(self._ifconfig().interfaces.keys())
 
     def _interface_mac(self, interface, ethtool):
         if config.network.primary_mac == "permanent" and ethtool and ethtool.get("mac_address"):
@@ -78,7 +78,7 @@ class Network(object):
             if mac == "00:00:00:00:00:00":
                 mac = None
         else:
-            mac = self._ifconfig_interfaces().get(interface, {}).get("mac")
+            mac = self._ifconfig().interfaces.get(interface, {}).get("mac")
             if mac == "00:00:00:00:00:00":
                 mac = None
         if mac:
@@ -88,7 +88,7 @@ class Network(object):
     def _interface_mtu(self, interface):
         if self._use_sysfs():
             return int(open("/sys/class/net/{}/mtu".format(interface), "r").read().strip())
-        return self._ifconfig_interfaces().get(interface, {}).get("mtu")
+        return self._ifconfig().interfaces.get(interface, {}).get("mtu")
 
     def _interface_bonding(self, interface):
         if self._use_sysfs() and os.path.isdir("/sys/class/net/{}/bonding".format(interface)):
@@ -106,6 +106,76 @@ class Network(object):
                 r"^(lo|tun|tap|bridge|vlan|gif|gre|epair|pflog|pfsync|enc|ipfw)\d*$", interface
             )
         )
+
+    def _carp_vip_addresses(self):
+        """CARP virtual IPs: addresses carrying a `vhid` in ``ifconfig``.
+
+        CARP is *BSD-only and read from ``ifconfig``; the sysfs (Linux) path has
+        no equivalent, so this returns nothing there.
+        """
+        if not config.network.vip_carp or self._use_sysfs():
+            return set()
+        return set(self._ifconfig().carp_addresses)
+
+    def _tunnel_vip_addresses(self):
+        """VIPs on IP-tunnel interfaces: a /32 (or /128) on an interface whose
+        sysfs ARPHRD type is IPIP/IP6IP6/SIT/GRE/IP6GRE (e.g. LVS-TUN)."""
+        if not config.network.vip_tunnel or not self._use_sysfs():
+            return set()
+        tunnel_types = ("768", "769", "776", "778", "823")
+        vips = set()
+        for interface in self._interface_names():
+            try:
+                with open("/sys/class/net/{}/type".format(interface)) as fh:
+                    if fh.read().strip() not in tunnel_types:
+                        continue
+            except OSError:
+                continue
+            for family in (netifaces.AF_INET, netifaces.AF_INET6):
+                for addr in netifaces.ifaddresses(interface).get(family, []):
+                    bits = IPAddress(addr["mask"].split("/")[0]).netmask_bits()
+                    if (family == netifaces.AF_INET and bits == 32) or (
+                        family == netifaces.AF_INET6 and bits == 128
+                    ):
+                        vips.add(addr["addr"].split("%")[0])
+        return vips
+
+    def _loopback_vip_addresses(self):
+        """Non-localhost addresses configured on a loopback interface (lo/lo0)."""
+        if not config.network.vip_loopback:
+            return set()
+        vips = set()
+        for interface in self._interface_names():
+            if not re.match(r"^lo\d*$", interface):
+                continue
+            for family in (netifaces.AF_INET, netifaces.AF_INET6):
+                for addr in netifaces.ifaddresses(interface).get(family, []):
+                    a = addr["addr"].split("%")[0]
+                    ipobj = IPAddress(a)
+                    if ipobj.is_loopback() or ipobj.is_link_local():
+                        continue
+                    vips.add(a)
+        return vips
+
+    def vip_roles(self):
+        """Map locally-detected VIP addresses to NetBox IP role labels.
+
+        Each detector is opt-in via config (``network.vip_carp`` / ``vip_tunnel``
+        / ``vip_loopback``), all default off, so with none enabled this returns
+        ``{}`` and IP handling is unchanged. A detected role lets
+        :meth:`create_or_update_netbox_ip_on_interface` mark the address so peers
+        sharing it each keep their own record instead of stealing it.
+        """
+        if not hasattr(self, "_vip_roles_cache"):
+            roles = {}
+            for addr in self._carp_vip_addresses():
+                roles[addr] = "CARP"
+            for addr in self._tunnel_vip_addresses():
+                roles.setdefault(addr, "VIP")
+            for addr in self._loopback_vip_addresses():
+                roles.setdefault(addr, "VIP")
+            self._vip_roles_cache = roles
+        return self._vip_roles_cache
 
     def scan(self):
         nics = []
@@ -421,9 +491,8 @@ class Network(object):
         * If IP exists and isn't assigned, take it
         * If IP exists and interface is wrong, change interface
         """
-        netbox_ips = nb.ipam.ip_addresses.filter(
-            address=ip,
-        )
+        role = self.vip_roles().get(ip.split("/")[0])
+        netbox_ips = list(nb.ipam.ip_addresses.filter(address=ip))
         if not netbox_ips:
             logging.info("Create new IP {ip} on {interface}".format(ip=ip, interface=interface))
             query_params = {
@@ -432,31 +501,43 @@ class Network(object):
                 "assigned_object_type": self.assigned_object_type,
                 "assigned_object_id": interface.id,
             }
+            if role:
+                query_params["role"] = self.ipam_choices["ip-address:role"][role]
 
             netbox_ip = nb.ipam.ip_addresses.create(**query_params)
             return netbox_ip
 
-        netbox_ip = list(netbox_ips)[0]
-        # If IP exists in anycast
-        if netbox_ip.role and netbox_ip.role.label == "Anycast":
-            logging.debug("IP {} is Anycast..".format(ip))
-            unassigned_anycast_ip = [x for x in netbox_ips if x.interface is None]
-            assigned_anycast_ip = [
-                x for x in netbox_ips if x.interface and x.interface.id == interface.id
-            ]
-            # use the first available anycast ip
-            if len(unassigned_anycast_ip):
-                logging.info("Assigning existing Anycast IP {} to interface".format(ip))
-                netbox_ip = unassigned_anycast_ip[0]
-                netbox_ip.interface = interface
+        netbox_ip = netbox_ips[0]
+        existing_role = netbox_ip.role.label if netbox_ip.role else None
+        # Multi-assignable / shared IPs (Anycast, plus any detected VIP role):
+        # each host keeps its own record for the shared address instead of
+        # stealing it. With VIP detection off (role is None) this triggers only
+        # for a pre-existing Anycast role -- as before -- but now via
+        # assigned_object_id rather than the removed `.interface` attribute.
+        if role or existing_role == "Anycast":
+            role_label = role or existing_role
+            logging.debug("IP {} is {} (multi-assignable)..".format(ip, role_label))
+            assigned_here = [x for x in netbox_ips if x.assigned_object_id == interface.id]
+            unassigned = [x for x in netbox_ips if x.assigned_object_id is None]
+            if assigned_here:
+                netbox_ip = assigned_here[0]
+            elif unassigned:
+                logging.info("Assigning existing {} IP {} to interface".format(role_label, ip))
+                netbox_ip = unassigned[0]
+                netbox_ip.assigned_object_type = self.assigned_object_type
+                netbox_ip.assigned_object_id = interface.id
+                if role:
+                    netbox_ip.role = self.ipam_choices["ip-address:role"][role]
                 netbox_ip.save()
-            # or if everything is assigned to other servers
-            elif not len(assigned_anycast_ip):
-                logging.info("Creating Anycast IP {} and assigning it to interface".format(ip))
+            else:
+                # every existing copy is assigned to another host; create our own
+                logging.info(
+                    "Creating {} IP {} and assigning it to interface".format(role_label, ip)
+                )
                 query_params = {
                     "address": ip,
                     "status": "active",
-                    "role": self.ipam_choices["ip-address:role"]["Anycast"],
+                    "role": self.ipam_choices["ip-address:role"][role_label],
                     "tenant": self.tenant.id if self.tenant else None,
                     "assigned_object_type": self.assigned_object_type,
                     "assigned_object_id": interface.id,

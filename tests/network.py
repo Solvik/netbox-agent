@@ -44,7 +44,8 @@ def test_lldp_parse_with_vlan(fixture):
     ],
 )
 def test_ifconfig_parse_freebsd(fixture):
-    interfaces = Ifconfig(fixture).interfaces
+    ifconfig = Ifconfig(fixture)
+    interfaces = ifconfig.interfaces
     # MAC + MTU are picked up from the ether/header lines
     assert interfaces["vtnet0"]["mac"] == "bc:24:11:6e:21:cd"
     assert interfaces["vtnet0"]["mtu"] == 1500
@@ -55,3 +56,6 @@ def test_ifconfig_parse_freebsd(fixture):
     assert interfaces["lo0"]["mtu"] == 16384
     assert interfaces["pflog0"]["mtu"] == 33152
     assert interfaces["tailscale0"]["mtu"] == 1280
+    # the CARP virtual IP (inet line carrying a vhid) is detected; the real
+    # address on the same interface and everything else is not
+    assert ifconfig.carp_addresses == {"10.0.6.1"}
