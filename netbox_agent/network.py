@@ -17,6 +17,23 @@ from netbox_agent.lldp import LLDP
 VIRTUAL_NET_FOLDER = Path("/sys/devices/virtual/net")
 
 
+def get_vlan_id(interface, vlan_root=Path("/proc/net/vlan")):
+    vlan_path = vlan_root / interface
+    try:
+        if vlan_path.is_file():
+            match = re.search(r"\bVID:\s*(\d+)\b", vlan_path.read_text())
+            if match:
+                return int(match.group(1))
+    except OSError:
+        pass
+
+    parts = interface.split(".")
+    if len(parts) > 1 and parts[1].isdigit():
+        return int(parts[1])
+
+    return None
+
+
 class Network(object):
     def __init__(self, server, *args, **kwargs):
         self.nics = []
@@ -104,9 +121,7 @@ class Network(object):
                 mac = mac.upper()
 
             mtu = int(open("/sys/class/net/{}/mtu".format(interface), "r").read().strip())
-            vlan = None
-            if len(interface.split(".")) > 1:
-                vlan = int(interface.split(".")[1])
+            vlan = get_vlan_id(interface)
 
             bonding = False
             bonding_slaves = []
