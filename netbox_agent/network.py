@@ -309,6 +309,13 @@ class Network(object):
                     }
                 )
 
+    def set_netbox_interface_primary_mac(self, interface, mac):
+        primary_mac = self.nb_net.mac_addresses.get(
+            interface_id=interface.id,
+            mac_address=mac,
+        )
+        interface.primary_mac_address = primary_mac.id
+
     def create_netbox_nic(self, nic, mgmt=False):
         # TODO: add Optic Vendor, PN and Serial
         nic_type = self.get_netbox_type_for_nic(nic)
@@ -551,7 +558,7 @@ class Network(object):
                 if version.parse(nb.version) < version.parse("4.2"):
                     interface.mac_address = nic["mac"]
                 else:
-                    interface.primary_mac_address = {"mac_address": nic["mac"]}
+                    self.set_netbox_interface_primary_mac(interface, nic["mac"])
                 nic_update += 1
 
             if hasattr(interface, "mtu"):
